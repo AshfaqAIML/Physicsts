@@ -15,11 +15,14 @@ import type { Note } from "@/content/notes";
 export function PrintEssayButton({ note }: { note: Note }) {
   // If the print dialogue outlives our patience, still clean up.
   const cleanupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The chip itself — the print handler walks up from here to its dialog.
+  const chipRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(
     () => () => {
       if (cleanupTimer.current) clearTimeout(cleanupTimer.current);
       document.documentElement.classList.remove("essay-printing");
+      chipRef.current?.closest('[role="dialog"]')?.classList.remove("print-target");
     },
     []
   );
@@ -32,12 +35,17 @@ export function PrintEssayButton({ note }: { note: Note }) {
     const slot = document.querySelector("[data-essay-print=\"url\"]");
     if (slot) slot.textContent = url;
 
+    // Mark this essay's own dialogue — a stacked dialogue underneath
+    // (opened from the palette, say) never leaks onto the page.
+    const dialog = chipRef.current?.closest('[role="dialog"]');
     const finish = () => {
       root.classList.remove("essay-printing");
+      dialog?.classList.remove("print-target");
       if (cleanupTimer.current) clearTimeout(cleanupTimer.current);
     };
 
     root.classList.add("essay-printing");
+    dialog?.classList.add("print-target");
     window.addEventListener("afterprint", finish, { once: true });
     window.print();
     // afterprint is unreliable in some embedded browsers — a safety net.
@@ -46,6 +54,7 @@ export function PrintEssayButton({ note }: { note: Note }) {
 
   return (
     <button
+      ref={chipRef}
       type="button"
       onClick={handlePrint}
       aria-label="Print this essay as an archival offprint"

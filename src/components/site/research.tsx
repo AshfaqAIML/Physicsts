@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowUpRight, BookOpen, Tag } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, BookOpen, Printer, Tag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,45 @@ import { cn } from "@/lib/utils";
  */
 export function ResearchInterests() {
   const [openArea, setOpenArea] = useState<ResearchArea | null>(null);
+  // If a print dialogue outlives our patience, still clean up the mode.
+  const printTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The print chip — the handler walks up from here to its dialog.
+  const areaChipRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(
+    () => () => {
+      if (printTimerRef.current) clearTimeout(printTimerRef.current);
+      document.documentElement.classList.remove("area-printing");
+    },
+    []
+  );
+
+  /** AREA OFFPRINT — paper receives the open research area alone:
+   * kicker, equation, the short brief, concepts, and the shelf. The
+   * interactive ask-assistant stays on screen; provenance is inked
+   * from the site address so the copy knows where it came from. The
+   * area's own dialogue is marked `print-target` — a stacked dialogue
+   * underneath never leaks onto the page. */
+  const handlePrintArea = () => {
+    if (!openArea) return;
+    const url = `${window.location.origin}${window.location.pathname}#research`;
+    const slot = document.querySelector('[data-area-print="url"]');
+    if (slot) slot.textContent = url;
+
+    const root = document.documentElement;
+    // The button lives inside the area's own dialogue — that one prints.
+    const dialog = areaChipRef.current?.closest('[role="dialog"]');
+    const finish = () => {
+      root.classList.remove("area-printing");
+      dialog?.classList.remove("print-target");
+      if (printTimerRef.current) clearTimeout(printTimerRef.current);
+    };
+    root.classList.add("area-printing");
+    dialog?.classList.add("print-target");
+    window.addEventListener("afterprint", finish, { once: true });
+    window.print();
+    // afterprint is unreliable in some embedded browsers — a safety net.
+    printTimerRef.current = setTimeout(finish, 1200);
+  };
 
   // External openers (command palette)
   useEffect(() => {
@@ -102,6 +141,14 @@ export function ResearchInterests() {
           {openArea && (
             <>
               <DialogHeader className="text-left">
+                {/* Offprint provenance — inked only by the area print mode */}
+                <p
+                  data-area-print="only"
+                  className="hidden font-mono text-[9.5pt] uppercase tracking-[0.14em] text-black/70"
+                >
+                  The Physicist · Research Area · printed from the companion site ·{" "}
+                  <span data-area-print="url" />
+                </p>
                 <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
                   <span>{openArea.index}</span>
                   <span aria-hidden="true" className="h-px w-8 bg-border" />
@@ -113,6 +160,23 @@ export function ResearchInterests() {
                 <DialogDescription className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em]">
                   {openArea.tagline}
                 </DialogDescription>
+                {/* Desk line — honest counts plus the paper deed */}
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                    {openArea.concepts.length} related concepts · {openArea.reading.length} on the shelf
+                  </p>
+                  <button
+                    ref={areaChipRef}
+                    type="button"
+                    onClick={handlePrintArea}
+                    aria-label="Print this research area as an archival offprint"
+                    data-print="hide"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    <Printer className="size-3" aria-hidden="true" />
+                    Print
+                  </button>
+                </div>
               </DialogHeader>
 
               <div className="mt-6 space-y-8">
@@ -159,7 +223,9 @@ export function ResearchInterests() {
                   </ul>
                 </div>
 
-                <ResearchAsk key={openArea.id} area={openArea} />
+                <div data-print="hide">
+                  <ResearchAsk key={openArea.id} area={openArea} />
+                </div>
               </div>
             </>
           )}

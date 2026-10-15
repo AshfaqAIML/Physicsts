@@ -1642,3 +1642,94 @@ Stage Summary:
   essay-print); offprint preset for research-area dialogs; an
   almanac "on this day" deep-link; real content replacement
   (name/portrait/channels/CV) when the owner is ready.
+
+---
+Task ID: R10 (review round — main agent)
+Agent: main agent (autonomous cron review)
+Task: R10 of the recurring review loop — full QA regression, then the mandatory style refinement + new feature round. Trace 1a13ff1b9f673871-web-cron-review-202610160526.
+
+Work Log:
+- Baseline: server up (200), dev.log clean (only duplicate-start EADDRINUSE noise).
+- FULL regression PASSED at open: page health (0 failed resources, clean console), T theme round-trip, L lexicon, ? manual, #note-spacetime-curved deep link (opens + hash clears on close), #experiment=lensing?e=110&d=grid restore, #lab-tour= hand-built link lifecycle (opening delivery + toast → photon dot on unvisited bench → REAL tab click → segment delivery + quiet toast → hash cleared via replaceState), lab tab keyboard nav with wrap, contact API friendly zod messages + happy path, footer almanac (Oct 1927 Solvay), mobile 375 + desktop 1440 zero real overflows, lint 0, tsc 0 under src/.
+- THREE QA-METHOD false alarms diagnosed (documented for future rounds):
+  (1) Synthetic keydown events dispatched on window NEVER reach document — global
+      shortcuts (L/?) listen on window so they fire, but Radix Escape handling
+      listens on document and stays deaf. Use real `press Escape` for Radix.
+  (2) eval `.click()` on Radix tab triggers does not switch tabs; use real
+      agent-browser click on the @ref. Also `.click()` is not a trusted gesture —
+      execCommand('copy') fails under it; quote-copy verified fine via real click.
+  (3) Probe selectors must match real DOM: tour dots are dynamic spans (find via
+      the sr-only text), not .tour-dot; ledger buttons were always rendered —
+      a slice(0,8) probe hid them.
+- NEW FEATURE — Excerpt Offprint (R9's top candidate, quote × essay-print merge):
+  · quote-copy.tsx: the chip is now a two-deed pill — "Quote this passage"
+    (unchanged copy) + "Print excerpt" (new). New hidden excerpt plate renders
+    inside the reading pane whenever a selection is live: masthead ("OFFPRINT ·
+    EXCERPT — THE PHYSICIST'S NOTEBOOK" + thick rule + "selected by the reader,
+    printed by request"), essay title, category·time·date line, the passage in
+    guillemets on a serif blockquote measure, provenance deep link. Handler inks
+    slots, stamps html.excerpt-printing, prints, cleans on afterprint + safety
+    timer. Excerpt cap 640 chars (paper carries more than a clipboard's 280).
+  · MAX chars + PrintEssayButton pattern reused (PRINT_CLEANUP_MS).
+- NEW FEATURE — Research-Area Offprint: research dialog gains a desk line
+  ("N related concepts · N on the shelf" — honest counts) with a Print chip;
+  printing typesets kicker, equation (KaTeX prints), brief, concepts, and the
+  reading shelf, with a print-only provenance line. The interactive
+  ResearchAsk is wrapped data-print="hide" (stays on screen).
+- REAL BUG FOUND & FIXED during verification — stacked-dialog leak: with an
+  essay open, the palette can open a research area ON TOP (both [role=dialog]
+  stay mounted as body children); the print modes displayed ALL dialogs, so an
+  area offprint printed the whole essay underneath. Fix: every print handler
+  (essay/excerpt/area) marks its OWN dialog with .print-target via
+  closest('[role="dialog"]') from a chip ref; CSS hides ALL body children then
+  shows only body > .print-target; dialog un-cinema rules now target
+  [role="dialog"].print-target (specificity: unsuffixed [role=dialog] rules
+  would have re-shown stacked dialogs — (0,0,2,1) beats body>* (0,0,1,2)).
+  Verified by PDF text extraction in stacked state: essay prints alone, area
+  prints alone, excerpt prints alone — zero cross-leak in all three modes.
+- REAL BUG FOUND & FIXED — chip clamp vs wide pill: place() clamped the old
+  170px chip with fixed 84px margins; the two-action pill is 331px wide — on a
+  341px mobile pane it overflowed. Fixes: (1) clamp by measured pill width
+  (chipRef.offsetWidth, estimate 300 before mount) with same-value bailout so
+  the layout-effect re-place converges instead of looping; (2) responsive pill:
+  flex-col below sm (buttons stacked, horizontal divider via max-sm utilities,
+  rounded-xl) → 185px wide at 375; sm:flex-row rounded-full → 331px on desktop;
+  (3) window resize listener re-places the pill while a selection lives.
+  Verified: 375 column no overflow, 1440 row no overflow, survives resize.
+- STYLING: offprint print typography across three modes (masthead line, thick
+  rule, guillemet blockquote at 12.5pt/1.75, 8.5–9.5pt mono caps provenance);
+  two-action pill with photon divider + focus-visible inner rings
+  (-outline-offset-4 inside the rounded container); research desk line.
+- Shortcuts manual line updated: the selection note now teaches both deeds
+  ("quote the passage or print it as an excerpt").
+- VLM review unavailable this round (z-ai vision CLI 401 "missing X-Token" —
+  env token lost after session restart); DOM/PDF-text verification used
+  instead, which has been the more reliable arbiter anyway per standing rule.
+- Turbopack HMR wedge hit TWICE this round (stale CSS: browser saw 2 of 14
+  excerpt-printing rule mentions). Recovery both times: pkill + rm -rf .next +
+  double-fork restart. Standing rule reaffirmed: after ANY edit round, verify
+  served CSS rule counts before believing "missing" styles are code bugs.
+- Final verification: page health clean, 0 console errors, 375/1440 zero real
+  overflows, all three print modes PDF-verified incl. stacked state, copy +
+  excerpt flows real-click verified, lint 0, tsc 0 under src/, dev.log clean.
+
+Stage Summary:
+- The site now has a complete OFFPRINT SYSTEM: whole essay (existing), selected
+  passage (new), research area (new) — each typeset for paper with its own
+  masthead and provenance, each printing only its own dialog even when dialogs
+  are stacked, each honest about what it is.
+- The quote chip grew a second deed without losing its manners: responsive
+  stacking on narrow panes, measured-width clamping, resize-aware placement,
+  same-value-bailout convergence.
+- Key patterns for future rounds: .print-target dialog marking (any new print
+  mode must adopt it), measured-width clamp + bailout in place(), and the
+  specificity lesson (attr-selector rules can out-rank body>* hiders — suffix
+  the mode rules with the marker class).
+- Known notes: (1) VLM CLI auth lost this round — retry next round, else keep
+  DOM/PDF arbiter; (2) HMR wedge now 5× lifetime — clean-restart after every
+  edit round is cheap insurance; (3) synth events on window don't reach
+  document listeners (Radix) and synth clicks aren't trusted gestures
+  (execCommand) — always re-verify with real agent-browser interactions.
+- Next-phase candidates: almanac "on this day" deep-links (milestone → related
+  lexicon term or lab bench); a fourth lab instrument; real content
+  replacement (name/portrait/channels/CV) when the owner is ready.

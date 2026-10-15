@@ -532,14 +532,28 @@
   }
 
   /* --------------------------------------------------------------------
-     Essay print mode — "Print this essay" (html.essay-printing).
-     The whole site steps aside; paper receives one essay, typeset like
-     an offprint: provenance line, the text itself, its references.
+     Offprint modes — "Print this essay" (html.essay-printing), "Print
+     excerpt" (html.excerpt-printing), and "Print area" (html.area-
+     printing). The whole site steps aside; paper receives one document,
+     typeset like an offprint with a provenance line so the copy knows
+     where it came from. Each handler marks its OWN dialogue with
+     `print-target` — stacked dialogues underneath never leak onto the
+     page. The plumbing is shared; each mode then chooses what inside
+     its dialogue stays on the page.
      -------------------------------------------------------------------- */
-  html.essay-printing body > *:not([role="dialog"]) {
+  html.essay-printing body > *,
+  html.excerpt-printing body > *,
+  html.area-printing body > * {
     display: none !important;
   }
-  html.essay-printing [role="dialog"] {
+  html.essay-printing body > .print-target,
+  html.excerpt-printing body > .print-target,
+  html.area-printing body > .print-target {
+    display: block !important;
+  }
+  html.essay-printing [role="dialog"].print-target,
+  html.excerpt-printing [role="dialog"].print-target,
+  html.area-printing [role="dialog"].print-target {
     display: block !important;
     position: static !important;
     inset: auto !important;
@@ -553,6 +567,7 @@
     transform: none !important;
     box-shadow: none !important;
     outline: none !important;
+    overflow: visible !important;
   }
   /* Tailwind 4 centres dialogs with `translate: var(--tw-translate-x)
      var(--tw-translate-y)`. Plain `translate: none` declarations get
@@ -561,7 +576,9 @@
      resetting the variables the utility consumes. The same trick re-inks
      the offprint: the dark theme's pale text colours are variables, and
      resetting them at the dialog root beats chasing every utility. */
-  html.essay-printing [role="dialog"] {
+  html.essay-printing [role="dialog"].print-target,
+  html.excerpt-printing [role="dialog"].print-target,
+  html.area-printing [role="dialog"].print-target {
     --tw-translate-x: 0;
     --tw-translate-y: 0;
     --tw-translate-z: 0;
@@ -571,16 +588,20 @@
     --foreground: #14161d;
     --muted-foreground: #3d4350;
   }
-  /* The reading stage un-cinemas: no split rail, no viewport cell */
-  html.essay-printing .reading-stage {
+  /* The reading stage un-cinemas: no split rail, no viewport cell
+     (essay mode shows the whole essay; excerpt mode swaps in the plate) */
+  html.essay-printing .reading-stage,
+  html.excerpt-printing .reading-stage {
     display: block !important;
     height: auto !important;
     max-height: none !important;
   }
-  html.essay-printing .reading-stage > aside {
+  html.essay-printing .reading-stage > aside,
+  html.excerpt-printing .reading-stage > aside {
     display: none !important;
   }
-  html.essay-printing .reading-pane {
+  html.essay-printing .reading-pane,
+  html.excerpt-printing .reading-pane {
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
@@ -595,13 +616,17 @@
   html.essay-printing .reading-measure {
     padding: 1.2rem 0 0 0 !important;
   }
-  /* Screen furniture inside the offprint: measure, buttons, companion,
-     hand-off card. The honest placeholder disclosure stays in print. */
-  html.essay-printing [data-essay-print="hide"] {
+  /* Screen furniture inside the offprints: measure, buttons, companion,
+     hand-off card, progress hairline. The honest placeholder disclosure
+     stays in print. */
+  html.essay-printing [data-essay-print="hide"],
+  html.excerpt-printing [data-essay-print="hide"] {
     display: none !important;
   }
   /* The screen's close affordance has no meaning on paper */
-  html.essay-printing [data-slot="dialog-close"] {
+  html.essay-printing [data-slot="dialog-close"],
+  html.excerpt-printing [data-slot="dialog-close"],
+  html.area-printing [data-slot="dialog-close"] {
     display: none !important;
   }
   /* The drop cap is a screen gesture; print engines double-render floated
@@ -620,4 +645,40 @@
   html.essay-printing [data-essay-print="only"] {
     display: block !important;
   }
+
+  /* --------------------------------------------------------------------
+     Excerpt print mode — "Print excerpt" (html.excerpt-printing).
+     The selected passage alone reaches the page: header and essay body
+     step aside, the excerpt plate (masthead · title · citation · the
+     passage · deep link) is the whole document.
+     -------------------------------------------------------------------- */
+  html.excerpt-printing .reading-head {
+    display: none !important;
+  }
+  html.excerpt-printing .reading-measure {
+    display: none !important;
+  }
+  html.excerpt-printing [data-excerpt-plate="root"] {
+    display: block !important;
+    padding: 0 !important;
+  }
+  html.excerpt-printing [data-excerpt-plate="root"] blockquote {
+    break-inside: avoid;
+  }
+
+  /* --------------------------------------------------------------------
+     Research-area print mode — "Print" in an area dialog
+     (html.area-printing). Kicker, equation, brief, concepts, and the
+     shelf print; the interactive ask-assistant stays on screen; the
+     provenance line is inked at the top of the page.
+     -------------------------------------------------------------------- */
+  html.area-printing [data-area-print="only"] {
+    display: block !important;
+    margin-bottom: 0.6rem;
+  }
+  html.area-printing [role="dialog"] h2 {
+    break-after: avoid;
+  }
+  /* The mode classes only ever apply to the marked dialogue; this
+     keeps the intent explicit if the selectors above are ever edited. */
 }

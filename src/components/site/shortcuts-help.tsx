@@ -127,7 +127,7 @@ export function ShortcutsHelp() {
             <ShortcutRow keys={["Tab"]} note="Step through controls in order" />
             <ShortcutRow
               keys={["Shift", "↑ ↓ ← →"]}
-              note="Select text inside an essay — a “Quote this passage” chip rises beneath it"
+              note="Select text inside an essay — a chip rises beneath it to quote the passage or print it as an excerpt"
             />
           </ShortcutGroup>
         </div>

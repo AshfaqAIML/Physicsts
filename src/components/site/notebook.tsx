@@ -536,8 +536,14 @@ function ReadingView({
           </div>
         </DialogHeader>
 
-        {/* Select any passage — the quote chip rises beneath it */}
-        <QuoteCopy articleRef={articleRef} note={note} essayTitle={essay.title} />
+        {/* Select any passage — the quote chip rises beneath it; the chip
+            can quote it to the clipboard or print it as an excerpt */}
+        <QuoteCopy
+          articleRef={articleRef}
+          note={note}
+          essayTitle={essay.title}
+          essayMeta={`${note.category} · ${essay.readingMinutes} min read · ${essay.date}`}
+        />
 
         <div className="reading-measure px-6 py-10 sm:px-10">
           {essay.sections.map((s, i) => (
