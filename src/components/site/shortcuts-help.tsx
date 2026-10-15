@@ -32,6 +32,14 @@ function isStageHeld(target: EventTarget | null): boolean {
     : false;
 }
 
+function isLaboratoryTarget(target: EventTarget | null): boolean {
+  // The lab instruments own their keys while focused — R resets them,
+  // arrows steer the lens — so the global letter keys must stand aside.
+  return target instanceof HTMLElement
+    ? target.closest("canvas, section#lab") !== null
+    : false;
+}
+
 export function ShortcutsHelp() {
   const [open, setOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
@@ -43,7 +51,8 @@ export function ShortcutsHelp() {
     return () => window.removeEventListener("phys:open-shortcuts", onOpen);
   }, []);
 
-  // Global hotkeys — ?, L, T (silent while typing or on a dialog stage)
+  // Global hotkeys — ?, L, M, R, T (silent while typing, on a dialog
+  // stage, or inside the laboratory, where the instruments own the keys)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -62,6 +71,11 @@ export function ShortcutsHelp() {
       if (e.key === "m") {
         e.preventDefault();
         setMotionReduced(!getMotionReduced());
+        return;
+      }
+      if (e.key === "r" && !isLaboratoryTarget(e.target)) {
+        e.preventDefault();
+        window.dispatchEvent(new Event("phys:open-random-note"));
         return;
       }
       if (e.key === "t") {
@@ -95,6 +109,7 @@ export function ShortcutsHelp() {
             <ShortcutRow keys={["?"]} note="This operating manual" />
             <ShortcutRow keys={["L"]} note="Open the physics lexicon" />
             <ShortcutRow keys={["M"]} note="Calm the universe — reduce or restore motion" />
+            <ShortcutRow keys={["R"]} note="Open a random notebook page — outside the laboratory" />
             <ShortcutRow keys={["T"]} note="Switch Deep Field (dark) ↔ Archival Journal (light)" />
           </ShortcutGroup>
 

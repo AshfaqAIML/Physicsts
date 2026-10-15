@@ -139,6 +139,21 @@
     color: var(--foreground);
   }
 
+  /* The photon caret — every typing surface blinks in instrument cyan */
+  input,
+  textarea,
+  select {
+    caret-color: var(--photon);
+  }
+
+  /* Search-match glow (lexicon highlighting, <mark>) */
+  mark {
+    background: color-mix(in oklab, var(--photon) 26%, transparent);
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 0.08em;
+  }
+
   /* Refined scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
@@ -251,7 +266,8 @@
   }
 
   /* Display equations framed as instrument plates — fine plotting grid
-     behind the mathematics, register-mark corner ticks in photon cyan */
+     behind the mathematics, register-mark corner ticks in photon cyan.
+     On hover the registers brighten, like an instrument waking up. */
   .equation-plate {
     position: relative;
     border: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
@@ -262,6 +278,10 @@
       linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
     background-size: 24px 24px;
     padding: 1.25rem;
+    transition: border-color 0.3s ease;
+  }
+  .equation-plate:hover {
+    border-color: color-mix(in oklab, var(--photon) 35%, var(--border));
   }
   .equation-plate::before,
   .equation-plate::after {
@@ -270,6 +290,7 @@
     width: 12px;
     height: 12px;
     pointer-events: none;
+    transition: border-color 0.3s ease;
   }
   .equation-plate::before {
     top: -1px;
@@ -282,6 +303,10 @@
     right: -1px;
     border-bottom: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
     border-right: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
+  }
+  .equation-plate:hover::before,
+  .equation-plate:hover::after {
+    border-color: var(--photon);
   }
 
   /* Quiet animated underline for inline links — grows from the left,
@@ -297,6 +322,31 @@
   .link-quiet:hover,
   .link-quiet:focus-visible {
     background-size: 100% 1px;
+  }
+
+  /* Reading pane — depth under the pinned header once the essay is in
+     motion (the JS scroll handler flips data-scrolled on the article) */
+  .reading-head {
+    position: relative;
+  }
+  .reading-head::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -14px;
+    height: 14px;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--background) 92%, transparent),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .reading-pane[data-scrolled="true"] .reading-head::after {
+    opacity: 1;
   }
 }
 
@@ -354,6 +404,16 @@
   .glass-panel {
     background: transparent !important;
     backdrop-filter: none !important;
+  }
+
+  /* Register ticks are screen furniture — ink is conserved on paper */
+  .equation-plate::before,
+  .equation-plate::after {
+    display: none !important;
+  }
+
+  .reading-head::after {
+    display: none !important;
   }
 
   .text-glow-photon {

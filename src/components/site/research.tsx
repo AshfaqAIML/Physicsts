@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ResearchAsk } from "@/components/site/research-ask";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Tex } from "@/components/site/tex";
@@ -157,6 +158,8 @@ export function ResearchInterests() {
                     ))}
                   </ul>
                 </div>
+
+                <ResearchAsk key={openArea.id} area={openArea} />
               </div>
             </>
           )}

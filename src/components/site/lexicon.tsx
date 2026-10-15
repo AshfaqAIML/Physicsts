@@ -69,6 +69,13 @@ export function Lexicon() {
     });
   }, [query, category]);
 
+  // The words the ledger highlights — single characters are skipped to
+  // keep the glow meaningful (searching "e" would light up everything).
+  const highlightWords = useMemo(
+    () => query.trim().toLowerCase().split(/\s+/).filter((w) => w.length >= 2),
+    [query]
+  );
+
   // "See also" — refocus the search onto a related term
   const jumpTo = (id: string) => {
     const target = lexiconTerms.find((t) => t.id === id);
@@ -150,7 +157,7 @@ export function Lexicon() {
           ) : (
             <div className="divide-y divide-border border-y border-border">
               {filtered.map((t, i) => (
-                <TermRow key={t.id} term={t} index={i} onJump={jumpTo} />
+                <TermRow key={t.id} term={t} index={i} onJump={jumpTo} words={highlightWords} />
               ))}
             </div>
           )}
@@ -174,10 +181,13 @@ function TermRow({
   term,
   index,
   onJump,
+  words,
 }: {
   term: LexiconTerm;
   index: number;
   onJump: (id: string) => void;
+  /** Search words to glow within the term and definition. */
+  words: string[];
 }) {
   const related = (term.seeAlso ?? [])
     .map((id) => lexiconTerms.find((t) => t.id === id))
@@ -195,7 +205,7 @@ function TermRow({
       <div className="min-w-0">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5">
           <h4 className="font-serif text-xl leading-snug text-foreground transition-colors hover:text-photon sm:text-2xl">
-            {term.term}
+            <Highlighted text={term.term} words={words} />
           </h4>
           <span className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground/80">
             {term.category}
@@ -203,7 +213,7 @@ function TermRow({
         </div>
 
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          {term.definition}
+          <Highlighted text={term.definition} words={words} />
         </p>
 
         {term.formula ? (
@@ -240,5 +250,29 @@ function TermRow({
         ) : null}
       </div>
     </article>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Search-match highlighting — a soft photon glow on the words that     */
+/* matched, via a case-insensitive alternation split (with a capture    */
+/* group, odd-indexed parts of the split are the matches).              */
+/* ------------------------------------------------------------------ */
+
+function Highlighted({ text, words }: { text: string; words: string[] }) {
+  if (words.length === 0) return <>{text}</>;
+  const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  let parts: string[];
+  try {
+    parts = text.split(new RegExp(`(${escaped.join("|")})`, "gi"));
+  } catch {
+    return <>{text}</>; // defensive — an unparsable pattern never breaks the ledger
+  }
+  return (
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1 ? <mark key={i}>{part}</mark> : part
+      )}
+    </>
   );
 }

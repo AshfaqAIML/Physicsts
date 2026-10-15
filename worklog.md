@@ -942,3 +942,204 @@ Stage Summary:
 - Next-phase candidates: research-area AI companion (same pattern as
   essays), hyperbola overlay for the escape regime, real content
   replacement when the owner is ready.
+
+---
+Task ID: R5-a
+Agent: subagent
+Task: Research-area AI study companion ("Ask about this area")
+
+Work Log:
+- Read worklog R3-a entry + all reference files (api/ask/route.ts,
+  ask-assistant.tsx, content/research.ts, skills/LLM/SKILL.md) before
+  writing anything; mirrored the essay-companion pattern deliberately.
+- NEW src/app/api/ask-research/route.ts (POST, force-dynamic, no-store on
+  every response):
+  · Zod schema: areaId non-empty; question trimmed 5–600; history
+    (default []) max 8 entries, role enum user|assistant, content
+    trimmed 1–2000. First flattened zod message → 400 { error }.
+  · Own in-memory sliding-window rate limit (12 req / 10 min / IP,
+    x-forwarded-for first hop, fallback "local") → 429 friendly message;
+    separate Map from /api/ask.
+  · Unknown areaId → 404 "Research area not found."; malformed JSON →
+    400 "Malformed request body.".
+  · Grounded system prompt from the area's REAL content: title, tagline,
+    equation LaTeX kept inline as $…$ (not stripped), equationLabel,
+    summary, detail, concepts, verbatim reading list — 4000-char cap
+    with graceful line-boundary clamp + truncation note (same algorithm
+    as the essay route, smaller budget since areas are compact).
+  · Honesty rules baked in: areas are "directions of study and
+    fascination — not claimed specialisations"; owner is a learner, not
+    an established expert; the AI never claims to be author/owner;
+    credentials questions get "interests being earned, not credentials
+    claimed"; never invent citations/quotes; beyond-page answers allowed
+    from general physics but must be flagged; reader's language, ≤~250
+    words, answer first + at most ONE closing probe, LaTeX in $…$.
+  · SDK call identical to /api/ask (ZAI.create → chat.completions.create,
+    thinking disabled); empty/failing completion → console.error
+    "[ask-research]" server-side only + 502 generic message.
+- NEW src/components/site/research-ask.tsx ("use client", standalone
+  copy-adapt of ask-assistant.tsx — no refactor of the original):
+  · Exported ResearchAsk({ area }) — collapsed full-width dashed mono
+  toggle "ASK ABOUT THIS AREA — AI COMPANION" (aria-expanded/controls,
+  Sparkles + rotating chevron), expanded panel with header "Ask about
+  this area" + "AI · can make mistakes" tag + subline "A study
+  companion grounded in this page — ask it anything about the area."
+  · Thread in component state (last 12 shown, "…earlier turns kept
+  brief" note; last 8 sent as history), user bubbles right-aligned,
+  assistant turns photon left-rule via <Prose> ($…$ typesets), Loader2 +
+  "Consulting this area…" while loading, aria-live=polite + auto-scroll.
+  · Input: Textarea rows=2 maxLength 600, Enter submits /
+  Shift+Enter newline (isComposing-guarded), counter past 500 (amber
+  past 560), inline mono error for well-formed server errors, sonner
+  toast only for unexpected failures. Two suggested chips while the
+  thread is empty: "Explain the central equation in plain words." /
+  "What should I read first, and why?" POSTs
+  { areaId, question, history } to /api/ask-research.
+- EDIT src/components/site/research.tsx only: import + mount
+  <ResearchAsk key={openArea.id} area={openArea} /> as the last child of
+  the dialog's space-y-8 container, after "On the shelf" (key isolates
+  thread state if the palette ever swaps areas while the dialog is
+  open). Diff = exactly 3 added lines; everything else identical.
+- QA (curl + agent-browser --session r5a, isolated):
+  · curl matrix: valid theoretical ask → 200 {"answer":…} (answer
+    restates the page's own $\\delta S = 0$ and integral); 3-char
+    question → 400; 700-char → 400; unknown areaId → 404; history role
+    "system" → 400; 9 history entries → 400; malformed JSON → 400.
+  · Rate limit: burned the window with 8 schema-valid 404 probes →
+    13th request (valid) → 429 "That is a lot of questions for one
+    sitting…".
+  · Desktop E2E: real click on the 01 Theoretical Physics card opened
+    the Radix dialog; scrolled to the toggle, clicked → expanded
+    (aria-expanded=true, chips + textarea + disabled Ask). Chip click
+    filled the input; Ask submitted; real answer appeared (19 .katex
+    nodes, 0 .katex-error). Follow-up via Enter ("Is the action always
+    a minimum…?") → grounded multi-turn answer quoting the page's own
+    "Newton needed one law and an integral" + Susskind reading item +
+    ONE closing probe (20 .katex, 0 errors) — history passing works.
+  · agent-browser errors: zero page errors desktop AND mobile; console
+    clean (only React DevTools info + HMR).
+  · Mobile 375×812: dialog opens, panel expands (2 chips), zero
+    horizontal overflow (scrollWidth=375=clientWidth, dialog 343px
+    wide), textarea + Ask button present. Screenshots:
+    qa/r5a-research-ask.jpeg (desktop, thread with 2 exchanges) +
+    qa/r5a-research-ask-mobile.jpeg.
+  · bun run lint: exit 0. bunx tsc --noEmit: zero errors under src/
+    (only pre-existing examples/ + skills/). git status: only my three
+    files + qa screenshots (main agent's concurrent qa-r5-*.png files
+    untouched).
+
+Stage Summary:
+- Every research-area dialog now ends with an honest AI study companion:
+  zod-validated, independently rate-limited (12/10 min/IP), grounded in
+  the area's real page content (equation LaTeX kept discussable,
+  concepts + reading list included, 4000-char cap), with the site's
+  learner-not-expert honesty enforced in the prompt. Answers verified
+  end-to-end in-browser: real LLM answers, multi-turn history, KaTeX
+  typesetting (19–20 nodes, 0 errors), inline error handling, mobile
+  layout clean.
+- Risks/notes: (1) the 429 test saturated the /api/ask-research window
+  — it returns 429 for roughly 10 minutes after the last probe (drains
+  automatically; dev-server restart also clears the in-memory map);
+  (2) research-ask.tsx deliberately duplicates ask-assistant.tsx per
+  the brief — a future round could extract a shared companion if a
+  third variant appears; (3) answer length/style is model-dependent
+  (≤250 words is a soft instruction); (4) if a future area's content
+  grows past 4000 chars, the clamp cuts on a line boundary and the
+  prompt tells the model post-cut content is unavailable.
+
+---
+Task ID: R5 (review round — main agent)
+Agent: main-agent
+Task: Status assessment, QA, mandated feature + styling expansion
+
+Work Log:
+- Baseline QA (default agent-browser session, desktop 1440×900 + mobile
+  375×812): fully stable — 200, zero page/console errors, no overflow at
+  either width, dev.log clean. Regression-verified the whole R2–R4
+  surface: essay deep-link (#note-spacetime-curved) + TOC + copy-link +
+  assistant, L/T/M/? hotkeys, lexicon, lab tab switching (real clicks —
+  synthetic eval clicks don't activate Radix, known quirk), orbits
+  "Elliptical orbit" preset applies + highlights (aria-pressed=true,
+  f=0.75), footer almanac, FAB.
+- Dev server died once mid-round (during my notebook.tsx edit window —
+  HMR served the transient TDZ state); restarted detached, fresh
+  sessions confirm zero errors (the 8-9 EMPTY ✗ entries in the old
+  default session are stale connection-refused marks from the downtime
+  window, not real page errors — verified via an isolated session and
+  performance.getEntriesByType: no failed resources, nav 200).
+- NEW FEATURES:
+  1. Reading progress bar + header depth shadow (notebook.tsx,
+     globals.css): a 2px photon hairline ("the reading measure") sticky
+     at the top edge of the reading pane, filled via direct
+     style.transform=scaleX writes in the article's onScroll (zero
+     re-renders); data-scrolled attribute (>8px) reveals a 14px
+     gradient fade (.reading-head::after) under the pinned header.
+     Reset effect zeroes scroll + bar on note change. Verified: 0 →
+     scaleX(0.174) @500px → scaleX(1) @bottom, mobile 0.073 @400px;
+     VLM: "thin, bright cyan progress line … clearly present".
+  2. Random page (notebook.tsx + command-palette.tsx +
+     shortcuts-help.tsx): dashed "RANDOM PAGE" chip (Shuffle icon,
+     ml-auto only sm+, left-aligned on mobile after VLM nit) picks
+     from the filtered readable essays (falls back to all readable);
+     opens via the deep-link path. Also a palette action ("Open a
+     random page — let fate choose") and a global R hotkey.
+  3. R hotkey guard: R conflicts with the lab instruments' own
+     R-reset — isLaboratoryTarget() (closest("canvas, section#lab"))
+     makes the global R stand aside while an instrument holds focus
+     (verified: canvas-focused R → no dialog/hash, sim keeps its key;
+     body-focused R → essay opens). Manual row added: "R — Open a
+     random notebook page — outside the laboratory".
+  4. Recently Read trail (notebook.tsx + command-palette.tsx): every
+     essay open (ledger/palette/deep-link/random) records
+     phys:recent-notes in localStorage (cap 3, dedup, most-recent-
+     first); the palette shows a "Recently Read" group at the very top
+     with History icons + RESUME kbd; refreshes on palette open and on
+     the phys:recent-notes-changed event.
+  5. Research-area AI companion — dispatched to subagent R5-a (its own
+     entry above: /api/ask-research + research-ask.tsx + research.tsx
+     mount); I spot-verified: dialog opens, toggle expands, 2 chips +
+     textarea present, VLM "highly coherent with the lab-notebook
+     aesthetic".
+- STYLING DETAIL:
+  · Lexicon search-match highlighting: <mark> glow (photon 26% tint,
+    2px radius) on matched words (≥2 chars) in term titles +
+    definitions, via a case-insensitive alternation split with capture
+    group (odd parts = matches); defensive try/catch on RegExp.
+    Verified: "energy" → 12 marks; VLM: "tasteful and professional".
+  · Photon caret: input/textarea/select caret-color = var(--photon).
+  · Equation plates wake on hover: border tints photon 35% and both
+    register ticks brighten to solid photon (300ms transitions).
+  · Print: equation-plate register ticks + reading-head fade hidden
+    (screen furniture, ink conserved).
+- Fixed a real ordering bug in my own edit before it could ship:
+  filtered useMemo was declared after openRandomNote used it (TS2448
+  + react-hooks/immutability lint error) — moved the memo above; lint
+  exit 0, tsc zero errors under src/ since.
+- VERIFICATION: all new features E2E'd in-browser (values above);
+  mobile 375 no overflow anywhere incl. reading view + filter row;
+  hotkey suite + contact API 200 re-verified post-changes; bun run
+  lint exit 0; bunx tsc --noEmit zero errors under src/; VLM reviews:
+  progress bar ✓ visible & correct, lexicon highlights ✓ tasteful,
+  research panel ✓ coherent, mobile filter row ✓ (nit fixed).
+- Cron task creation retried (5th time across rounds) — still "cron
+  tool is not available for this request" (gateway limitation; job
+  definition preserved in R1-cron entry).
+
+Stage Summary:
+- The reading experience gained an instrument-grade progress measure,
+  fate became a navigation method (Random page: button, palette, R
+  hotkey — laboratory-aware), the palette remembers the last three
+  essays read, and the lexicon now glows where it matches. Plus the
+  research dialogs gained an honest AI study companion (R5-a).
+- Known notes: (1) agent-browser `errors` retains stale empty marks
+  from any server downtime — always confirm with a fresh session or
+  performance entries; (2) recently-read is per-browser by design;
+  (3) /api/ask-research rate window was saturated by R5-a's 429 test —
+  drains within 10 min or on dev-server restart; (4) hover styles
+  remain unverifiable in headless QA (hover:none media gate) —
+  documented in R4.
+- Next-phase candidates: unify the two AI companions into one shared
+  component (deliberate duplication this round), hyperbola overlay for
+  the escape regime, "share this experiment" deep links for lab
+  presets, real content replacement (name/portrait/channels/CV) when
+  the owner is ready.

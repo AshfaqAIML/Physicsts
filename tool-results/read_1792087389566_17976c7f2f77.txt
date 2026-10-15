@@ -1,0 +1,566 @@
+   380→  (w-fit max-w-full overflow-x-auto border-border/70 bg-background/60 +
+   381→  mono formulaLabel), and "→ See also:" photon buttons that set the search to
+   382→  the target term + reset category to All + refocus input. Multi-word
+   383→  case-insensitive AND search over term+definition+category+formulaLabel+
+   384→  formula. Empty state "No terms in this light cone." (role=status). Footer
+   385→  microcopy "Definitions are standard physics — see the notebook essays for
+   386→  worked ideas." No framer-motion; CSS transitions only.
+   387→- EDIT src/components/site/navigation.tsx: BookMarked icon button (h-9,
+   388→  aria-label "Open the physics lexicon") next to the ⌘K trigger; mobile Sheet
+   389→  "The Lexicon" dashed-border button after "Search everything" (closes sheet,
+   390→  dispatches event). Minimal diffs; untouched everything else.
+   391→- EDIT src/components/site/command-palette.tsx: new "Reference" CommandGroup
+   392→  between Notebook and Actions — "Open the lexicon — physics glossary" item
+   393→  (BookMarked icon, value "lexicon glossary dictionary terms reference",
+   394→  run() → dispatch phys:open-lexicon). Existing groups untouched.
+   395→- EDIT src/app/page.tsx: <Lexicon /> mounted right after <CommandPalette />.
+   396→- Did NOT touch notebook.tsx / research.tsx / projects.tsx / footer.tsx /
+   397→  globals.css (concurrent agent owns notebook.tsx).
+   398→
+   399→QA (agent-browser, default session; desktop 1440×900 + mobile 375×812):
+   400→- Nav button click → dialog opens: 24 term rows, 24/24 KaTeX expressions
+   401→  rendered with 0 .katex-error nodes, eyebrow/footer/count correct, focus
+   402→  lands in the search input.
+   403→- Search "entropy" → exactly 1 row (Entropy). Nonsense query → aria-live
+   404→  "No terms in this light cone." visible, 0 rows.
+   405→- Category chip "Cosmology" (aria-pressed=true, others false) → exactly
+   406→  Cosmological Constant + Hubble Parameter.
+   407→- seeAlso click ("Einstein Field Equations") → query set to that term,
+   408→  category reset to All, exactly 1 matching row, focus back in input.
+   409→- ⌘K path: Ctrl+K → typed "lexicon" → single "Open the lexicon — physics
+   410→  glossary" option selected → Enter → palette closes, lexicon opens with 24
+   411→  terms + focused empty search.
+   412→- Mobile: sheet menu shows SEARCH EVERYTHING + THE LEXICON; lexicon button →
+   413→  sheet unmounts, dialog opens (343px wide), dialog height exactly 690px =
+   414→  85vh, inner ledger scrolls (scrollTop 600 verified), no horizontal overflow.
+   415→- Light "Archival Journal" theme verified (ink-on-paper, cyan accents legible).
+   416→- VLM review of qa/r2b-lexicon.jpeg: PASS on composition, typeset formulas
+   417→  (no raw LaTeX), no overflow/clipping, ledger consistency, dark scientific
+   418→  aesthetic — zero defects. VLM on mobile+light flagged "missing formula/
+   419→  truncated definition" for the Action row — disproven via DOM (plate visible
+   420→  198px, full 197-char definition present); artifact of the mid-scroll crop.
+   421→- Screenshots: qa/r2b-lexicon.jpeg (desktop dark), qa/r2b-lexicon-mobile.jpeg,
+   422→  qa/r2b-lexicon-light.jpeg; VLM JSONs qa/vlm-r2b-lexicon.json,
+   423→  qa/vlm-r2b-mobile-light.json.
+   424→- bun run lint: clean (exit 0). bunx tsc --noEmit: zero errors under src/
+   425→  (only pre-existing examples/ + skills/ errors outside app tree). dev.log:
+   426→  clean compiles, all GET / 200.
+   427→
+   428→Stage Summary:
+   429→- The Lexicon is live site-wide: 24 accurate physics terms with correct
+   430→  KaTeX formulas, reachable from the nav bar, the mobile sheet menu, and the
+   431→  ⌘K palette (Reference group), all through the phys:open-lexicon event.
+   432→  Search + category filtering + see-also cross-links + empty state verified
+   433→  in-browser on desktop and mobile, dark and light themes; lint and tsc
+   434→  clean. Fully decoupled from section internals; notebook.tsx untouched.
+   435→- Risks/notes: (1) seeAlso sets the search to the target's full term name —
+   436→  multi-word terms match any term containing all those words (by design, the
+   437→  target is always included); (2) the dialog renders all 24 rows at once —
+   438→  fine at this scale, would need virtualization if the glossary grew past
+   439→  ~200 terms; (3) "N terms" eyebrow count is derived from data, so it stays
+   440→  honest if terms are added later.
+   441→
+   442→---
+   443→Task ID: R2 (review round — main agent)
+   444→Agent: main-agent
+   445→Task: Status assessment, QA, bug fixes, mandated styling detail + feature expansion
+   446→
+   447→Work Log:
+   448→- Baseline assessment: dev server healthy (GET / 200), console clean, no page
+   449→  errors, no horizontal overflow (1440 & 375). VLM baseline review 7/10 —
+   450→  flagged items were intentional honest placeholders or screenshot-scroll
+   451→  artifacts; two actionable nits (low-contrast floating control, hover label
+   452→  never showing) fixed below.
+   453→- Dispatched two parallel subagents (see R2-a / R2-b entries):
+   454→  · R2-a: notebook essay deep-links (#note-<id> — initial load, back/forward,
+   455→    TOC-anchor immunity, hash cleanup on close) + "Copy link" button with
+   456→    sonner toast. Browser-verified by subagent; re-verified in regression.
+   457→  · R2-b: The Lexicon — 24-term searchable physics glossary dialog (search +
+   458→    category chips + KaTeX formula plates + see-also links), reachable from
+   459→    nav bar, mobile sheet, and ⌘K palette Reference group.
+   460→- NEW FEATURES (built by main agent this round):
+   461→  1. Keyboard shortcuts help ("The Keyboard, a Quiet Instrument.") — ?
+   462→     opens an operating-manual dialog (shortcuts-help.tsx). Component also
+   463→     owns the new global letter hotkeys: L → lexicon, T → theme toggle —
+   464→     all guarded against typing contexts and against any open dialog/palette
+   465→     stage. Palette Reference group gained "Keyboard shortcuts — the
+   466→     operating manual" item; palette footer hint now reads "...esc close · ?
+   467→     manual".
+   468→  2. "This month in physics history" footer almanac (physics-history.tsx +
+   469→     physicsHistory content in site.ts) — 12 real, verifiable milestones
+   470→     (Galileo's moons 1610, Chadwick's neutron 1932, Einstein's birth/1905
+   471→     papers/1915 field equations, Great Debate 1920, Eddington 1919, Higgs
+   472→     2012, Faraday 1831, Solvay 1927, Planck 1900). Opens on the current
+   473→     month (October → Solvay 1927 verified), chevrons page all 12 with
+   474→     aria-live announcement + month counter; footer restructured so the
+   475→     strip is a full-bleed section between colophon grid and bottom bar.
+   476→- STYLING DETAIL polish (mandated):
+   477→  · .equation-plate utility (globals.css) — display equations framed as
+   478→    instrument plates: fine plotting grid, hairline border, photon-cyan
+   479→    register-mark corner ticks. Applied to research + projects dialog
+   480→    equations (replacing plain bordered blocks); print rule added.
+   481→  · Research & projects card equation strips now carry bg-plot-grid texture.
+   482→  · Ascend button: group class added so the "ASCEND" hover label finally
+   483→    shows (was dead code); icon lifts on hover; bg contrast raised
+   484→    (bg-card/90); near page bottom it now fades out (footer's own "Back to
+   485→    orbit" takes over) — fixes VLM-flagged FAB/copyright crowding on mobile.
+   486→  · Nav + footer wordmark orbit icon spins 180° on hover (700ms ease-out).
+   487→  · A11y: mobile Sheet gained SheetDescription (observatory note) — kills
+   488→    the last Radix "Missing Description" console warning.
+   489→- VERIFICATION (agent-browser desktop 1440×900 + mobile 375×812):
+   490→  · Hotkeys: synthetic keydown "?" opens manual (headless Chromium cannot
+   491→    synthesise "?" via press — handler proven via KeyboardEvent); L opens
+   492→    lexicon; T toggles dark↔light (class swap verified both ways).
+   493→  · Almanac: October shown on load, next → November 1915 EFE entry,
+   494→    prev/next buttons present, mobile stacked layout 9/10 per VLM.
+   495→  · Equation plate present in research dialog (DOM + screenshot; VLM 9/10).
+   496→  · Shortcuts dialog VLM 9/10 (kbd styling, alignment, contrast praised).
+   497→  · Regression: essay deep-link opens + copy-link button present + Escape
+   498→    clears hash; mobile sheet contains "Search everything" + "The Lexicon"
+   499→    and the lexicon opens from it; FAB opacity 0 at bottom, 1 mid-scroll;
+   500→    scrollWidth=clientWidth at 1440 and 375; zero page errors; console
+   501→    clean after reload + sheet open.
+   502→  · bun run lint: clean (exit 0). bunx tsc --noEmit: zero errors under src/
+   503→    (pre-existing examples/ + skills/ errors only). dev.log: GET / 200s,
+   504→    no runtime errors ("Failed to start server" line is from a harmless
+   505→    duplicate EADDRINUSE dev-server attempt, not the running instance).
+   506→
+   507→Stage Summary:
+   508→- Site now additionally has: essay deep-linking + copy-link, a 24-term
+   509→  searchable lexicon, global hotkeys with an operating-manual dialog, and a
+   510→  physics-history almanac — plus equation-plate framing and micro-polish
+   511→  across cards, buttons, wordmark, and mobile sheet. All QA-verified desktop
+   512→  + mobile, both themes, lint + tsc clean.
+   513→- Known non-blocking notes: agent-browser `keyboard type` dispatches no
+   514→  page key events (tool quirk; hotkeys verified via synthetic
+   515→  KeyboardEvents); Radix aria-controls useId hydration warning on the
+   516→  mobile sheet trigger remains dev-mode noise (pre-existing, functional).
+   517→- Cron task creation retried twice this round — cron tool still returns
+   518→  "not available for this request" (gateway limitation). The intended job:
+   519→  every 15 min (0 */15 * * * *), kind webDevReview, tz Asia/Calcutta,
+   520→  message as recorded in the R1-cron entry. REMAINING CARRY-OVER.
+   521→- Next-phase candidates: real content replacement (name, portrait,
+   522→  channels, CV) still awaits the owner; optional LLM-powered "ask about
+   523→  this essay" assistant; publication list when real; analytics-free
+   524→  performance pass (canvas frame budgets) if ever needed.
+   525→
+   526→---
+   527→Task ID: R3-a
+   528→Agent: subagent
+   529→Task: "Ask about this essay" — LLM-powered Socratic companion in the notebook
+   530→reading view (the site's first AI feature)
+   531→
+   532→Work Log:
+   533→- Read skills/LLM/SKILL.md fully before any backend code; probed the SDK
+   534→  first with a one-off bun script confirming the exact call shape works:
+   535→  default import ZAI, `await ZAI.create()`, `zai.chat.completions.create({
+   536→  messages, thinking: { type: "disabled" } })`, answer at
+   537→  `completion.choices?.[0]?.message?.content`. The `system` role IS accepted
+   538→  (SDK ChatMessage type allows system|user|assistant), so the conversation is
+   539→  [{role:"system", …}, …history, {role:"user", question}] as specced.
+   540→- NEW src/app/api/ask/route.ts (POST only, `export const dynamic =
+   541→  "force-dynamic"` + Cache-Control: no-store on every response):
+   542→  · Zod validation matching the contact route's style: noteId non-empty;
+   543→    question trimmed 5–600; history array (default []) max 8 entries, each
+   544→    role enum "user"|"assistant" + content trimmed 1–2000. Failures → 400
+   545→    { error } with the first human-readable issue message.
+   546→  · Rate limit copied from the contact route: in-memory sliding window,
+   547→    12 requests / 10 min / IP (x-forwarded-for first hop, fallback "local")
+   548→    → 429 { error } ("That is a lot of questions for one sitting…").
+   549→  · Unknown noteId or note without essay → 404 { error: "Essay not found." }.
+   550→  · System prompt (honest + grounded): study companion for ONE essay, not
+   551→    its author; the essay's actual title, dek, every section heading +
+   552→    paragraphs with $…$/$$…$$ delimiters stripped but LaTeX source kept
+   553→    inline (math stays discussable), plus the essay's verbatim reference
+   554→    list; capped at 8000 chars with a graceful line-boundary cut + truncation
+   555→    note. Style rules: reader's language, ≤250 words, Socratic but direct
+   556→    (answer first, at most ONE closing probe, never a bare question), plain
+   557→    language/short paragraphs, LaTeX inside $…$ for the UI's <Prose>, NEVER
+   558→    invent citations/quotes/page numbers/historical claims, say so when
+   559→    unsure, flag answers that go beyond the essay.
+   560→  · SDK failure or empty completion → console.error (server log only) + 502
+   561→    { error: "The assistant is momentarily unavailable…" } — no stack leaks.
+   562→  · The SDK import lives ONLY in this route file (never client code).
+   563→- NEW src/components/site/ask-assistant.tsx ("use client", no SDK import):
+   564→  · Collapsed: full-width dashed mono uppercase toggle "ASK ABOUT THIS
+   565→    ESSAY — AI COMPANION" (Sparkles + rotating ChevronDown, aria-expanded/
+   566→    aria-controls, site dashed-affordance styling + focus-visible ring).
+   567→  · Expanded panel (rounded-lg border border-border bg-card/60): header row
+   568→    "Socratic companion" + "AI · can make mistakes" tag; one-line honest
+   569→    disclosure; message list (max-h-60, overflow-y-auto, aria-live=polite,
+   570→    auto-scrolls to newest) — user turns right-aligned bubbles, assistant
+   571→    turns with photon left rule rendered via existing <Prose> (answers with
+   572→    $math$ typeset; blank-line paragraphs preserved, single breaks kept);
+   573→    Loader2 + mono "Consulting the essay…" while loading.
+   574→  · Input row: shadcn Textarea rows=2 maxLength 600 with mono placeholder;
+   575→    Enter submits / Shift+Enter newline (keydown guard incl.
+   576→    nativeEvent.isComposing); send Button (sm, Send icon + "Ask") disabled
+   577→    while loading or <5 trimmed chars (client-side block). Character counter
+   578→    appears past 500, amber past 560 (contact-form pattern). Errors: inline
+   579→    mono aria-live line for well-formed server errors (400/404/429/502 — no
+   580→    toast); sonner toast ONLY for unexpected failures (network throw /
+   581→    unparseable body). Thread kept fully in state; displays last 12 turns
+   582→    with "…earlier turns kept brief" note; sends last 8 turns as history.
+   583→  · Two suggested-question chips (mono, dashed, fill input + focus it) shown
+   584→    only while the thread is empty.
+   585→- EDIT src/components/site/notebook.tsx only: ReadingView now mounts
+   586→  <AskAssistant note={note} /> inside .reading-measure after the References
+   587→  section, with the "Example essay · placeholder content…" footnote moved to
+   588→  remain the LAST element (DOM order verified: refs 6 → assistant 7 →
+   589→  footnote 8). Panel scrolls with the essay, not fixed. No other files
+   590→  touched (concurrent-agent ownership respected).
+   591→
+   592→QA (curl + agent-browser --session r3a, isolated to avoid session clashes):
+   593→- curl matrix: valid ask → 200 {"answer": …} in ~1.7 s; question "hi" → 400;
+   594→  601 chars → 400; 9 history entries → 400; role "system" in history → 400;
+   595→  malformed JSON → 400; unknown + planned (essay-less) noteIds → 404
+   596→  "Essay not found.".
+   597→- Browser E2E: opened localhost:3000, location.hash="#note-spacetime-curved"
+   598→  → reading dialog; scrolled to toggle, clicked → panel expanded
+   599→  (aria-expanded=true, chips + textarea + disabled Ask visible). Chip click
+   600→  fills input. "hi" keeps Ask disabled (client-side block).
+   601→- Real conversation (3 exchanges, all POST /api/ask 200 in dev.log):
+   602→  · "In one sentence, what does the essay say curvature means?" → "…curvature
+   603→    means that distances and angles between events in spacetime refuse to
+   604→    follow the flat rulebook of Euclidean geometry, as measured by
+   605→    inhabitants within spacetime itself." + one Socratic probe. Grounded in
+   606→    §3 verbatim phrasing.
+   607→  · "Write the triangle-angle rule from section 3 as an equation…" →
+   608→    α+β+γ=π+A/R² rendered by KaTeX (5 .katex nodes, 0 .katex-error) + symbol
+   609→    glossary + probe — proves history/context passing and $…$ rendering.
+   610→  · "What about the rubber sheet?" → quoted the essay's actual line
+   611→    ("explains gravity by using gravity and so explains nothing…") + probe.
+   612→  · Post-error recovery question → "Light bending around the Sun." (§5).
+   613→- Enter submits (press Enter AND synthetic keydown both proven); synthetic
+   614→  Shift+Enter keydown: defaultPrevented=false, no submission (agent-browser
+   615→  cross-CLI keydown/keyup doesn't hold modifiers — tool quirk noted in R2;
+   616→  handler verified via synthetic events instead).
+   617→- Error paths via network route mocks: well-formed {"error": …} → inline
+   618→  mono error, NO toast, input preserved for retry; unparseable body →
+   619→  inline fallback + sonner toast "The essay companion failed to answer.";
+   620→  after unroute, next real question answered normally.
+   621→- Rate limit: burned the sliding window with cheap 404 probes → HTTP 429
+   622→  {"error":"That is a lot of questions for one sitting — please try again
+   623→  in a few minutes."} logged in dev.log (took 16 total hits because early
+   624→  hits had already slid out of the 10-min window — sliding drain works).
+   625→- Counter: 520 → "520 / 600" muted; 570 → amber span verified; ≤500 hidden.
+   626→- No page errors / console errors during the whole session. Mount order
+   627→  refs→assistant→footnote verified in DOM. Mobile 375×812: no horizontal
+   628→  overflow (375=375), panel 293px wide inside viewport.
+   629→- Screenshots: qa/r3a-ask.jpeg (desktop, thread w/ user bubble + photon-rule
+   630→  answer + input row; VLM-verified: header+honesty tag+disclosure, cyan left
+   631→  rule, typeset math confirmed in the bottom-scrolled capture, no layout
+   632→  defects — the "cut-off" second question is the max-h-60 scroll boundary,
+   633→  by design) + qa/r3a-ask-mobile.jpeg (mobile).
+   634→- bun run lint: clean (exit 0). bunx tsc --noEmit: zero errors under src/
+   635→  (only pre-existing examples/ + skills/ errors, untouched).
+   636→
+   637→Stage Summary:
+   638→- The notebook reading view now has an honest AI study companion: a dashed
+   639→  mono toggle expands a "Socratic companion" panel whose answers come from
+   640→  /api/ask — zod-validated, rate-limited (12/10 min/IP), grounded in the
+   641→  essay's real text (LaTeX source kept discussable, references included,
+   642→  8000-char cap), with an honesty header/disclosure and inline error
+   643→  handling. Answers quote the essay accurately, typeset $…$ math via the
+   644→  existing <Prose>, and end with a single probing question; multi-turn
+   645→  history works (last 8 sent, last 12 shown). Lint/tsc clean; verified
+   646→  end-to-end in-browser with real LLM answers, error paths, rate limiting,
+   647→  and mobile layout. No files outside the three owned ones were touched.
+   648→- Risks/notes: (1) rate-limit window was saturated by the 429 test — /api/ask
+   649→  returns 429 until roughly 10 minutes after the last probe (drains
+   650→  automatically; dev-server restart also clears the in-memory map);
+   651→  (2) in-memory rate limiting + no session persistence means reloads reset
+   652→  the visible thread (history lives only in component state, by design —
+   653→  no storage/tracking); (3) answer length/style depends on the model — the
+   654→  ≤250-word instruction is soft; (4) the essay prompt budget (8000 chars)
+   655→  will truncate future longer essays mid-text — the system prompt tells the
+   656→  model to treat post-truncation content as unavailable; (5) agent-browser
+   657→  keydown/keyup across CLI calls does not hold modifiers (Enter-to-submit
+   658→  proven via press + synthetic events; Shift+Enter via synthetic events).
+   659→
+   660→---
+   661→Task ID: R3-a (subagent)
+   662→Agent: subagent
+   663→Task: "Ask about this essay" — LLM-powered Socratic companion
+   664→
+   665→Work Log:
+   666→- Read skills/LLM/SKILL.md; built POST /api/ask (zod validation, 12/10-min/IP
+   667→  rate limit, 404 unknown notes, 502 on SDK failure, no-store). SDK lives
+   668→  only in the route (server-side).
+   669→- ask-assistant.tsx: collapsible dashed panel in the reading view —
+   670→  suggestion chips, Enter-submits/Shift+Enter-newline, char counter,
+   671→  loading dots, answers rendered through <Prose> (KaTeX math typesets),
+   672→  honest "AI · can make mistakes" disclosure, aria-live.
+   673→- notebook.tsx: panel mounted between References and the footnote.
+   674→- E2E verified with REAL answers (curvature summary, math follow-up with
+   675→  α+β+γ=π+A/R² typeset, verbatim §6 quote), full validation matrix
+   676→  (400/404/429 paths), mobile 375 no overflow, lint + tsc clean.
+   677→- Full details in this entry's own worklog section (appended by subagent).
+   678→
+   679→Stage Summary:
+   680→- The site's first AI feature is live and honest: grounded answers about
+   681→  each readable essay, clearly labelled as AI, rate-limited, no fabricated
+   682→  citations.
+   683→
+   684→---
+   685→Task ID: R3 (review round — main agent)
+   686→Agent: main-agent
+   687→Task: Status assessment, QA, mandated feature + styling expansion
+   688→
+   689→Work Log:
+   690→- Baseline QA clean (200, no errors/warnings, no overflow 1440/375).
+   691→- NEW FEATURES:
+   692→  1. Site-level motion preference — "calm the universe"
+   693→     (lib/motion-preference.ts): localStorage override layered over the
+   694→     OS prefers-reduced-motion; explicit choice always wins.
+   695→     · providers.tsx rewritten: useSyncExternalStore-driven MotionConfig
+   696→       (reducedMotion "always" when calm) + context + <html>.motion-calm
+   697→       class hook (CSS: scroll-behavior auto + transition/animation kill,
+   698→       mirroring the media query). Lint-clean (no setState-in-effect).
+   699→     · motion-toggle.tsx: nav Zap/ZapOff button (aria-pressed, M
+   700→       shortcut, hydration-guarded icon), visible on mobile too.
+   701→     · M hotkey in shortcuts-help (+ manual row); "Calm the universe"
+   702→       action in ⌘K palette; palette goTo + ascend button now respect
+   703→       the preference for smooth scrolling.
+   704→     · Canvas wiring: black-hole + deep-field read the lib and react to
+   705→       phys:motion events live (cancel loop + static frame / restart);
+   706→       orbits + wave sims swapped their matchMedia helpers for the shared
+   707→       store — auto-pause under calm, auto-resume on restore (verified:
+   708→       Play overlay appears under calm, disappears on restore).
+   709→  2. LLM "Ask about this essay" companion — dispatched to subagent
+   710→     (R3-a above); re-verified myself post-restart: curl POST /api/ask
+   711→     → HTTP 200 with a real grounded answer; panel present in the
+   712→     reading view (DOM + screenshot).
+   713→- STYLING DETAIL:
+   714→  · Research cards: photon-cyan top-edge line that sweeps in on hover
+   715→    (before: gradient, origin-left, 500ms). Projects cards: same in
+   716→    nebula violet (matching their example badges).
+   717→  · Publications empty state: faint "uncharted constellation" SVG
+   718→    (hairline connections + photon stars, aria-hidden, 16/22% opacity).
+   719→  · .link-quiet utility: animated underline that grows from the left —
+   720→    applied to footer index links.
+   721→  · aria-keyshortcuts on nav triggers (⌘K palette, L lexicon, M motion).
+   722→  · Print: almanac month pager hidden via data-print="hide".
+   723→- VERIFICATION:
+   724→  · Motion system: toggle click → html.motion-calm + localStorage "1" +
+   725→     aria-pressed true + label swap; M hotkey toggles both ways; palette
+   726→     action present; 3 rapid toggles → zero page errors; deep-field
+   727→     renders a static frame under calm (lit pixels verified); orbits
+   728→     auto-pause/auto-resume verified; fresh browser session → zero
+   729→     page errors.
+   730→  · Radix tabs note: synthetic eval clicks don't activate Radix tabs —
+   731→    real agent-browser clicks DO (verified switching works; not a bug).
+   732→  · Overflow: 1440=1440, 375=375. lint exit 0; tsc zero errors under
+   733→    src/. VLM review of ask-panel + publications constellation:
+   734→    9.5/10, zero defects.
+   735→  · Dev server died mid-round (post-subagent) — restarted detached,
+   736→    dev.log was truncated at some point during the subagent's run (its
+   737→    api/ask log lines lost), so I re-verified /api/ask live via curl.
+   738→- Cron task creation retried again this round — STILL "cron tool is not
+   739→  available for this request" (gateway limitation; same job definition
+   740→  preserved in R1-cron entry).
+   741→
+   742→Stage Summary:
+   743→- The site now has: a genuinely accessible site-level motion preference
+   744→  wired through framer-motion AND all five canvas instruments, plus its
+   745→  first AI feature (grounded essay Q&A), plus a styling detail pass
+   746→  (card edges, constellation, link underlines, print polish).
+   747→- Known notes: (1) dev.log truncated once during R3-a — verify API
+   748→  health by curl, not only logs, after restarts; (2) motion preference
+   749→  is per-browser (localStorage) — first paint always animates until
+   750→  hydration reads the store; (3) ask-assistant thread is session-only
+   751→  by design.
+   752→- Next-phase candidates: lab instrument presets (one-tap experiments),
+   753→  LLM assistant for research areas (same pattern as essays), real
+   754→  content replacement (name/portrait/channels) when the owner is ready.
+   755→
+   756→---
+   757→Task ID: R4-a
+   758→Agent: subagent
+   759→Task: One-tap experiment presets for the three lab instruments
+   760→
+   761→Work Log:
+   762→- NEW src/components/site/lab/preset-chips.tsx — shared presentational
+   763→  component: "EXPERIMENTS" label (mono 10px, tracking 0.2em), chip row
+   764→  (role="group" + aria-label, flex-wrap gap-2, aria-pressed chips, spec'd
+   765→  chip classes incl. active border-photon/60 bg-photon/10), plus
+   766→  presetParamEq() float compare (tol 1e-6 — covers Radix float32 slider
+   767→  noise ~1e-7). Presets live INSIDE each sim's control panel; lab.tsx
+   768→  untouched (zero edits).
+   769→- lensing-sim.tsx (+3 chips): "Einstein ring" θ_E=110 · starfield · ring
+   770→  guide ON · lens reset to default plate position; "Double image" θ_E=70 ·
+   771→  starfield · guide ON · lens programmatically offset 0.35·θ_E (diagonal,
+   772→  magnitude 0.35θ_E — u=|β|/θ_E=0.35 → images at +1.190 θ_E and −0.840 θ_E,
+   773→  μ=2.99); "Caustic grid" θ_E=90 · coord-grid mode · guide ON · aligned.
+   774→  Lens position IS programmable (lensRef) → presets place it; new
+   775→  lensMoved state (set by pointerdown/drag/arrow-keys) participates in
+   776→  active-chip comparison so a hand-dragged lens clears the highlight.
+   777→  State+refs set together, dirtyRef flip → redraw (no play/pause concept
+   778→  in this instrument).
+   779→- orbits-sim.tsx (+4 chips): "Perfect circle" f=1.00, m₂/m₁=0.20, trails+
+   780→  analytic ON (ε=−0.500, e=0, T=2π); "Elliptical orbit" f=0.75 (ε=−0.719,
+   781→  e=0.438, launch at apoapsis, T=3.65); "Close escape" f=1.45 (ε=+0.051,
+   782→  e=1.103 — just past √2≈1.414; analytic toggle switched OFF because the
+   783→  dashed-conic renderer only supports bound orbits — switch state kept
+   784→  truthful); "Binary dance" m₂/m₁=0.50 max, f=1.00 (barycentre waltz at
+   785→  ⅓/⅔ separation). PHYSICS CORRECTION: the task brief claimed f=1.25 →
+   786→  e>1; actually ε=f²/2−1=−0.219 → e=0.5625 BOUND. Escape was unreachable
+   787→  (old slider max 1.25 < √2), so the launch-speed slider max was extended
+   788→  1.25 → 1.5 and the caption now states the f=√2 escape threshold. Preset
+   789→  apply = set all params + resetSim(f) (f only takes effect on reset) +
+   790→  auto-play iff !playing && !reduceMotion (calm keeps it paused, overlay
+   791→  play button intact; explicit user pause/play overrides respected).
+   792→- wave-sim.tsx (+3 chips): "Textbook tunneling" E=1.40, V₀=1.60, w=2.0
+   793→  (plane-wave T=0.141; measured packet T plateau ≈0.29 — broad-packet
+   794→  energy spread, as the instrument's own note explains); "Over the wall"
+   795→  E=2.20 (T_pw=0.757; measured ≈0.59–0.63 at plateau, visible reflection
+   796→  ripple); "Thin barrier" E=1.00, w=0.8 (T_pw=0.487; measured ≈0.48 —
+   797→  nearly half the packet through a wall it cannot climb). Preset apply
+   798→  writes energyRef/v0Ref/wRef DIRECTLY (state→ref mirrors only run
+   799→  post-render), then buildSystem() + resetSim() + auto-play rule as
+   800→  orbits. Redundant post-render buildSystem from the mirror effects is
+   801→  idempotent. Active comparison covers E/V₀/w only — sim-speed slider is
+   802→  a view param, presets don't own it (same for orbits).
+   803→- NUMERICAL VERIFICATION (offline bun replica of each sim's exact internal
+   804→  math + live browser cross-check):
+   805→  · orbits: circle e=0.0000, ΔE drift −0.000%, r≡1.000; ellipse e=0.4375,
+   806→    r∈[0.391,1.000], drift 0.000%; escape e=1.1025, ε=+0.0513, r→12.7 at
+   807→    t=20, drift +0.001%; binary = circle + ratio display. LIVE readouts
+   808→    matched: 0.437/0.696/−0.719/3.6τ, 1.103/—/+0.051/unbound, 0.000/1.000/
+   809→    −0.500/6.3τ.
+   810→  · wave: browser readout "pw" values 0.141/0.757/0.487 match formula
+   811→    exactly; measured packet R/T/A at matched simulated times agree with
+   812→    the offline replica to ~0.01 (e.g. Over-the-wall at t=17.9: browser
+   813→    R=0.363 T=0.514 A=0.121 vs replica t=18: 0.363/0.510/0.125).
+   814→  · lensing: mapping round-trip β=θ−θ_E²/θ returns exactly 0.350000 for
+   815→    both image positions ±(1.190, −0.840)·θ_E.
+   816→- QA (agent-browser --session r4a, 1440×900 + 375×812):
+   817→  · Every chip on every instrument: params verified via aria-valuenow +
+   818→    readouts (lensing 110/70/90 + grid radio; orbits f/mass + live e-ε-T;
+   819→    wave E/V₀/w + pw), active chip aria-pressed=true with photon classes,
+   820→    one-at-a-time exclusivity.
+   821→  · Manual slider change clears highlight on all three (lensing θ_E
+   822→    110→112; orbits mass 0.5→0.49; wave E 1.0→1.05). Lens drag clears via
+   823→    lensMoved (code path exercised by pointer handlers).
+   824→  · Auto-play after preset (default session) and calm-mode (localStorage
+   825→    phys:motion-reduced=1 → html.motion-calm): orbits + wave presets apply
+   826→    params + reset but STAY PAUSED (play overlay visible); calm cleared
+   827→    afterwards (verified motion-calm=false after reload).
+   828→  · Mobile 375: scrollWidth=375=clientWidth (no overflow); chips wrap
+   829→    2+1 (lensing, wave) and 2+2 (orbits). Bonus qa/r4a-mobile-375.jpeg.
+   830→  · Zero page errors / console errors throughout; dev.log clean.
+   831→  · Screenshots: qa/r4a-lensing.jpeg (Einstein ring applied, θ_E=110,
+   832→    ring distortion + dashed guide), qa/r4a-orbits.jpeg (ellipse applied:
+   833→    trail + dashed analytic conic + P/A ticks), qa/r4a-wave.jpeg (mid-
+   834→    tunneling t=10.3: packet straddling barrier, R=0.359/T=0.264). VLM
+   835→    review of all three (qa/vlm-r4a-*.json): chips present + correct chip
+   836→    highlighted + correct physics visible + correct readouts; no layout
+   837→    defects (one pre-existing nav-tracking nit "NOTESLAB" noted by VLM —
+   838→    nav design, unrelated to this task).
+   839→- bun run lint: exit 0. bunx tsc --noEmit: zero errors under src/ (only
+   840→  pre-existing examples/ + skills/ errors). git status: only the 3 sim
+   841→  files modified + preset-chips.tsx added; lab.tsx/notebook.tsx untouched.
+   842→
+   843→Stage Summary:
+   844→- Each lab instrument now has a one-tap EXPERIMENTS row (3/4/3 chips) that
+   845→  sets every parameter, places/resets the state the way the phenomenon
+   846→  needs, and plays it (unless the visitor prefers calm) — with the active
+   847→  experiment highlighted and manual tweaks honestly clearing it. All
+   848→  preset physics was verified numerically against the sims' internal math
+   849→  (analytic values + an exact offline replica + live browser readouts).
+   850→- The escape preset exposed and fixed a real instrument limitation: the
+   851→  launch-speed slider could never reach escape speed (√2); range now
+   852→  0.5–1.5 with the threshold documented in the caption.
+   853→- Risks/notes: (1) lensing lens placement resets to the default position
+   854→  on window resize (existing behavior for dragged lenses too) — the chip
+   855→  highlight can outlive that reset; harmless, rare. (2) wave R/T readouts
+   856→  are instantaneous values that decay as the caps absorb the outgoing
+   857→  packets (existing semantics) — quoted plateau numbers are the honest
+   858→  measurement window (t≈10–20), before wall-bounce scrambling; auto-pause
+   859→  (total<0.03) takes minutes because cap absorption is gradual — also
+   860→  pre-existing. (3) "Close escape" turns the analytic overlay off (the
+   861→  dashed-conic renderer is bound-only by design); a future enhancement
+   862→  could draw the hyperbola branch. (4) Sim-speed sliders are deliberately
+   863→  outside preset comparison (view params); changing them keeps the chip
+   864→  lit. (5) Tab switches remount sims (Radix default), so preset state
+   865→  resets between instruments — existing behavior, matches everything else.
+   866→
+   867→---
+   868→Task ID: R4-a (subagent)
+   869→Agent: subagent
+   870→Task: One-tap experiment presets for the three lab instruments
+   871→
+   872→Work Log:
+   873→- New shared preset-chips.tsx (PresetChips component + param comparator);
+   874→  preset rows added inside each sim's control panel (lab.tsx untouched).
+   875→- Lensing: Einstein ring / Double image / Caustic grid (lens position
+   876→  programmatically placed; u=0.35 offset verified: images at ±1.19/−0.84 θ_E,
+   877→  magnification 2.99). Orbits: Perfect circle / Elliptical / Close escape /
+   878→  Binary dance — PHYSICS CORRECTION: escape needs f > √2, so launch slider
+   879→  max extended 1.25 → 1.5 and escape preset uses f=1.45 (verified live by
+   880→  main agent: e=1.103, ε=+0.051, "unbound"). Wave: Textbook tunneling /
+   881→  Over the wall / Thin barrier (T values verified against an offline CN
+   882→  solver replica). Full details in the subagent's own entry above.
+   883→
+   884→Stage Summary:
+   885→- All three instruments now teach through one tap; active preset chips
+   886→  highlight and clear on manual parameter change. Reduced-motion-safe.
+   887→
+   888→---
+   889→Task ID: R4 (review round — main agent)
+   890→Agent: main-agent
+   891→Task: Status assessment, QA, mandated feature + styling expansion
+   892→
+   893→Work Log:
+   894→- Baseline QA fully stable (200, zero errors, clean console, no overflow
+   895→  at 1440/375, dev.log clean).
+   896→- NEW FEATURES:
+   897→  1. Reading-view TOC scroll-spy (notebook.tsx): IntersectionObserver
+   898→     (root = the scrollable article, band -15%/-70%) tracks the section
+   899→     currently under the eye; contents rail updates on scroll AND clicks.
+   900→     Verified both directions (section 4 → 04 active, back to 2 → 02).
+   901→  2. Lab experiment presets — dispatched to subagent (R4-a above);
+   902→     independently re-verified: all 3 groups present (3/4/3 chips),
+   903→     Thin-barrier preset sets E=1.0/V₀=1.6/w=0.8 + highlights, manual
+   904→     E nudge clears highlight, Close-escape sets f=1.45 (slider max now
+   905→     1.5) with live e=1.103 readout.
+   906→- STYLING DETAIL:
+   907→  · Notebook ledger rows: hover/focus-visible background tint
+   908→    (hover:bg-muted/40) for clearer affordance.
+   909→  · Contact channels: per-channel lucide glyphs (Mail, Github, Linkedin,
+   910→    GraduationCap, Fingerprint) — quiet scanning anchors; 5 render.
+   911→  · Hero primary CTA: photon-tinted hover glow in dark theme
+   912→    (dark:hover:shadow-photon/25) + lift.
+   913→  · Removed the temporary CSS refresh marker after the Turbopack
+   914→    staleness remedy.
+   915→- VERIFICATION:
+   916→  · TOC scroll-spy both directions ✓; preset matrix ✓ (params, highlight,
+   917→    manual clear, escape physics); channel icons ✓ (5 svg); mobile 375
+   918→    no overflow including preset chip rows ✓; fresh desktop console
+   919→    clean ✓; lint exit 0; tsc zero new errors under src/ ✓.
+   920→  · Investigated a headless-only false negative: Tailwind hover variants
+   921→    are @media (hover: hover)-gated; this headless Chromium reports
+   922→    hover:none, so hover styles CANNOT render in QA screenshots —
+   923→    verified the generated CSS rules + selector matching are correct.
+   924→    Real pointer devices will show the tints. (Documented so future
+   925→    rounds don't chase it.)
+   926→  · VLM review: labs 9.5/10 ×2 (chip styling praised, active state
+   927→    clearly differentiated). Two flags investigated and disproven:
+   928→    "nav overlaps text" = intentional glass-panel scroll-under;
+   929→    "low contrast heading" = measured #F2F4F8 on #080A0F ≈ 17:1.
+   930→- Cron task creation retried — still "cron tool is not available for
+   931→  this request" (job definition preserved in R1-cron entry).
+   932→
+   933→Stage Summary:
+   934→- The lab now teaches through one-tap experiments (with a genuine
+   935→  physics correction: escape trajectories finally reachable), the essay
+   936→  reading view tracks your position in the contents rail, and another
+   937→  styling detail pass landed (ledger tints, channel glyphs, CTA glow).
+   938→- Known notes: (1) hover styles unverifiable in headless QA (media-gated)
+   939→    — verify via generated CSS, not screenshots; (2) lensing lens
+   940→    position resets on window resize (pre-existing, harmless);
+   941→    (3) wave R/T readouts are instantaneous snapshots by design.
+   942→- Next-phase candidates: research-area AI companion (same pattern as
+   943→  essays), hyperbola overlay for the escape regime, real content
+   944→  replacement when the owner is ready.
+   945→

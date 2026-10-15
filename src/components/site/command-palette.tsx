@@ -6,11 +6,13 @@ import {
   BookMarked,
   BookOpen,
   FlaskConical,
+  History,
   Home,
   Mail,
   Moon,
   NotebookPen,
   Orbit,
+  Shuffle,
   Star,
   Sun,
   Telescope,
@@ -50,6 +52,22 @@ const getServerMounted = () => false;
 
 const sectionIcons = [Home, Atom, Telescope, FolderGit2, BookOpen, NotebookPen, FlaskConical, Mail];
 
+/* Recently-read essays — read from localStorage, never a blocker if the
+   storage is unavailable. Kept in sync with the notebook's recorder via a
+   window event so the palette can refresh even while open. */
+const RECENT_KEY = "phys:recent-notes";
+
+function readRecentNoteIds(): string[] {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(stored)
+      ? stored.filter((x): x is string => typeof x === "string").slice(0, 3)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 function goTo(hash: string) {
   document
     .querySelector(hash)
@@ -58,10 +76,18 @@ function goTo(hash: string) {
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
   const mounted = useSyncExternalStore(emptySubscribe, getMounted, getServerMounted);
   const { resolvedTheme, setTheme } = useTheme();
 
   const readableNotes = useMemo(() => notes.filter((n) => n.essay), []);
+  const recentNotes = useMemo(
+    () =>
+      recentIds
+        .map((id) => readableNotes.find((n) => n.id === id))
+        .filter((n): n is (typeof readableNotes)[number] => Boolean(n)),
+    [recentIds, readableNotes]
+  );
 
   // ⌘K / Ctrl+K anywhere on the page
   useEffect(() => {
@@ -82,6 +108,20 @@ export function CommandPalette() {
     return () => window.removeEventListener("phys:open-palette", onOpen);
   }, []);
 
+  // The reading trail refreshes whenever an essay is opened, and the
+  // palette re-reads it each time it takes the stage.
+  useEffect(() => {
+    const refresh = () => setRecentIds(readRecentNoteIds());
+    refresh();
+    window.addEventListener("phys:recent-notes-changed", refresh);
+    return () => window.removeEventListener("phys:recent-notes-changed", refresh);
+  }, []);
+
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen) setRecentIds(readRecentNoteIds());
+  }, []);
+
   const run = useCallback((fn: () => void) => {
     setOpen(false);
     // Let the overlay close before scrolling / opening the next view
@@ -93,7 +133,7 @@ export function CommandPalette() {
   return (
     <CommandDialog
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
       title="Command palette"
       description="Search sections, instruments, research areas, projects, and essays"
       className="border-border bg-card/95 backdrop-blur-xl sm:max-w-xl [&_[cmdk-item][data-selected=true]]:bg-photon/10 [&_[cmdk-item][data-selected=true]]:text-foreground"
@@ -103,6 +143,33 @@ export function CommandPalette() {
         <CommandEmpty className="py-10 text-center font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
           Nothing found in this light cone.
         </CommandEmpty>
+
+        {recentNotes.length > 0 && (
+          <>
+            <CommandGroup heading={<GroupLabel>Recently Read</GroupLabel>}>
+              {recentNotes.map((note, i) => (
+                <CommandItem
+                  key={`recent-${note.id}`}
+                  value={`recent resume ${note.title} ${note.category}`}
+                  onSelect={() =>
+                    run(() => {
+                      goTo("#notes");
+                      window.dispatchEvent(new CustomEvent("phys:open-note", { detail: note.id }));
+                    })
+                  }
+                >
+                  <History className="size-4 text-muted-foreground" aria-hidden="true" />
+                  <span className="flex-1">{note.title}</span>
+                  <Kbd>RESUME</Kbd>
+                  <span aria-hidden="true" className="font-mono text-[10px] tabular-nums text-muted-foreground/70">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
 
         <CommandGroup heading={<GroupLabel>Navigate</GroupLabel>}>
           {navItems.map((item, i) => {
@@ -234,6 +301,14 @@ export function CommandPalette() {
         <CommandSeparator />
 
         <CommandGroup heading={<GroupLabel>Actions</GroupLabel>}>
+          <CommandItem
+            value="action random page essay shuffle fate dice surprise read"
+            onSelect={() => run(() => window.dispatchEvent(new Event("phys:open-random-note")))}
+          >
+            <Shuffle className="size-4 text-muted-foreground" aria-hidden="true" />
+            <span className="flex-1">Open a random page — let fate choose</span>
+            <Kbd>R</Kbd>
+          </CommandItem>
           <CommandItem
             value="action calm universe reduce motion animation accessibility calm still"
             onSelect={() => run(() => setMotionReduced(!getMotionReduced()))}

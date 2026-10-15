@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Check, Clock, Link2, ListTree, NotebookPen } from "lucide-react";
+import { ArrowUpRight, Check, Clock, Link2, ListTree, NotebookPen, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -29,6 +29,27 @@ import { cn } from "@/lib/utils";
 const NOTE_HASH_PREFIX = "#note-";
 
 const noteHash = (note: Note) => `${NOTE_HASH_PREFIX}${note.id}`;
+
+/* Recently-read essays — most recent first, capped at three, kept in
+   localStorage so the command palette can offer to resume them. */
+const RECENT_KEY = "phys:recent-notes";
+const RECENT_CAP = 3;
+
+function recordRecentNote(id: string) {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+    const ids: string[] = Array.isArray(stored) ? stored.filter((x): x is string => typeof x === "string") : [];
+    if (ids[0] === id) return;
+    window.localStorage.setItem(
+      RECENT_KEY,
+      JSON.stringify([id, ...ids.filter((x) => x !== id)].slice(0, RECENT_CAP))
+    );
+    window.dispatchEvent(new Event("phys:recent-notes-changed"));
+  } catch {
+    // Storage unavailable (private mode, quota) — recently-read is a bonus,
+    // never a blocker.
+  }
+}
 
 /** Resolve a location hash to a readable (essay-bearing) note, else null. */
 function readableNoteFromHash(hash: string): Note | null {
@@ -63,6 +84,11 @@ export function Notebook() {
     }
   }, []);
 
+  const filtered = useMemo(
+    () => (category === "All" ? notes : notes.filter((n) => n.category === category)),
+    [category]
+  );
+
   // External openers (command palette)
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -73,6 +99,27 @@ export function Notebook() {
     window.addEventListener("phys:open-note", onOpen);
     return () => window.removeEventListener("phys:open-note", onOpen);
   }, [openNote]);
+
+  // Random page — fate chooses from the readable essays, preferring the
+  // current category filter (external openers: palette action, R hotkey).
+  const openRandomNote = useCallback(() => {
+    const pool = filtered.filter((n) => n.essay);
+    const source = pool.length > 0 ? pool : notes.filter((n) => n.essay);
+    if (source.length === 0) return;
+    openNote(source[Math.floor(Math.random() * source.length)]);
+  }, [filtered, openNote]);
+
+  useEffect(() => {
+    const onRandom = () => openRandomNote();
+    window.addEventListener("phys:open-random-note", onRandom);
+    return () => window.removeEventListener("phys:open-random-note", onRandom);
+  }, [openRandomNote]);
+
+  // Any open — ledger row, palette, deep link, random — feeds the
+  // recently-read trail the command palette offers to resume.
+  useEffect(() => {
+    if (open?.essay) recordRecentNote(open.id);
+  }, [open]);
 
   // Deep links: `#note-<id>` opens that essay on initial load and on
   // back/forward navigation. Hashes without the `#note-` prefix (nav
@@ -97,11 +144,6 @@ export function Notebook() {
     return () => window.removeEventListener("hashchange", syncFromHash);
   }, []);
 
-  const filtered = useMemo(
-    () => (category === "All" ? notes : notes.filter((n) => n.category === category)),
-    [category]
-  );
-
   return (
     <section
       id="notes"
@@ -116,29 +158,40 @@ export function Notebook() {
           lede="Essays and notes on physics, mathematics, and the history of ideas — written to think clearly, published when ready."
         />
 
-        {/* Category filter */}
+        {/* Category filter + the dice */}
         <Reveal delay={0.05} className="mt-12">
-          <div
-            role="group"
-            aria-label="Filter notes by category"
-            className="flex flex-wrap items-center gap-2"
-          >
-            {(["All", ...noteCategories] as const).map((c) => (
-              <button
-                key={c}
-                type="button"
-                aria-pressed={category === c}
-                onClick={() => setCategory(c)}
-                className={cn(
-                  "rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                  category === c
-                    ? "border-photon/60 bg-photon/10 text-foreground"
-                    : "border-border text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground"
-                )}
-              >
-                {c}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
+            <div
+              role="group"
+              aria-label="Filter notes by category"
+              className="flex flex-wrap items-center gap-2"
+            >
+              {(["All", ...noteCategories] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={category === c}
+                  onClick={() => setCategory(c)}
+                  className={cn(
+                    "rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    category === c
+                      ? "border-photon/60 bg-photon/10 text-foreground"
+                      : "border-border text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground"
+                  )}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={openRandomNote}
+              title="Open a random readable essay — prefers the current filter"
+              className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-photon/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:ml-auto"
+            >
+              <Shuffle className="size-3" aria-hidden="true" />
+              Random page
+            </button>
           </div>
         </Reveal>
 
@@ -274,6 +327,32 @@ function ReadingView({
   const essay = note.essay!;
   const [active, setActive] = useState(essay.sections[0]?.id ?? "");
   const articleRef = useRef<HTMLElement | null>(null);
+  const progressRef = useRef<HTMLDivElement | null>(null);
+
+  // Reading progress — a photon hairline along the top of the reading
+  // pane. Driven by direct style writes on scroll (no re-renders), and
+  // mirrored as a data attribute that reveals the header's depth shadow.
+  const handleArticleScroll = useCallback(() => {
+    const el = articleRef.current;
+    const bar = progressRef.current;
+    if (!el) return;
+    if (bar) {
+      const max = el.scrollHeight - el.clientHeight;
+      const p = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
+      bar.style.transform = `scaleX(${p})`;
+    }
+    el.dataset.scrolled = el.scrollTop > 8 ? "true" : "false";
+  }, []);
+
+  // A fresh essay starts at the top with a zeroed measure.
+  useEffect(() => {
+    const el = articleRef.current;
+    if (el) {
+      el.scrollTop = 0;
+      el.dataset.scrolled = "false";
+    }
+    if (progressRef.current) progressRef.current.style.transform = "scaleX(0)";
+  }, [note.id]);
 
   // Scroll-spy — the contents rail tracks the section under the eye
   // as the essay scrolls, not only on explicit clicks.
@@ -338,8 +417,16 @@ function ReadingView({
       </aside>
 
       {/* The essay */}
-      <article ref={articleRef} className="overflow-y-auto">
-        <DialogHeader className="sticky top-0 z-10 border-b border-border bg-background/90 px-6 py-5 text-left backdrop-blur-sm sm:px-10">
+      <article ref={articleRef} onScroll={handleArticleScroll} className="reading-pane overflow-y-auto">
+        {/* Reading measure — fills as the essay scrolls */}
+        <div aria-hidden="true" className="sticky top-0 z-20 h-0.5">
+          <div
+            ref={progressRef}
+            className="h-full w-full origin-left bg-photon"
+            style={{ transform: "scaleX(0)" }}
+          />
+        </div>
+        <DialogHeader className="reading-head sticky top-0 z-10 border-b border-border bg-background/90 px-6 py-5 text-left backdrop-blur-sm sm:px-10">
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
             Scientific Notebook · {note.category}
           </p>
