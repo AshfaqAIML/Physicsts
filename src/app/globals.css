@@ -1,0 +1,254 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-photon: var(--photon);
+  --color-nebula: var(--nebula);
+  --color-starlight: var(--starlight);
+  --color-dust: var(--dust);
+  --color-obsidian: #080a0f;
+  --color-midnight: #0c1220;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
+}
+
+/* ---------------------------------------------------------------
+   THEME — LIGHT ("Archival Journal")
+   Warm archival paper, deep ink, restrained scholarly accents.
+---------------------------------------------------------------- */
+:root {
+  --radius: 0.375rem;
+
+  --background: #f5f3ee;
+  --foreground: #14161d;
+  --card: #fcfbf7;
+  --card-foreground: #14161d;
+  --popover: #fbfaf5;
+  --popover-foreground: #14161d;
+  --primary: #14161d;
+  --primary-foreground: #f5f3ee;
+  --secondary: #ebe8e0;
+  --secondary-foreground: #14161d;
+  --muted: #edeae2;
+  --muted-foreground: #5a6170;
+  --accent: #e7e3d8;
+  --accent-foreground: #14161d;
+  --destructive: #b3261e;
+  --border: rgba(20, 22, 29, 0.14);
+  --input: rgba(20, 22, 29, 0.2);
+  --ring: #0e7c8c;
+
+  /* Scientific accents (WCAG-conscious on paper) */
+  --photon: #0e7c8c;
+  --nebula: #5d50d4;
+  --starlight: #f5f3ee;
+  --dust: #5a6170;
+
+  --grid-line: rgba(20, 22, 29, 0.055);
+  --glow-a: rgba(14, 124, 140, 0.09);
+  --glow-b: rgba(93, 80, 212, 0.07);
+  --hero-veil: rgba(245, 243, 238, 0.55);
+}
+
+/* ---------------------------------------------------------------
+   THEME — DARK ("Deep Field") — default
+   Obsidian black, deep midnight blue, soft starlight white.
+---------------------------------------------------------------- */
+.dark {
+  --background: #080a0f;
+  --foreground: #f2f4f8;
+  --card: #0c1220;
+  --card-foreground: #f2f4f8;
+  --popover: #0b1018;
+  --popover-foreground: #f2f4f8;
+  --primary: #f2f4f8;
+  --primary-foreground: #080a0f;
+  --secondary: #121a2a;
+  --secondary-foreground: #f2f4f8;
+  --muted: #101724;
+  --muted-foreground: #a7b0c0;
+  --accent: #16202f;
+  --accent-foreground: #f2f4f8;
+  --destructive: #e5484d;
+  --border: rgba(167, 176, 192, 0.14);
+  --input: rgba(167, 176, 192, 0.18);
+  --ring: #78dce8;
+
+  /* Scientific accents */
+  --photon: #78dce8;
+  --nebula: #a99bff;
+  --starlight: #f2f4f8;
+  --dust: #a7b0c0;
+
+  --grid-line: rgba(167, 176, 192, 0.06);
+  --glow-a: rgba(120, 220, 232, 0.07);
+  --glow-b: rgba(169, 155, 255, 0.06);
+  --hero-veil: rgba(8, 10, 15, 0.5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--photon) 28%, transparent);
+    color: var(--foreground);
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted-foreground) 30%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--muted-foreground) 55%, transparent);
+    background-clip: padding-box;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Subtle blueprint grid, as in an observatory chart */
+  .bg-chart-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  /* Fine plotting grid for panels */
+  .bg-plot-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Cinematic film grain (feTurbulence) */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  .glass-panel {
+    background: color-mix(in oklab, var(--background) 72%, transparent);
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  }
+
+  .text-glow-photon {
+    text-shadow: 0 0 24px color-mix(in oklab, var(--photon) 45%, transparent);
+  }
+
+  .focus-ring {
+    outline: 2px solid color-mix(in oklab, var(--photon) 70%, transparent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Editorial drop cap for the reading view */
+  .drop-cap::first-letter {
+    font-family: var(--font-instrument), serif;
+    float: left;
+    font-size: 3.4em;
+    line-height: 0.82;
+    padding-right: 0.12em;
+    padding-top: 0.06em;
+    color: var(--photon);
+  }
+
+  /* Reading measure — comfortable line length */
+  .reading-measure {
+    max-width: 68ch;
+  }
+
+  /* Vertical writing for side annotations */
+  .writing-vertical {
+    writing-mode: vertical-rl;
+  }
+}
+
+/* KaTeX — inherit colour, tune size to the typographic scale */
+.katex {
+  color: inherit;
+  font-size: 1.02em;
+}
+.katex-display {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.15rem 0.25rem;
+}
+
+/* Sonner toast theming refinement */
+[data-sonner-toaster] {
+  --normal-bg: var(--card);
+  --normal-text: var(--foreground);
+  --normal-border: var(--border);
+}

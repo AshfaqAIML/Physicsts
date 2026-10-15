@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Screenshot 1 (Hero):**\nText is highly readable with no overlap. The headline, subtext, and buttons are well-spaced. The background particle effect and the Einstein quote at the bottom fit within the 375px width. There is no horizontal overflow; all elements, including the \"1 Issue\" badge, are contained within the screen boundaries.\n\n**Screenshot 2 (Interactive Lab):**\nAll text is legible and free from overlapping elements. The section header, description, and tab buttons (\"Gravitational Lensing\", \"Orbital Mechanics\") are properly aligned. The interactive canvas area fits the mobile viewport perfectly without any broken layout or horizontal scrolling.\n\n**Screenshot 3 (Footer):**\nThe layout is clean and text remains readable throughout. The navigation links in the two-column grid, the colophon text, and the copyright footer all fit comfortably within the screen width. No elements overflow horizontally, and the \"Back to Orbit\" button and notification badge are correctly positioned.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1792075938,
+  "id": "202610152252133b679f45fd7649ac",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202610152252133b679f45fd7649ac",
+  "usage": {
+    "completion_tokens": 201,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1085,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1286
+  }
+}
