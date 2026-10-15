@@ -15,6 +15,7 @@ import {
   EXPERIMENT_EVENT,
   restoreFlag,
   restoreNumber,
+  type BenchReporter,
   type ExperimentSpec,
 } from "./experiment-link";
 import { ShareExperimentButton } from "./share-experiment";
@@ -111,7 +112,12 @@ function rgba(rgb: [number, number, number], a: number): string {
 
 const getServerReduceMotion = () => false;
 
-export function OrbitsSim() {
+export function OrbitsSim({
+  onReport,
+}: {
+  /** Reports the bench's shareable state upward for whole-lab tour links. */
+  onReport?: BenchReporter;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // null = automatic: paused when the visitor prefers reduced motion
@@ -482,6 +488,22 @@ export function OrbitsSim() {
         p.showTrails === showTrails
     )?.id ?? null;
 
+  // One builder feeds the per-bench share chip and the tour reporter,
+  // so the two views of "this experiment" can never drift apart.
+  const shareParams = useCallback(
+    () => ({
+      m: massRatio.toFixed(2),
+      f: launchF.toFixed(2),
+      a: showAnalytic ? 1 : 0,
+      t: showTrails ? 1 : 0,
+    }),
+    [massRatio, launchF, showAnalytic, showTrails]
+  );
+
+  useEffect(() => {
+    onReport?.(shareParams(), activePresetId);
+  }, [onReport, shareParams, activePresetId]);
+
   /* ---------- shared-link restore ---------- */
 
   useEffect(() => {
@@ -562,12 +584,7 @@ export function OrbitsSim() {
                 tab="orbits"
                 preset={activePresetId}
                 instrument="the orbital-mechanics bench"
-                params={() => ({
-                  m: massRatio.toFixed(2),
-                  f: launchF.toFixed(2),
-                  a: showAnalytic ? 1 : 0,
-                  t: showTrails ? 1 : 0,
-                })}
+                params={shareParams}
               />
             </div>
 

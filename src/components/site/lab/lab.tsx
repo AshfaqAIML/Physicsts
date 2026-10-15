@@ -9,11 +9,14 @@ import { Tex } from "@/components/site/tex";
 import {
   EXPERIMENT_EVENT,
   isExperimentHash,
+  isLabTourHash,
   parseExperimentHash,
+  parseLabTourHash,
   type ExperimentSpec,
 } from "./experiment-link";
 import { LensingSim } from "./lensing-sim";
 import { OrbitsSim } from "./orbits-sim";
+import { ShareLabTourButton, type ReportedBench } from "./share-lab-tour";
 import { WaveSim } from "./wave-sim";
 
 export type LabTab = "lensing" | "orbits" | "wave";
@@ -23,16 +26,71 @@ export type LabTab = "lensing" | "orbits" | "wave";
  * Three working instruments, not animations: light deflection,
  * orbits, and quantum tunneling — each paired with its governing
  * equations and stated assumptions. Every bench state is shareable:
- * #experiment=<instrument>?<params> restores it from a link.
+ * #experiment=<instrument>?<params> restores it from a link, and
+ * #lab-tour=<seg>|<seg>|<seg> restores the whole room at once.
  */
 export function PhysicsLab() {
   const [tab, setTab] = useState<LabTab>("lensing");
-  // Bumped on every parsed #experiment= so the delivery effect re-runs even
-  // when the link targets the already-active instrument.
+  // Bumped on every parsed #experiment= or #lab-tour= so the delivery
+  // effect re-runs even when the link targets the already-active bench.
   const [restoreTick, setRestoreTick] = useState(0);
+  // Benches whose tour segment is still waiting to be visited — drives
+  // the photon dot on the instrument tabs so a tour link reads as a
+  // self-guided route, not an accident.
+  const [tourPending, setTourPending] = useState<LabTab[]>([]);
 
   // A parsed #experiment= spec waiting for its instrument to mount.
   const pendingSpecRef = useRef<ExperimentSpec | null>(null);
+
+  // A parsed #lab-tour= waiting bench by bench: each segment is delivered
+  // when the visitor reaches that instrument (the tour is self-guided —
+  // the first segment decides where it starts).
+  const pendingTourRef = useRef<Map<LabTab, ExperimentSpec> | null>(null);
+  const tourFirstDeliveryRef = useRef(true);
+
+  // Last-known state of each bench, reported by the instruments as their
+  // shareable state settles — one map feeds the whole-lab tour link, so
+  // it captures benches the visitor has already left.
+  const benchStatesRef = useRef<Partial<Record<LabTab, ReportedBench>>>({});
+
+  const reportBench = useCallback(
+    (
+      bench: LabTab,
+      params: Record<string, string | number | boolean>,
+      preset: string | null
+    ) => {
+      benchStatesRef.current[bench] = { tab: bench, params, preset };
+    },
+    []
+  );
+  const reportLensing = useCallback(
+    (params: Record<string, string | number | boolean>, preset: string | null) =>
+      reportBench("lensing", params, preset),
+    [reportBench]
+  );
+  const reportOrbits = useCallback(
+    (params: Record<string, string | number | boolean>, preset: string | null) =>
+      reportBench("orbits", params, preset),
+    [reportBench]
+  );
+  const reportWave = useCallback(
+    (params: Record<string, string | number | boolean>, preset: string | null) =>
+      reportBench("wave", params, preset),
+    [reportBench]
+  );
+
+  // The tour link serialises the lab as it was left: the bench the
+  // visitor is on now leads; the others follow in canonical order.
+  const collectBenches = useCallback((): ReportedBench[] => {
+    const all: LabTab[] = [tab, "lensing", "orbits", "wave"];
+    const order = all.filter((v, i) => all.indexOf(v) === i);
+    const out: ReportedBench[] = [];
+    for (const bench of order) {
+      const state = benchStatesRef.current[bench];
+      if (state) out.push(state);
+    }
+    return out;
+  }, [tab]);
 
   // External control (command palette) — switch instruments on demand
   useEffect(() => {
@@ -47,11 +105,25 @@ export function PhysicsLab() {
   }, []);
 
   // Shared-link restore: parse on mount and on every hashchange, then
-  // hand the spec to whichever instrument the link names.
+  // hand the spec to whichever instrument the link names. Tour links
+  // (#lab-tour=) deliver bench by bench as the visitor reaches them.
   useEffect(() => {
     const apply = () => {
+      const tour = parseLabTourHash(window.location.hash);
+      if (tour) {
+        const segments = new Map<LabTab, ExperimentSpec>();
+        for (const spec of tour.specs) segments.set(spec.tab, spec);
+        pendingTourRef.current = segments;
+        setTourPending(tour.specs.map((s) => s.tab));
+        tourFirstDeliveryRef.current = true;
+        setTab(tour.specs[0].tab);
+        setRestoreTick((t) => t + 1);
+        return;
+      }
       const spec = parseExperimentHash(window.location.hash);
       if (!spec) return;
+      pendingTourRef.current = null;
+      setTourPending([]);
       pendingSpecRef.current = spec;
       setTab(spec.tab);
       setRestoreTick((t) => t + 1);
@@ -64,24 +136,76 @@ export function PhysicsLab() {
   // Once the requested tab is mounted (its own effects have run, so the
   // instrument has measured its canvas), deliver the spec and scroll the
   // visitor down to the bench. Deferred by a frame so a fresh mount can
-  // settle; notebook deep-links are unaffected (different prefix).
+  // settle; notebook deep-links are unaffected (different prefix). A
+  // tour segment delivered on a later tab switch does not scroll again —
+  // the visitor walked there themselves.
+  //
+  // The pending maps are mutated only INSIDE the timeout: if the effect
+  // re-runs first (tab switch, restoreTick bump), the cleanup cancels
+  // the pending delivery and the segment simply stays pending — it will
+  // be delivered when its bench is (re)reached. Deleting at schedule
+  // time instead would silently drop shared state whenever a timeout is
+  // cancelled — exactly what happens on the first double-render after a
+  // tour link loads (initial tab → parsed tab).
   useEffect(() => {
     const spec = pendingSpecRef.current;
-    if (!spec || spec.tab !== tab) return;
-    pendingSpecRef.current = null;
+    const tour = pendingTourRef.current;
+    let deliver: ExperimentSpec | null = null;
+    let fromTour = false;
+    if (spec && spec.tab === tab) {
+      deliver = spec;
+    } else if (tour && tour.has(tab)) {
+      deliver = tour.get(tab) ?? null;
+      fromTour = true;
+    }
+    if (!deliver) return;
     const id = window.setTimeout(() => {
-      const calm =
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-        window.localStorage.getItem("phys:motion-reduced") === "1";
-      document
-        .getElementById("lab")
-        ?.scrollIntoView({ behavior: calm ? "auto" : "smooth" });
+      // Claim the spec only now that the delivery is actually firing.
+      if (!fromTour) {
+        pendingSpecRef.current =
+          pendingSpecRef.current === deliver ? null : pendingSpecRef.current;
+      } else {
+        const pending = pendingTourRef.current;
+        pending?.delete(tab);
+        setTourPending((prev) => prev.filter((t) => t !== tab));
+        if (pending && pending.size === 0) {
+          // Every bench on the tour has been visited — the URL no longer
+          // needs to carry it; a refresh starts from a clean lab, honestly.
+          pendingTourRef.current = null;
+          if (isLabTourHash(window.location.hash)) {
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+        }
+      }
+      const isTourOpening = fromTour && tourFirstDeliveryRef.current;
+      if (fromTour) tourFirstDeliveryRef.current = false;
+      if (!fromTour || isTourOpening) {
+        const calm =
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+          window.localStorage.getItem("phys:motion-reduced") === "1";
+        document
+          .getElementById("lab")
+          ?.scrollIntoView({ behavior: calm ? "auto" : "smooth" });
+      }
       window.dispatchEvent(
-        new CustomEvent<ExperimentSpec>(EXPERIMENT_EVENT, { detail: spec })
+        new CustomEvent<ExperimentSpec>(EXPERIMENT_EVENT, {
+          detail: deliver,
+        })
       );
-      toast.info("Experiment restored from a shared link.", {
-        description: "The instrument was set up exactly as it was shared.",
-      });
+      if (!fromTour) {
+        toast.info("Experiment restored from a shared link.", {
+          description: "The instrument was set up exactly as it was shared.",
+        });
+      } else if (isTourOpening) {
+        toast.info("Lab tour restored from a shared link.", {
+          description:
+            "The benches are set as they were shared — hop between the instruments to see each one.",
+        });
+      } else {
+        toast.info("Tour bench restored.", {
+          description: "This instrument is set up as the tour link shared.",
+        });
+      }
     }, 80);
     return () => window.clearTimeout(id);
   }, [tab, restoreTick]);
@@ -118,32 +242,44 @@ export function PhysicsLab() {
             quantum wave-packet tunnelling — are live on the screen; paper
             cannot run simulations. This printed copy records their catalogue.
           </p>
+          {/* Whole-lab tour share — the room-level companion to the
+              per-bench share chips inside each instrument. It shares one
+              control band with the instrument tabs: tabs left, tour
+              right, wrapping beneath on narrow screens. */}
           <Tabs value={tab} onValueChange={switchTab} className="w-full">
-            <div className="mb-8 w-full max-w-xl overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <TabsList className="h-auto w-max gap-0 bg-transparent p-0 sm:w-auto">
-                <TabsTrigger
-                  value="lensing"
-                  className="rounded-l-md rounded-r-none border border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
-                >
-                  Gravitational Lensing
-                </TabsTrigger>
-                <TabsTrigger
-                  value="orbits"
-                  className="rounded-none border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
-                >
-                  Orbital Mechanics
-                </TabsTrigger>
-                <TabsTrigger
-                  value="wave"
-                  className="rounded-l-none rounded-r-md border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
-                >
-                  Wave Packet
-                </TabsTrigger>
-              </TabsList>
+            <div className="mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+              <div className="w-full max-w-xl overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto sm:flex-1">
+                <TabsList className="h-auto w-max gap-0 bg-transparent p-0 sm:w-auto">
+                  <TabsTrigger
+                    value="lensing"
+                    className="rounded-l-md rounded-r-none border border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
+                  >
+                    Gravitational Lensing
+                    <TourDot pending={tourPending.includes("lensing")} />
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="orbits"
+                    className="rounded-none border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
+                  >
+                    Orbital Mechanics
+                    <TourDot pending={tourPending.includes("orbits")} />
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="wave"
+                    className="rounded-l-none rounded-r-md border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
+                  >
+                    Wave Packet
+                    <TourDot pending={tourPending.includes("wave")} />
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <div data-print="hide" className="ml-auto flex justify-end">
+                <ShareLabTourButton benches={collectBenches} />
+              </div>
             </div>
 
             <TabsContent value="lensing" className="mt-0">
-              <LensingSim />
+              <LensingSim onReport={reportLensing} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
                   <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -218,7 +354,7 @@ export function PhysicsLab() {
             </TabsContent>
 
             <TabsContent value="orbits" className="mt-0">
-              <OrbitsSim />
+              <OrbitsSim onReport={reportOrbits} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
                   <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -291,7 +427,7 @@ export function PhysicsLab() {
               </div>
             </TabsContent>
             <TabsContent value="wave" className="mt-0">
-              <WaveSim />
+              <WaveSim onReport={reportWave} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
                   <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -372,5 +508,26 @@ export function PhysicsLab() {
         </Reveal>
       </div>
     </section>
+  );
+}
+
+/**
+ * TOUR DOT — a photon pip on an instrument tab while a shared lab tour
+ * still has a setup waiting on that bench. It answers "where does this
+ * tour still lead?" at a glance, and it retires the moment the bench's
+ * shared state has been visited.
+ */
+function TourDot({ pending }: { pending: boolean }) {
+  if (!pending) return null;
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="ml-2 inline-block size-[5px] rounded-full bg-photon shadow-[0_0_6px_var(--color-photon)]"
+      />
+      <span className="sr-only">
+        — a shared setup from the tour link is waiting on this bench
+      </span>
+    </>
   );
 }

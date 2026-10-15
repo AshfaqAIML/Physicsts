@@ -125,6 +125,10 @@ export function ShortcutsHelp() {
           <ShortcutGroup label="Dialogues & reading">
             <ShortcutRow keys={["Esc"]} note="Close any open view" />
             <ShortcutRow keys={["Tab"]} note="Step through controls in order" />
+            <ShortcutRow
+              keys={["Shift", "↑ ↓ ← →"]}
+              note="Select text inside an essay — a “Quote this passage” chip rises beneath it"
+            />
           </ShortcutGroup>
         </div>
 

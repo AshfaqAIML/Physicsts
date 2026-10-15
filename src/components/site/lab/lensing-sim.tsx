@@ -12,6 +12,7 @@ import {
   EXPERIMENT_EVENT,
   restoreFlag,
   restoreNumber,
+  type BenchReporter,
   type ExperimentSpec,
 } from "./experiment-link";
 import { ShareExperimentButton } from "./share-experiment";
@@ -108,7 +109,12 @@ function withAlpha(rgb: RGB, a: number): string {
   return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
 }
 
-export function LensingSim() {
+export function LensingSim({
+  onReport,
+}: {
+  /** Reports the bench's shareable state upward for whole-lab tour links. */
+  onReport?: BenchReporter;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const readoutRef = useRef<HTMLSpanElement | null>(null);
 
@@ -516,6 +522,36 @@ export function LensingSim() {
           p.showRing === showRing
       )?.id ?? null);
 
+  // The shareable state of this bench — one builder feeds the per-bench
+  // share chip, the tour reporter, and nothing else, so the three views
+  // of "this experiment" can never drift apart.
+  const shareParams = useCallback(
+    () => ({
+      e: Math.round(thetaE),
+      d: mode,
+      r: showRing ? 1 : 0,
+      x: (
+        sizeRef.current.w > 1
+          ? lensRef.current.x / sizeRef.current.w
+          : DEFAULT_LENS.x
+      ).toFixed(3),
+      y: (
+        sizeRef.current.h > 1
+          ? lensRef.current.y / sizeRef.current.h
+          : DEFAULT_LENS.y
+      ).toFixed(3),
+      m: lensMoved ? 1 : 0,
+    }),
+    [thetaE, mode, showRing, lensMoved]
+  );
+
+  // Report upward whenever the shareable state settles. Lens drags move
+  // the mass through refs without re-rendering, so the figure's pointerup
+  // reports once more after the hand lets go.
+  useEffect(() => {
+    onReport?.(shareParams(), activePresetId);
+  }, [onReport, shareParams, activePresetId]);
+
   /* ---------- shared-link restore ---------- */
 
   useEffect(() => {
@@ -552,7 +588,10 @@ export function LensingSim() {
   return (
     <div data-print="hide" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <figure className="m-0">
-        <div className="relative h-[380px] overflow-hidden rounded-lg border border-border bg-card sm:h-[460px] lg:h-[560px]">
+        <div
+          className="relative h-[380px] overflow-hidden rounded-lg border border-border bg-card sm:h-[460px] lg:h-[560px]"
+          onPointerUp={() => onReport?.(shareParams(), activePresetId)}
+        >
           <canvas
             ref={canvasRef}
             className="h-full w-full cursor-grab touch-none active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
@@ -591,20 +630,7 @@ export function LensingSim() {
                 tab="lensing"
                 preset={activePresetId}
                 instrument="the lensing bench"
-                params={() => ({
-                  e: Math.round(thetaE),
-                  d: mode,
-                  r: showRing ? 1 : 0,
-                  x: (sizeRef.current.w > 1
-                    ? lensRef.current.x / sizeRef.current.w
-                    : DEFAULT_LENS.x
-                  ).toFixed(3),
-                  y: (sizeRef.current.h > 1
-                    ? lensRef.current.y / sizeRef.current.h
-                    : DEFAULT_LENS.y
-                  ).toFixed(3),
-                  m: lensMoved ? 1 : 0,
-                })}
+                params={shareParams}
               />
             </div>
 

@@ -13,6 +13,7 @@ import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
 import {
   EXPERIMENT_EVENT,
   restoreNumber,
+  type BenchReporter,
   type ExperimentSpec,
 } from "./experiment-link";
 import { ShareExperimentButton } from "./share-experiment";
@@ -128,7 +129,12 @@ const WAVE_PRESETS: readonly WavePreset[] = [
   },
 ];
 
-export function WaveSim() {
+export function WaveSim({
+  onReport,
+}: {
+  /** Reports the bench's shareable state upward for whole-lab tour links. */
+  onReport?: BenchReporter;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // null = automatic: paused when the visitor prefers reduced motion
@@ -589,6 +595,21 @@ export function WaveSim() {
         presetParamEq(p.w, barrierW)
     )?.id ?? null;
 
+  // One builder feeds the per-bench share chip and the tour reporter,
+  // so the two views of "this experiment" can never drift apart.
+  const shareParams = useCallback(
+    () => ({
+      E: energy.toFixed(2),
+      V: barrierV.toFixed(2),
+      w: barrierW.toFixed(2),
+    }),
+    [energy, barrierV, barrierW]
+  );
+
+  useEffect(() => {
+    onReport?.(shareParams(), activePresetId);
+  }, [onReport, shareParams, activePresetId]);
+
   /* ---------- shared-link restore ---------- */
 
   useEffect(() => {
@@ -679,11 +700,7 @@ export function WaveSim() {
                 tab="wave"
                 preset={activePresetId}
                 instrument="the wave-packet bench"
-                params={() => ({
-                  E: energy.toFixed(2),
-                  V: barrierV.toFixed(2),
-                  w: barrierW.toFixed(2),
-                })}
+                params={shareParams}
               />
             </div>
 

@@ -1517,3 +1517,128 @@ Stage Summary:
   real content replacement (name/portrait/channels/CV) when the owner
   is ready; a11y pass on the quote chip for switch/voice users
   (currently pointer-centric discovery).
+
+---
+Task ID: R9
+Agent: main-agent
+Task: Status assessment, QA regression, mandated feature + styling expansion
+
+Work Log:
+- Baseline: dev server verified up (200; EADDRINUSE noise = duplicate
+  start attempt only). Full QA regression PASSED: page health (0 failed
+  resources, clean console), T theme round-trip, L lexicon, ? manual,
+  #note- deep link, #experiment= restores (lensing e/d/r/x/y + toast;
+  orbits m/f), lab tab keyboard nav (Radix arrows WRAP from last tab
+  to first), contact API friendly zod messages, footer almanac
+  October→November, mobile 375 / desktop 1440 zero overflow, lint 0,
+  tsc 0 under src/.
+- TWO QA-METHOD FALSE ALARMS diagnosed (documented for future rounds):
+  (1) EXPERIMENT HASH PARAM NAMES: lensing uses e/d/r/x/y/m (m=lens-
+      moved flag), orbits uses m/f/a/t (m=mass) — testing lensing with
+      orbits-style params "fails" by design; format is
+      #experiment=lensing?e=110&d=grid (a ? separates tab from params).
+  (2) THE DISPLAY LAYER SWALLOWS "[m" (ANSI reset CSI) in bash tool
+      output: `rg grid-cols` showed `grid-cols-inmax(...)` for a file
+      that od -c proved contains `grid-cols-[minmax(...)]` — byte-
+      level checks (od -c) are the only truth for class names
+      containing [m. THREE identical "corrupted" classes in the sims
+      were ALL display artifacts, zero real bugs.
+- REAL BUG FIXED (found while testing my own new code): the tour
+  delivery effect deleted segments from the pending map at SCHEDULE
+  time, so a canceled timeout (the first double-render after a tour
+  link loads: initial tab → parsed tab) silently dropped that bench's
+  shared state and consumed the "tour opening" flag. Fix: mutate the
+  pending map only INSIDE the fired timeout (delivery-time claim);
+  canceled segments stay pending and deliver when their bench is
+  (re)reached. Verified: full 3-bench tour restores every segment.
+- DEBUGGING METHODOLOGY LESSON: a 90-minute quote-copy "failure" was
+  my own probe regex — I tested aria-label for "quote this passage"
+  while the real label is "Copy the selected passage as a quote"
+  (the visible TEXT is "Quote this passage"). The feature worked the
+  whole time, including the new settle path. Probe selectors must be
+  copied from the source verbatim. Also: agent-browser console output
+  is a CUMULATIVE session buffer — old parse errors persist across
+  navigations and look live; only logs with new timestamps count.
+- TURBOPACK HMR WEDGE struck again (3× this round): after the first
+  file edit following a server start, subsequent edits stop being
+  served (stale parse errors, probes never appear). Recovery remains
+  pkill + rm -rf .next + double-fork restart. Rule of thumb: verify
+  ANY behavioral anomaly survives a clean restart before debugging
+  the code.
+- NEW FEATURE — Assistive-tech quote selection (quote-copy.tsx):
+  selections created by voice control or screen-reader cursors
+  announce themselves ONLY via selectionchange (no pointerup/keyup),
+  so the chip never rose for them. Now a non-collapsed selectionchange
+  with no pointer held arms a 350ms settle timer → evaluate → chip.
+  Pointer drags are excluded via a pointerdown/up tracker (the
+  never-flicker-mid-drag rule is preserved); Escape/hide cancel the
+  timer. Verified end-to-end: pure setBaseAndExtent selection (no
+  pointer, no keys) → chip rises → click → «quote»+title+deep-link
+  payload copied, chip folds, toast shown.
+- NEW FEATURE — "Share lab tour" (cross-instrument room link):
+  · experiment-link.ts: #lab-tour=<seg>|<seg>|<seg> codec — segments
+    re-use the single-experiment parser (one family, no drift);
+    buildLabTourHash/parseLabTourHash/isLabTourHash.
+  · Each sim reports its shareable state upward via a new onReport
+    prop (BenchReporter): one shareParams builder per sim now feeds
+    BOTH the per-bench share chip and the tour reporter (dedupe);
+    lensing also reports on figure pointerup (lens drags mutate refs
+    without re-rendering). Untouched benches are omitted from the
+    link — honest: they stood at defaults when shared.
+  · lab.tsx: benchStatesRef tracks last-known bench states; the
+    active bench leads the tour, others follow in canonical order;
+    delivery is self-guided — each segment restores when the visitor
+    reaches its bench (opening delivery scrolls + full toast; later
+    benches get a quiet toast, no scroll); the tour hash clears via
+    replaceState once every segment has been visited.
+  · share-lab-tour.tsx: dashed utility chip (matches Share experiment
+    language), clipboard + execCommand fallback, honest toast counts
+    benches ("2 of 3 benches shared — the rest stand at their
+    defaults"), listens for phys:share-lab-tour.
+  · Command palette: "Share the whole lab — copy a tour link" action
+    (Route icon) dispatches the event.
+- STYLING DETAIL — lab control band unified (VLM-verified): the share
+  chip previously floated right on its own row above the tabs
+  ("independent coordinate systems" per VLM). Now ONE flex band:
+  tabs left, tour chip right (items-center, same row on desktop;
+  wraps beneath with ml-auto right-alignment on mobile — verified
+  chipRight 359/375, no overflow). VLM final pass: "visually unified,
+  aligned, and balanced."
+- STYLING DETAIL — tour dots: while a tour has unvisited benches,
+  their tabs carry a 5px photon dot with a soft glow (shadow keyed to
+  --color-photon) + sr-only "a shared setup from the tour link is
+  waiting on this bench"; dots retire as each bench is visited
+  (tourPending state). The self-guided tour now reads as a route.
+- VLM 4-shot defect review triaged by DOM measurement: ALL FOUR
+  claims were false positives (hero buttons both exactly 48px/same
+  baseline; publications FILTER label and pills share optical center
+  6110.5; notebook tags all px14/py6/h29). Only the control-band
+  finding was real (fixed above). The standing rule holds: VLM
+  claims need DOM verification.
+- Final verification: lint exit 0, tsc 0 under src/, mobile 375 no
+  overflow, 0 failed resources, full tour lifecycle (share → open →
+  hop ×2 → hash clear) + AT-selection quote round trip re-verified
+  on the final clean build; dev.log clean.
+- Cron task creation retried (9th time) — still "cron tool is not
+  available for this request" (gateway limitation; R1-cron spec stands).
+
+Stage Summary:
+- The lab is now shareable as a ROOM: one link carries every bench
+  the sharer actually left state on, restores each as the visitor
+  hops between instruments, marks the route with photon dots, and
+  cleans the URL when the tour completes. The quote chip now answers
+  assistive technology, closing R8's known a11y gap; the shortcuts
+  manual teaches the selection gesture.
+- Critical bug fixed in delivery claiming (schedule-time vs
+  delivery-time mutation) — the pattern is documented in the effect
+  comment for future companions.
+- Known notes: (1) agent-browser console is cumulative — stale
+  errors mislead; (2) bash tool output swallows "[m" — use od -c;
+  (3) probe selectors must be copied verbatim from source; (4) the
+  turbopack HMR wedge recurs after the first edit per server start —
+  clean-restart before debugging anomalies; (5) Radix tabs arrow
+  keys wrap last→first.
+- Next-phase candidates: "print selection" offprint (merge quote +
+  essay-print); offprint preset for research-area dialogs; an
+  almanac "on this day" deep-link; real content replacement
+  (name/portrait/channels/CV) when the owner is ready.

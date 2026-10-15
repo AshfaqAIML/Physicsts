@@ -13,6 +13,7 @@ import {
   NotebookPen,
   Orbit,
   Printer,
+  Route,
   Shuffle,
   Star,
   Sun,
@@ -208,6 +209,11 @@ export function CommandPalette() {
             <Waves className="size-4 text-muted-foreground" aria-hidden="true" />
             <span className="flex-1">Wave Packet Tunneling</span>
             <Kbd>L-3</Kbd>
+          </CommandItem>
+          <CommandItem value="lab share tour link all benches" onSelect={() => run(() => { window.dispatchEvent(new Event("phys:share-lab-tour")); })}>
+            <Route className="size-4 text-muted-foreground" aria-hidden="true" />
+            <span className="flex-1">Share the whole lab — copy a tour link</span>
+            <span aria-hidden="true" className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">3 benches</span>
           </CommandItem>
         </CommandGroup>
 
