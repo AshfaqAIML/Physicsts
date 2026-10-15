@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AskAssistant } from "@/components/site/ask-assistant";
+import { PrintEssayButton } from "@/components/site/print-essay";
+import { QuoteCopy } from "@/components/site/quote-copy";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Prose } from "@/components/site/tex";
@@ -450,7 +452,7 @@ function ReadingView({
   }, [essay.sections]);
 
   return (
-    <div className="grid h-[92vh] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
+    <div className="reading-stage grid h-[92vh] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
       {/* Table of contents */}
       <aside className="hidden flex-col border-r border-border bg-card/60 py-6 lg:flex">
         <p className="flex items-center gap-2 px-6 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -488,10 +490,10 @@ function ReadingView({
         </p>
       </aside>
 
-      {/* The essay */}
-      <article ref={articleRef} onScroll={handleArticleScroll} className="reading-pane overflow-y-auto">
-        {/* Reading measure — fills as the essay scrolls */}
-        <div aria-hidden="true" className="sticky top-0 z-20 h-0.5">
+      {/* The essay — relative so the quote chip can ride its scroll */}
+      <article ref={articleRef} onScroll={handleArticleScroll} className="reading-pane relative overflow-y-auto">
+        {/* Reading measure — fills as the essay scrolls (screen only) */}
+        <div aria-hidden="true" data-essay-print="hide" className="sticky top-0 z-20 h-0.5">
           <div
             ref={progressRef}
             className="h-full w-full origin-left bg-photon"
@@ -499,6 +501,14 @@ function ReadingView({
           />
         </div>
         <DialogHeader className="reading-head sticky top-0 z-10 border-b border-border bg-background/90 px-6 py-5 text-left backdrop-blur-sm sm:px-10">
+          {/* Offprint provenance — inked only by the essay print mode */}
+          <p
+            data-essay-print="only"
+            className="hidden font-mono text-[9.5pt] uppercase tracking-[0.14em] text-black/70"
+          >
+            The Physicist's Notebook · an essay printed from the companion
+            site · <span data-essay-print="url" />
+          </p>
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
             Scientific Notebook · {note.category}
           </p>
@@ -511,7 +521,7 @@ function ReadingView({
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
               {essay.readingMinutes} min read · {essay.date} ·{" "}
-              <span aria-hidden="true" className="tabular-nums">
+              <span aria-hidden="true" data-essay-print="hide" className="tabular-nums">
                 <span ref={percentRef} className="text-photon">
                   000
                 </span>
@@ -519,9 +529,15 @@ function ReadingView({
               </span>
               <span className="sr-only">reading position shown as a percentage</span>
             </p>
-            <CopyLinkButton note={note} />
+            <span className="flex items-center gap-2" data-essay-print="hide">
+              <CopyLinkButton note={note} />
+              <PrintEssayButton note={note} />
+            </span>
           </div>
         </DialogHeader>
+
+        {/* Select any passage — the quote chip rises beneath it */}
+        <QuoteCopy articleRef={articleRef} note={note} essayTitle={essay.title} />
 
         <div className="reading-measure px-6 py-10 sm:px-10">
           {essay.sections.map((s, i) => (
@@ -568,8 +584,11 @@ function ReadingView({
             </ol>
           </section>
 
-          {/* AI study companion — grounded in this essay's actual text */}
-          <AskAssistant note={note} />
+          {/* AI study companion — grounded in this essay's actual text
+              (screen companion; the offprint stands on its own) */}
+          <div data-essay-print="hide">
+            <AskAssistant note={note} />
+          </div>
 
           <p className="mt-10 font-mono text-[9px] uppercase leading-relaxed tracking-[0.16em] text-muted-foreground/60">
             Example essay · placeholder content until replaced by genuine
@@ -580,6 +599,7 @@ function ReadingView({
           {nextNote && (
             <button
               type="button"
+              data-essay-print="hide"
               onClick={() => onOpenNext(nextNote)}
               className="group mt-8 flex w-full items-center justify-between gap-4 rounded-lg border border-border bg-card p-5 text-left transition-colors hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-6"
             >

@@ -85,6 +85,10 @@ export function KeyboardHint() {
     <aside
       data-print="hide"
       aria-label="Keyboard hint"
+      // Once retired the chip is furniture, not a control: inert keeps the
+      // invisible dismiss button out of the tab order and the a11y tree.
+      aria-hidden={!shown}
+      inert={!shown}
       className={cn(
         "fixed bottom-6 left-4 z-40 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-card/90 p-3 pl-4 shadow-lg backdrop-blur-md transition-all duration-700 sm:left-6",
         "motion-safe:translate-y-0",

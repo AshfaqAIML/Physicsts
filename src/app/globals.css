@@ -393,6 +393,33 @@
   padding: 0.15rem 0.25rem;
 }
 
+/* ----------------------------------------------------------------------
+   Laboratory sliders — the thumb becomes an instrument: a photon core
+   with a soft halo, so tuning a parameter feels like moving a gauge
+   needle rather than a stock form control.
+   ---------------------------------------------------------------------- */
+#lab [data-slot="slider-thumb"] {
+  border-color: color-mix(in oklab, var(--photon) 60%, var(--border));
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--photon) 22%, transparent),
+    0 0 12px color-mix(in oklab, var(--photon) 30%, transparent);
+}
+#lab [data-slot="slider-thumb"]:hover,
+#lab [data-slot="slider-thumb"]:focus-visible {
+  border-color: color-mix(in oklab, var(--photon) 85%, var(--border));
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--photon) 32%, transparent),
+    0 0 16px color-mix(in oklab, var(--photon) 48%, transparent);
+}
+/* The filled range reads as energised track, not a progress bar */
+#lab [data-slot="slider-range"] {
+  background: color-mix(in oklab, var(--photon) 55%, var(--muted));
+}
+/* Track: a hairline darker than the card so the rail is visible at rest */
+#lab [data-slot="slider-track"] {
+  background: color-mix(in oklab, var(--muted-foreground) 24%, transparent);
+}
+
 /* Sonner toast theming refinement */
 [data-sonner-toaster] {
   --normal-bg: var(--card);
@@ -502,5 +529,95 @@
 
   .katex-display {
     overflow: visible;
+  }
+
+  /* --------------------------------------------------------------------
+     Essay print mode — "Print this essay" (html.essay-printing).
+     The whole site steps aside; paper receives one essay, typeset like
+     an offprint: provenance line, the text itself, its references.
+     -------------------------------------------------------------------- */
+  html.essay-printing body > *:not([role="dialog"]) {
+    display: none !important;
+  }
+  html.essay-printing [role="dialog"] {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: #fff !important;
+    transform: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  /* Tailwind 4 centres dialogs with `translate: var(--tw-translate-x)
+     var(--tw-translate-y)`. Plain `translate: none` declarations get
+     folded into the `transform` shorthand by the CSS minifier, which
+     cannot happen to custom properties — so neutralise the shift by
+     resetting the variables the utility consumes. The same trick re-inks
+     the offprint: the dark theme's pale text colours are variables, and
+     resetting them at the dialog root beats chasing every utility. */
+  html.essay-printing [role="dialog"] {
+    --tw-translate-x: 0;
+    --tw-translate-y: 0;
+    --tw-translate-z: 0;
+    --tw-scale-x: 1;
+    --tw-scale-y: 1;
+    --tw-scale-z: 1;
+    --foreground: #14161d;
+    --muted-foreground: #3d4350;
+  }
+  /* The reading stage un-cinemas: no split rail, no viewport cell */
+  html.essay-printing .reading-stage {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  html.essay-printing .reading-stage > aside {
+    display: none !important;
+  }
+  html.essay-printing .reading-pane {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  html.essay-printing .reading-head {
+    position: static !important;
+    background: none !important;
+    border-bottom: 1px solid #000 !important;
+    backdrop-filter: none !important;
+    padding: 0 0 0.6rem 0 !important;
+  }
+  html.essay-printing .reading-measure {
+    padding: 1.2rem 0 0 0 !important;
+  }
+  /* Screen furniture inside the offprint: measure, buttons, companion,
+     hand-off card. The honest placeholder disclosure stays in print. */
+  html.essay-printing [data-essay-print="hide"] {
+    display: none !important;
+  }
+  /* The screen's close affordance has no meaning on paper */
+  html.essay-printing [data-slot="dialog-close"] {
+    display: none !important;
+  }
+  /* The drop cap is a screen gesture; print engines double-render floated
+     first-letters — the offprint sets plain, self-possessed typography. */
+  html.essay-printing .drop-cap::first-letter {
+    float: none !important;
+    font-size: 1em !important;
+    line-height: inherit !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: inherit !important;
+    background: none !important;
+    border: none !important;
+  }
+  /* Provenance line — set invisible on screen, inked only for the essay */
+  html.essay-printing [data-essay-print="only"] {
+    display: block !important;
   }
 }

@@ -11,20 +11,20 @@ import { db } from "@/lib/db";
 
 const contactSchema = z.object({
   name: z
-    .string()
+    .string({ error: "Please tell me your name." })
     .trim()
     .min(2, "Please tell me your name.")
     .max(80, "That name is too long."),
   email: z
-    .email("Please provide a valid email address.")
+    .email({ error: "Please provide a valid email address." })
     .max(120, "That email address is too long."),
   subject: z
-    .string()
+    .string({ error: "Please choose a subject." })
     .trim()
-    .min(3)
+    .min(3, "Please choose a subject.")
     .max(120, "That subject is too long."),
   message: z
-    .string()
+    .string({ error: "Please write at least a sentence or two." })
     .trim()
     .min(20, "Please write at least a sentence or two.")
     .max(4000, "That message is too long."),

@@ -1396,3 +1396,124 @@ Stage Summary:
   benches); print expansion for the reading view (currently dialogs are
   hidden from print by policy); real content replacement
   (name/portrait/channels/CV) when the owner is ready.
+
+---
+Task ID: R8
+Agent: main-agent
+Task: Status assessment, QA regression, mandated feature + styling expansion
+
+Work Log:
+- Baseline: dev server started detached (200). Full QA regression PASSED:
+  page health (0 failed resources), L/T/M/? hotkeys (note: `press t` must
+  be lowercase; a `press t` issued while a dialog is still exiting gets
+  swallowed by design), #note- deep links, #experiment= restore
+  (m=0.31/f=0.85 exact), reading % counter (051 @ 40%), next-note card,
+  lab tabs + Wave Packet canvas, footer almanac (Nov→Dec), contact API,
+  mobile 375 / desktop 1440 zero overflow, KaTeX no mobile overflow,
+  FAB, keyboard hint lifecycle. lint 0, tsc clean, dev.log clean.
+- VLM 8.2/10 review triaged by DOM measurement — five of its claims were
+  false positives (nav icon centers both 32px; grid gap 20==20 H==V;
+  Explore links use mt-auto with constant pt-6; about-list radius
+  10px == research card 10px; placeholder chips full-opacity
+  muted-foreground). ONE real finding: stock shadcn slider thumbs.
+- BUG FIXES (real):
+  · keyboard-hint.tsx: the retired chip (opacity-0) stayed in the DOM
+    WITHOUT inert/aria-hidden — the invisible dismiss X remained Tab-
+    focusable. Now aria-hidden={!shown} + inert={!shown} on the aside.
+    Verified: after retirement aria-hidden=true + inert=true.
+  · contact route: zod type-level messages for absent keys leaked raw
+    English ("Invalid input: expected string, received undefined") to
+    hand-crafted payloads. All four fields now carry z.string({error:
+    "…"}) / z.email({error: …}) type messages identical to their min
+    messages. Verified via curl: every missing-key/empty case returns
+    the friendly sentence.
+- STYLING DETAIL — laboratory sliders became instruments (globals.css,
+  scoped to #lab [data-slot=…]): photon-mixed thumb border + double
+  photon halo (22%/30% at rest, 32%/48% on hover/focus), energised
+  range fill (photon 55% over muted), hairline track (24%). VLM visual
+  pass: "resemble scientific instrumentation… readout gauge".
+- NEW FEATURE — "Quote this passage" (src/components/site/quote-copy.tsx,
+  mounted inside the reading article, which gained `relative`):
+  selecting ≥12 chars of essay prose (pointerup/touchend/shift-keyup
+  gated so it never flickers mid-drag; selectionchange only ever hides)
+  raises a photon-bordered pill beneath the selection (center-clamped
+  to the pane, repositioned live on pane scroll, guarded against
+  input/textarea/button selections, Escape dismisses, resets on note
+  change). Click copies «quote (280-char cap with …)» + em-dash essay
+  title + deep-link URL — clipboard API with execCommand fallback,
+  success toast, chip folds on success while the selection itself is
+  left intact. Verified end-to-end with a navigator.clipboard stub:
+  402-char payload exactly as designed; real-browser copy path is the
+  same code as the proven Copy link button.
+- NEW FEATURE — "Print this essay" (print-essay.tsx button in the
+  reading header next to Copy link + full essay-print print-mode CSS):
+  clicking stamps html.essay-printing, fills a provenance slot
+  ([data-essay-print="url"]) with the essay's deep link, calls
+  window.print(), cleans up on afterprint or a 1.2s safety timer.
+  In print the whole site steps aside (body > :not([role=dialog])
+  display:none), the dialog un-cinemas (static position, un-clipped,
+  TOC rail / companion / hand-off card / close X / progress measure /
+  % counter all data-essay-print="hide"), a provenance line inks
+  ("The Physicist's Notebook · an essay printed from the companion
+  site · URL"), minutes·date stay, and the drop cap flattens (float
+  first-letters double-render in print engines). The honest
+  "Example essay · placeholder content" disclosure prints by policy.
+  VERIFIED via agent-browser pdf (print media): 4-page offprint,
+  VLM-confirmed black ink, provenance line, serif title, italic dek,
+  complete words, no X button, no counter, "professionally typeset".
+- THREE deep engineering findings this round (all documented in CSS
+  comments):
+  (1) TURBOPACK CSS STALENESS: after the first globals.css edit of a
+      session, HMR stops serving subsequent edits (the dev.log "No link
+      element found for chunk [root-of-the-server]__d9e95593._.css" is
+      this wedge). Full pkill + rm -rf .next + double-fork restart is
+      the only reliable recovery; happened 3× this round.
+  (2) LIGHTNING CSS FOLDS translate/scale/rotate: none into the
+      `transform` shorthand (for older browser targets) — so plain
+      `translate: none !important` never survives the pipeline
+      (verified in served chunk; separate rules get re-merged).
+      Workaround: reset the Tailwind variables the utilities consume
+      (--tw-translate-x/y/z: 0, --tw-scale-x/y/z: 1) — custom
+      properties are minifier-proof. Tailwind 4 centres Radix dialogs
+      via the individual `translate: var(--tw-translate-x)
+      var(--tw-translate-y)` property, which transform:none cannot
+      reset — this was the offprint sliding off the page (left-edge
+      clipping + header above page 1).
+  (3) DARK-THEME PRINT INK: body { color:#000 } does not cascade past
+      explicit Tailwind colour utilities, so the offprint printed in
+      washed-out pale greys. Fixed with the same variable trick at the
+      dialog scope: --foreground: #14161d; --muted-foreground: #3d4350
+      — the whole subtree re-inks while photon accents keep their
+      archival teal.
+- Final verification: lint exit 0; tsc zero errors under src/; contact
+  API all-friendly messages; experiment restore still exact; hint chip
+  inert when retired; mobile 375 no overflow; VLM final review of the
+  essay view (buttons aligned, chip cleanly positioned, no glitches).
+- Cron task creation retried (8th time) — still "cron tool is not
+  available for this request" (gateway limitation; R1-cron spec stands).
+
+Stage Summary:
+- The notebook gained two research-desk powers: any passage of any
+  essay is now quotable with one click (a citation that carries its own
+  address), and any essay prints as a clean archival offprint — site
+  chrome gone, provenance inked, typography re-set for paper. The lab
+  sliders finally look like the instruments they are. Two small real
+  bugs fixed (retired hint chip stayed Tab-focusable; raw zod type
+  errors on malformed contact payloads).
+- Critical pipeline knowledge banked (in CSS comments + this log):
+  turbopack CSS HMR wedges after first edit (restart + rm .next);
+  Lightning CSS folds individual transform properties — reset Tailwind
+  variables instead; dark-theme text re-inks via variable overrides at
+  the dialog scope.
+- Known notes: (1) essay-print CSS lives inside @media print so the
+  class is screen-inert by construction; (2) the quote chip's copy in
+  headless QA requires the clipboard stub (same as Copy link); (3) the
+  pdftotext plain extraction of the offprint is fragmentary (font
+  subsetting) — use pdftotext -layout or VLM on rasterized pages.
+- Next-phase candidates: cross-instrument "lab tour" share link
+  (serialize all three benches in one hash); reading-view "print
+  selection" merging the quote + offprint ideas; an "offprint" preset
+  for the research-area dialogs (same machinery, different content);
+  real content replacement (name/portrait/channels/CV) when the owner
+  is ready; a11y pass on the quote chip for switch/voice users
+  (currently pointer-centric discovery).
