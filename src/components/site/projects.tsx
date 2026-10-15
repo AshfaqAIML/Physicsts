@@ -81,7 +81,7 @@ export function Projects() {
                   “{p.question}”
                 </p>
 
-                <div className="my-6 overflow-x-auto border-y border-border/70 py-4 text-foreground/85">
+                <div className="my-6 overflow-x-auto border-y border-border/70 bg-plot-grid py-4 text-foreground/85">
                   <Tex math={p.equation} ariaLabel={p.equationLabel} />
                 </div>
 
@@ -137,7 +137,7 @@ export function Projects() {
                   <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     Mathematical formulation
                   </h4>
-                  <div className="mt-3 rounded-lg border border-border bg-background/50 p-5 text-center text-foreground/90">
+                  <div className="equation-plate mt-3 text-center text-foreground/90">
                     <Tex display math={open.equation} ariaLabel={open.equationLabel} />
                     <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                       {open.equationLabel}

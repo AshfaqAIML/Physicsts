@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUp, Orbit } from "lucide-react";
+import { PhysicsHistory } from "@/components/site/physics-history";
 import { navItems, site } from "@/content/site";
 
 /**
@@ -20,7 +21,7 @@ export function Footer() {
                 aria-hidden="true"
                 className="flex size-8 items-center justify-center rounded-full border border-border text-photon transition-colors group-hover:border-photon/50"
               >
-                <Orbit className="size-4" />
+                <Orbit className="size-4 transition-transform duration-700 ease-out group-hover:rotate-180" />
               </span>
               <span className="font-serif text-lg">{site.wordmark}</span>
             </Link>
@@ -71,8 +72,13 @@ export function Footer() {
             </a>
           </div>
         </div>
+      </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
+      {/* Almanac — one real moment per month, full-bleed rule */}
+      <PhysicsHistory />
+
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-6 sm:flex-row sm:items-center sm:px-6 lg:px-8">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
             © {new Date().getFullYear()} {site.name} · built with curiosity
           </p>

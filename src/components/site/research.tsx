@@ -73,7 +73,7 @@ export function ResearchInterests() {
                   {area.tagline}
                 </p>
 
-                <div className="my-5 overflow-hidden border-y border-border/70 py-4 text-center text-foreground/85">
+                <div className="my-5 overflow-hidden border-y border-border/70 bg-plot-grid py-4 text-center text-foreground/85">
                   <Tex math={area.equation} ariaLabel={area.equationLabel} />
                 </div>
 
@@ -115,7 +115,7 @@ export function ResearchInterests() {
               </DialogHeader>
 
               <div className="mt-6 space-y-8">
-                <div className="rounded-lg border border-border bg-background/50 p-5 text-center text-foreground/90">
+                <div className="equation-plate mt-2 text-center text-foreground/90">
                   <Tex display math={openArea.equation} ariaLabel={openArea.equationLabel} />
                   <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     {openArea.equationLabel}

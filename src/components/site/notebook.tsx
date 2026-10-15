@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Clock, ListTree, NotebookPen } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpRight, Check, Clock, Link2, ListTree, NotebookPen } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -19,19 +20,80 @@ import { cn } from "@/lib/utils";
  * SCIENTIFIC NOTEBOOK — a premium digital journal. One full example
  * essay; the rest are honestly-marked planned topics.
  */
+
+/* ------------------------------------------------------------------ */
+/* Deep links — readable essays are addressable as `#note-<noteId>`    */
+/* ------------------------------------------------------------------ */
+
+const NOTE_HASH_PREFIX = "#note-";
+
+const noteHash = (note: Note) => `${NOTE_HASH_PREFIX}${note.id}`;
+
+/** Resolve a location hash to a readable (essay-bearing) note, else null. */
+function readableNoteFromHash(hash: string): Note | null {
+  if (!hash.startsWith(NOTE_HASH_PREFIX)) return null;
+  const note = notes.find((n) => n.id === hash.slice(NOTE_HASH_PREFIX.length));
+  return note?.essay ? note : null;
+}
+
 export function Notebook() {
   const [category, setCategory] = useState<NoteCategory | "All">("All");
   const [open, setOpen] = useState<Note | null>(null);
+  /**
+   * The reading view's table of contents navigates with in-dialog anchors
+   * (`#<section-id>`). This ref records the hash a contents link is about
+   * to produce so the `hashchange` listener can recognise and ignore it —
+   * those hashes are not note deep-links and must never close or swap the
+   * reading view.
+   */
+  const contentsHash = useRef<string | null>(null);
+
+  /**
+   * User-initiated open (ledger row, command palette). Pushes a history
+   * entry — Back then closes the essay — via pushState, which changes the
+   * hash without a scroll jump and without firing a hashchange echo.
+   */
+  const openNote = useCallback((note: Note) => {
+    contentsHash.current = null;
+    setOpen(note);
+    const target = noteHash(note);
+    if (window.location.hash !== target) {
+      window.history.pushState(null, "", target);
+    }
+  }, []);
 
   // External openers (command palette)
   useEffect(() => {
     const onOpen = (e: Event) => {
       const id = (e as CustomEvent<string>).detail;
       const note = notes.find((n) => n.id === id);
-      if (note?.essay) setOpen(note);
+      if (note?.essay) openNote(note);
     };
     window.addEventListener("phys:open-note", onOpen);
     return () => window.removeEventListener("phys:open-note", onOpen);
+  }, [openNote]);
+
+  // Deep links: `#note-<id>` opens that essay on initial load and on
+  // back/forward navigation. Hashes without the `#note-` prefix (nav
+  // anchors, in-dialog contents anchors) never open anything; only a
+  // move *away* from a note hash closes the reading view.
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash;
+      const expected = contentsHash.current;
+      contentsHash.current = null;
+      if (expected !== null && expected === hash) return; // contents anchor — ignore
+      if (hash.startsWith(NOTE_HASH_PREFIX)) {
+        const note = readableNoteFromHash(hash);
+        if (note) setOpen(note); // hash-driven opens never touch history
+      } else {
+        setOpen(null); // back/forward moved away from an essay deep link
+      }
+    };
+
+    syncFromHash(); // initial load — history is left untouched
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
   }, []);
 
   const filtered = useMemo(
@@ -88,7 +150,7 @@ export function Notebook() {
                 <button
                   type="button"
                   disabled={!readable}
-                  onClick={() => readable && setOpen(note)}
+                  onClick={() => readable && openNote(note)}
                   aria-haspopup="dialog"
                   aria-label={
                     readable
@@ -155,12 +217,41 @@ export function Notebook() {
       </div>
 
       {/* Reading view — a quiet room for one essay */}
-      <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
+      <Dialog
+        open={open !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && open) {
+            // Manual close: if the hash points at this essay (its deep link
+            // or a stale in-dialog contents anchor), clear it without adding
+            // a history entry.
+            const hash = window.location.hash;
+            const pointsAtThisEssay =
+              hash === noteHash(open) ||
+              Boolean(open.essay?.sections.some((s) => `#${s.id}` === hash));
+            if (pointsAtThisEssay) {
+              window.history.replaceState(
+                null,
+                "",
+                window.location.pathname + window.location.search
+              );
+            }
+            contentsHash.current = null;
+            setOpen(null);
+          }
+        }}
+      >
         <DialogContent
           className="max-h-[92vh] gap-0 overflow-hidden border-border bg-background p-0 sm:max-w-5xl"
           showCloseButton
         >
-          {open?.essay && <ReadingView note={open} />}
+          {open?.essay && (
+            <ReadingView
+              note={open}
+              onContentsNavigate={(hash) => {
+                contentsHash.current = hash;
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </section>
@@ -171,7 +262,14 @@ export function Notebook() {
 /* The reading view                                                      */
 /* ------------------------------------------------------------------ */
 
-function ReadingView({ note }: { note: Note }) {
+function ReadingView({
+  note,
+  onContentsNavigate,
+}: {
+  note: Note;
+  /** Reports the hash a contents link is about to navigate to. */
+  onContentsNavigate: (hash: string) => void;
+}) {
   const essay = note.essay!;
   const [active, setActive] = useState(essay.sections[0]?.id ?? "");
 
@@ -188,7 +286,10 @@ function ReadingView({ note }: { note: Note }) {
               <li key={s.id}>
                 <a
                   href={`#${s.id}`}
-                  onClick={() => setActive(s.id)}
+                  onClick={() => {
+                    onContentsNavigate(`#${s.id}`);
+                    setActive(s.id);
+                  }}
                   aria-current={active === s.id ? "true" : undefined}
                   className={cn(
                     "block rounded-md px-3 py-2 text-sm leading-snug transition-colors focus-visible:outline-2 focus-visible:outline-ring",
@@ -223,6 +324,12 @@ function ReadingView({ note }: { note: Note }) {
           <DialogDescription className="max-w-2xl font-serif text-base italic leading-relaxed">
             {essay.dek}
           </DialogDescription>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+              {essay.readingMinutes} min read · {essay.date}
+            </p>
+            <CopyLinkButton note={note} />
+          </div>
         </DialogHeader>
 
         <div className="reading-measure px-6 py-10 sm:px-10">
@@ -276,5 +383,80 @@ function ReadingView({ note }: { note: Note }) {
         </div>
       </article>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Copy link — share the deep link to this essay                        */
+/* ------------------------------------------------------------------ */
+
+function CopyLinkButton({ note }: { note: Note }) {
+  const [copied, setCopied] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear any pending label-reset if the view unmounts mid-flight.
+  useEffect(
+    () => () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    },
+    []
+  );
+
+  const handleCopy = async () => {
+    const url = `${window.location.origin}${window.location.pathname}${noteHash(note)}`;
+    let ok = false;
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        ok = true;
+      }
+    } catch {
+      ok = false;
+    }
+    if (!ok) {
+      // Fallback for insecure contexts / older browsers.
+      let scratch: HTMLTextAreaElement | null = null;
+      try {
+        scratch = document.createElement("textarea");
+        scratch.value = url;
+        scratch.readOnly = true;
+        scratch.style.position = "fixed";
+        scratch.style.opacity = "0";
+        document.body.appendChild(scratch);
+        scratch.select();
+        ok = document.execCommand("copy");
+      } catch {
+        ok = false;
+      } finally {
+        scratch?.remove();
+      }
+    }
+
+    if (ok) {
+      toast.success("Link copied — share this essay.", {
+        description: "The URL now points directly to this essay.",
+      });
+      setCopied(true);
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error("Could not copy the link.");
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label="Copy a link to this essay"
+      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      {copied ? (
+        <Check className="size-3" aria-hidden="true" />
+      ) : (
+        <Link2 className="size-3" aria-hidden="true" />
+      )}
+      {copied ? "Copied" : "Copy link"}
+    </button>
   );
 }

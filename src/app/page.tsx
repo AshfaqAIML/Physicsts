@@ -2,7 +2,9 @@ import { AscendButton } from "@/components/site/ascend-button";
 import { CommandPalette } from "@/components/site/command-palette";
 import { ConstellationNav } from "@/components/site/constellation-nav";
 import { DeepField } from "@/components/site/deep-field";
+import { Lexicon } from "@/components/site/lexicon";
 import { ReadingProgress } from "@/components/site/reading-progress";
+import { ShortcutsHelp } from "@/components/site/shortcuts-help";
 import { About } from "@/components/site/about";
 import { Contact } from "@/components/site/contact";
 import { Footer } from "@/components/site/footer";
@@ -34,6 +36,8 @@ export default function Home() {
       <ConstellationNav />
       <AscendButton />
       <CommandPalette />
+      <Lexicon />
+      <ShortcutsHelp />
 
       <main className="flex-1">
         <Hero />

@@ -236,6 +236,40 @@
   .writing-vertical {
     writing-mode: vertical-rl;
   }
+
+  /* Display equations framed as instrument plates — fine plotting grid
+     behind the mathematics, register-mark corner ticks in photon cyan */
+  .equation-plate {
+    position: relative;
+    border: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
+    border-radius: var(--radius);
+    background-color: color-mix(in oklab, var(--background) 55%, transparent);
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    padding: 1.25rem;
+  }
+  .equation-plate::before,
+  .equation-plate::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+  }
+  .equation-plate::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
+    border-left: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
+  }
+  .equation-plate::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
+    border-right: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
+  }
 }
 
 /* KaTeX — inherit colour, tune size to the typographic scale */
@@ -287,6 +321,7 @@
 
   .bg-chart-grid,
   .bg-plot-grid,
+  .equation-plate,
   .grain::after,
   .glass-panel {
     background: transparent !important;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   Atom,
+  BookMarked,
   BookOpen,
   FlaskConical,
   Home,
@@ -14,6 +15,7 @@ import {
   Sun,
   Telescope,
   FolderGit2,
+  Keyboard,
   Waves,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -205,6 +207,27 @@ export function CommandPalette() {
 
         <CommandSeparator />
 
+        <CommandGroup heading={<GroupLabel>Reference</GroupLabel>}>
+          <CommandItem
+            value="lexicon glossary dictionary terms reference"
+            onSelect={() => run(() => window.dispatchEvent(new Event("phys:open-lexicon")))}
+          >
+            <BookMarked className="size-4 text-muted-foreground" aria-hidden="true" />
+            <span className="flex-1">Open the lexicon — physics glossary</span>
+            <Kbd>L</Kbd>
+          </CommandItem>
+          <CommandItem
+            value="keyboard shortcuts help keys hotkeys operating manual"
+            onSelect={() => run(() => window.dispatchEvent(new Event("phys:open-shortcuts")))}
+          >
+            <Keyboard className="size-4 text-muted-foreground" aria-hidden="true" />
+            <span className="flex-1">Keyboard shortcuts — the operating manual</span>
+            <Kbd>?</Kbd>
+          </CommandItem>
+        </CommandGroup>
+
+        <CommandSeparator />
+
         <CommandGroup heading={<GroupLabel>Actions</GroupLabel>}>
           <CommandItem
             value="action toggle theme dark light"
@@ -224,7 +247,7 @@ export function CommandPalette() {
       </CommandList>
 
       <div className="flex items-center justify-between border-t border-border px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-        <span>↑↓ traverse · ↵ engage · esc close</span>
+        <span>↑↓ traverse · ↵ engage · esc close · ? manual</span>
         <span aria-hidden="true">⌘K</span>
       </div>
     </CommandDialog>

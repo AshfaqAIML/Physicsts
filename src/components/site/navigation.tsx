@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, Orbit, Search } from "lucide-react";
+import { BookMarked, Menu, Orbit, Search } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { navItems, site } from "@/content/site";
 import { cn } from "@/lib/utils";
@@ -76,7 +76,7 @@ export function Navigation() {
             aria-hidden="true"
             className="relative flex size-8 items-center justify-center rounded-full border border-border text-photon transition-colors duration-500 group-hover:border-photon/50"
           >
-            <Orbit className="size-4" />
+            <Orbit className="size-4 transition-transform duration-700 ease-out group-hover:rotate-180" />
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-serif text-lg tracking-tight">{site.wordmark}</span>
@@ -129,6 +129,15 @@ export function Navigation() {
             </span>
           </button>
 
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("phys:open-lexicon"))}
+            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            aria-label="Open the physics lexicon"
+          >
+            <BookMarked className="size-4" aria-hidden="true" />
+          </button>
+
           <ThemeToggle />
 
           {/* Mobile menu */}
@@ -147,9 +156,9 @@ export function Navigation() {
                 <SheetTitle className="font-serif text-lg">
                   {site.wordmark}
                 </SheetTitle>
-                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                <SheetDescription className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
                   {site.observatoryNote}
-                </p>
+                </SheetDescription>
               </SheetHeader>
               <nav aria-label="Mobile" className="px-1">
                 <ul className="flex flex-col">
@@ -187,6 +196,20 @@ export function Navigation() {
                   Search everything
                 </span>
                 <span aria-hidden="true">⌘K</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  window.dispatchEvent(new Event("phys:open-lexicon"));
+                }}
+                className="mt-2 flex w-full items-center justify-between rounded-md border border-dashed border-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <span className="flex items-center gap-2">
+                  <BookMarked className="size-3.5" aria-hidden="true" />
+                  The Lexicon
+                </span>
+                <span aria-hidden="true">A–Z</span>
               </button>
             </SheetContent>
           </Sheet>
