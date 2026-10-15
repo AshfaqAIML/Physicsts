@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Check, Clock, Link2, ListTree, NotebookPen, Shuffle } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Clock, Link2, ListTree, NotebookPen, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -87,6 +87,18 @@ export function Notebook() {
   const filtered = useMemo(
     () => (category === "All" ? notes : notes.filter((n) => n.category === category)),
     [category]
+  );
+
+  // The reading view ends with a hand-off to whatever essay comes next.
+  const readableNotes = useMemo(() => notes.filter((n) => n.essay), []);
+  const nextNoteOf = useCallback(
+    (note: Note): Note | null => {
+      if (readableNotes.length < 2) return null;
+      const idx = readableNotes.findIndex((n) => n.id === note.id);
+      if (idx === -1) return null;
+      return readableNotes[(idx + 1) % readableNotes.length];
+    },
+    [readableNotes]
   );
 
   // External openers (command palette)
@@ -301,6 +313,8 @@ export function Notebook() {
           {open?.essay && (
             <ReadingView
               note={open}
+              nextNote={nextNoteOf(open)}
+              onOpenNext={openNote}
               onContentsNavigate={(hash) => {
                 contentsHash.current = hash;
               }}
@@ -318,9 +332,15 @@ export function Notebook() {
 
 function ReadingView({
   note,
+  nextNote,
+  onOpenNext,
   onContentsNavigate,
 }: {
   note: Note;
+  /** The essay to offer when this one ends, if any. */
+  nextNote: Note | null;
+  /** Opens another essay the way a ledger row does. */
+  onOpenNext: (note: Note) => void;
   /** Reports the hash a contents link is about to navigate to. */
   onContentsNavigate: (hash: string) => void;
 }) {
@@ -328,19 +348,21 @@ function ReadingView({
   const [active, setActive] = useState(essay.sections[0]?.id ?? "");
   const articleRef = useRef<HTMLElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
+  const percentRef = useRef<HTMLSpanElement | null>(null);
 
   // Reading progress — a photon hairline along the top of the reading
-  // pane. Driven by direct style writes on scroll (no re-renders), and
-  // mirrored as a data attribute that reveals the header's depth shadow.
+  // pane, plus a quiet counter in the header. Driven by direct style and
+  // text writes on scroll (no re-renders), and mirrored as a data
+  // attribute that reveals the header's depth shadow.
   const handleArticleScroll = useCallback(() => {
     const el = articleRef.current;
-    const bar = progressRef.current;
     if (!el) return;
-    if (bar) {
-      const max = el.scrollHeight - el.clientHeight;
-      const p = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
-      bar.style.transform = `scaleX(${p})`;
-    }
+    const max = el.scrollHeight - el.clientHeight;
+    const p = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
+    const bar = progressRef.current;
+    if (bar) bar.style.transform = `scaleX(${p})`;
+    const counter = percentRef.current;
+    if (counter) counter.textContent = String(Math.round(p * 100)).padStart(3, "0");
     el.dataset.scrolled = el.scrollTop > 8 ? "true" : "false";
   }, []);
 
@@ -348,10 +370,13 @@ function ReadingView({
   useEffect(() => {
     const el = articleRef.current;
     if (el) {
-      el.scrollTop = 0;
+      // "instant" — never animate the jump back to the top; the pane's
+      // CSS smooth scroll is for contents navigation only.
+      el.scrollTo({ top: 0, behavior: "instant" });
       el.dataset.scrolled = "false";
     }
     if (progressRef.current) progressRef.current.style.transform = "scaleX(0)";
+    if (percentRef.current) percentRef.current.textContent = "000";
   }, [note.id]);
 
   // Scroll-spy — the contents rail tracks the section under the eye
@@ -384,7 +409,7 @@ function ReadingView({
         <p className="flex items-center gap-2 px-6 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
           <ListTree className="size-3.5" aria-hidden="true" /> Contents
         </p>
-        <nav aria-label="Table of contents" className="mt-5 flex-1 overflow-y-auto px-3">
+        <nav aria-label="Table of contents" className="reading-toc mt-5 flex-1 overflow-y-auto px-3">
           <ol className="space-y-1">
             {essay.sections.map((s, i) => (
               <li key={s.id}>
@@ -438,7 +463,14 @@ function ReadingView({
           </DialogDescription>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
-              {essay.readingMinutes} min read · {essay.date}
+              {essay.readingMinutes} min read · {essay.date} ·{" "}
+              <span aria-hidden="true" className="tabular-nums">
+                <span ref={percentRef} className="text-photon">
+                  000
+                </span>
+                %
+              </span>
+              <span className="sr-only">reading position shown as a percentage</span>
             </p>
             <CopyLinkButton note={note} />
           </div>
@@ -496,6 +528,32 @@ function ReadingView({
             Example essay · placeholder content until replaced by genuine
             writing
           </p>
+
+          {/* The hand-off — one essay ends, the notebook continues */}
+          {nextNote && (
+            <button
+              type="button"
+              onClick={() => onOpenNext(nextNote)}
+              className="group mt-8 flex w-full items-center justify-between gap-4 rounded-lg border border-border bg-card p-5 text-left transition-colors hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-6"
+            >
+              <span className="min-w-0">
+                <span className="block font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  Next in the notebook
+                </span>
+                <span className="mt-2 block truncate font-serif text-lg leading-snug text-foreground sm:text-xl">
+                  {nextNote.title}
+                </span>
+                <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                  {nextNote.category} · {nextNote.essay!.readingMinutes} min
+                  read
+                </span>
+              </span>
+              <ArrowRight
+                className="size-5 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
+                aria-hidden="true"
+              />
+            </button>
+          )}
         </div>
       </article>
     </div>

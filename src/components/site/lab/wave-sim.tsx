@@ -10,6 +10,12 @@ import {
   subscribeMotion as subscribeReduceMotion,
 } from "@/lib/motion-preference";
 import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
+import {
+  EXPERIMENT_EVENT,
+  restoreNumber,
+  type ExperimentSpec,
+} from "./experiment-link";
+import { ShareExperimentButton } from "./share-experiment";
 
 /**
  * QUANTUM WAVE PACKET — the one-dimensional time-dependent Schrödinger
@@ -583,6 +589,33 @@ export function WaveSim() {
         presetParamEq(p.w, barrierW)
     )?.id ?? null;
 
+  /* ---------- shared-link restore ---------- */
+
+  useEffect(() => {
+    const onRestore = (e: Event) => {
+      const spec = (e as CustomEvent<ExperimentSpec>).detail;
+      if (spec?.tab !== "wave") return;
+      const E = restoreNumber(spec.params, "E", E_MIN, E_MAX, 1.4);
+      const V = restoreNumber(spec.params, "V", V0_MIN, V0_MAX, 1.6);
+      const wv = restoreNumber(spec.params, "w", W_MIN, W_MAX, 1.6);
+      setEnergy(E);
+      setBarrierV(V);
+      setBarrierW(wv);
+      // Write the refs directly so the rebuild below sees the new values
+      // immediately (the state→ref mirrors only run after the next render).
+      energyRef.current = E;
+      v0Ref.current = V;
+      wRef.current = wv;
+      buildSystem();
+      resetSim();
+      if (!playing && !reduceMotion) setPlayingOverride(true);
+    };
+    window.addEventListener(EXPERIMENT_EVENT, onRestore);
+    return () => window.removeEventListener(EXPERIMENT_EVENT, onRestore);
+    // buildSystem/resetSim are re-created each render; the listener only
+    // needs the latest versions at event time, so re-subscribe is fine.
+  });
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
     if (e.key === " ") {
       e.preventDefault();
@@ -640,6 +673,19 @@ export function WaveSim() {
               activeId={activePresetId}
               onSelect={applyPreset}
             />
+
+            <div>
+              <ShareExperimentButton
+                tab="wave"
+                preset={activePresetId}
+                instrument="the wave-packet bench"
+                params={() => ({
+                  E: energy.toFixed(2),
+                  V: barrierV.toFixed(2),
+                  w: barrierW.toFixed(2),
+                })}
+              />
+            </div>
 
             <div className="space-y-3">
               <div className="flex items-baseline justify-between">

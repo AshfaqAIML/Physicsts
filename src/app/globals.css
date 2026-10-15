@@ -244,20 +244,51 @@
     border-radius: 2px;
   }
 
-  /* Editorial drop cap for the reading view */
+  /* Editorial drop cap for the reading view — optical alignment tuned:
+     slightly raised (padding-top) with more air to its right, so the cap
+     sits on the first line's cap height instead of sinking below it. */
   .drop-cap::first-letter {
     font-family: var(--font-instrument), serif;
     float: left;
     font-size: 3.4em;
-    line-height: 0.82;
-    padding-right: 0.12em;
-    padding-top: 0.06em;
+    line-height: 0.78;
+    padding-right: 0.16em;
+    padding-top: 0.02em;
     color: var(--photon);
   }
 
   /* Reading measure — comfortable line length */
   .reading-measure {
     max-width: 68ch;
+  }
+
+  /* The reading pane — a slimmer, instrument-grade scrollbar, and smooth
+     scrolling for contents navigation (the note-change reset jumps
+     instantly by script; calm preferences disable the smoothing). */
+  .reading-pane {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent)
+      transparent;
+    scroll-behavior: smooth;
+  }
+  .reading-pane::-webkit-scrollbar {
+    width: 6px;
+  }
+  .reading-pane::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .reading-pane::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
+    border: 0;
+    border-radius: 999px;
+  }
+  .reading-pane::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--photon) 55%, transparent);
+  }
+
+  /* Contents rail — the section under the eye carries a photon tick */
+  .reading-toc a[aria-current="true"] {
+    box-shadow: inset 2px 0 0 0 var(--photon);
   }
 
   /* Vertical writing for side annotations */

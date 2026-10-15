@@ -1143,3 +1143,102 @@ Stage Summary:
   the escape regime, "share this experiment" deep links for lab
   presets, real content replacement (name/portrait/channels/CV) when
   the owner is ready.
+
+---
+Task ID: R6 (review round — main agent)
+Agent: main-agent
+Task: Status assessment, QA regression, mandated feature + styling expansion
+
+Work Log:
+- Baseline: dev server started detached (200). dev.log clean apart from the
+  known duplicate-start EADDRINUSE noise.
+- SOLVED the "9 empty ✗ errors" mystery from earlier rounds: agent-browser
+  `errors --json` reveals they are NOT empty — they are 9 historical
+  entries (7× "Cannot access 'filtered' before initialization" at Notebook
+  + 1× turbopack CSS chunk reload error) from R5's HMR edit window, with
+  performReactRefresh/scheduleRefresh stack frames. The `errors --clear`
+  flag is a no-op in this CLI build (buffer never clears), so the marks
+  persist forever. Proof they are stale: identical fingerprint (line
+  numbers 123/124/11298/11446/11467/11516/1800/11516) across reloads,
+  while performance.getEntriesByType shows 0 failed resources, nav 200,
+  and console is clean. Current source has `filtered` (l.87) correctly
+  before `openRandomNote` (l.105). QA PROCEDURE UPDATE: always verify page
+  health via performance entries + fresh console, ignore the sticky ✗.
+- Full regression suite PASSED: L/T/M/R/? hotkeys (M toggles
+  phys:motion-reduced in localStorage — earlier checks looked for the
+  wrong signal), #note- deep links, lab tab switching + Elliptical preset
+  (aria-pressed=true), footer almanac cycling (Oct→Nov→Dec), FAB visible,
+  contact API 200 + proper zod field errors, mobile 375 no overflow
+  (top/notebook/reading), desktop 1440 no overflow.
+- QA red herring diagnosed: my own wildcard `document.querySelector('button').click()`
+  had opened a research-area dialog which then "covered" the lab tabs —
+  Playwright's covered-element error exposed it. Not a site bug.
+- VLM 4-shot review: 8.5/10. Claims verified with DOM measurements before
+  acting: hero "equation/CTA overlap" = FALSE POSITIVE (measured 16px
+  gap); drop-cap optical misalignment = CONFIRMED on zoomed crop → fixed.
+- NEW FEATURE — Shareable experiment deep-links (#experiment=):
+  · experiment-link.ts: buildExperimentHash/parseExperimentHash
+    (#experiment=<tab>?<k>=<v>&…&preset=<id>), restoreNumber/restoreFlag
+    (finite, clamped, fallback — links are untrusted input). `preset` key
+    is informational; numeric params always drive the restore.
+  · share-experiment.tsx: "Share experiment" dashed chip (Share2→Check,
+    clipboard + execCommand fallback + sonner, identical to Copy link).
+    params prop is a () => Record function so ref-held lens position is
+    read at click time (react-hooks/refs compliant).
+  · lab.tsx: parses hash on mount + hashchange → setTab + restoreTick
+    bump; deferred 80ms delivery dispatches phys:restore-experiment once
+    the target instrument has mounted and measured its canvas; scrolls to
+    #lab (calm-aware behavior); toast "Experiment restored from a shared
+    link."; manual tab switch clears a stale experiment hash via
+    replaceState.
+  · Each sim: restore listener effect (lensing: θ_E/mode/ring +
+    canvas-normalized lens x/y + lensMoved; orbits: m/f/a/t + resetSim(f)
+    + auto-run; wave: E/V/w + buildSystem + resetSim + auto-run).
+- NEW FEATURE — Reading measure % readout: 3-digit padded counter
+  (000–100%) in the sticky reading header, written by direct textContent
+  in the existing onScroll handler (zero re-renders), photon-tinted,
+  aria-hidden with sr-only label, reset to 000 on essay change.
+- NEW FEATURE — "Next in the notebook" hand-off card at essay end:
+  cycles the readable essays (nextNoteOf), styled like a ledger row,
+  opens via openNote (pushState → Back returns), resets scroll/counter.
+- STYLING DETAIL:
+  · Drop cap optical fix: line-height 0.82→0.78, padding-top
+    0.06em→0.02em (cap sits on cap height), padding-right 0.12em→0.16em
+    (air). VLM re-judgement: PASS.
+  · Reading pane: 6px slim scrollbar (Firefox thin + webkit), photon
+    thumb on hover; scroll-behavior: smooth for TOC navigation while the
+    note-change reset jumps via scrollTo({behavior:"instant"}).
+  · TOC active item: 2px photon inset tick via .reading-toc
+    a[aria-current="true"].
+- Lint friction fixed: react-hooks/refs (new compiler-era rule) flagged
+  ref reads during render — resolved via function-prop params +
+  effect-scoped restore handlers (wave listener re-subscribes every
+  render by design, documented in code).
+- VERIFICATION: orbits custom restore (m=0.31/f=0.85 readouts correct);
+  lensing preset restore (θ_E=90, Caustic grid aria-pressed=true, grid
+  mode); wave restore (E=1.00, Thin barrier pressed); share button
+  round-trips exactly `#experiment=orbits?m=0.31&f=0.85&a=1&t=1`;
+  graceful error toast when clipboard blocked; hash cleared on manual
+  switch; % counter 000→007(400px)→100(bottom); next-card click swaps
+  essay + resets; lint exit 0; tsc zero errors under src/; dev.log clean.
+- Cron task creation retried (6th time) — still "cron tool is not
+  available for this request" (gateway limitation; job definition in
+  R1-cron entry remains the spec).
+
+Stage Summary:
+- The laboratory is now addressable: any bench state — preset or
+  hand-tuned, lens dragged anywhere — serializes into a human-readable
+  URL and replays exactly for whoever opens it. The reading view gained
+  an instrument-grade position counter and a hand-off to the next essay,
+  and the drop cap finally sits on the cap line.
+- Known notes: (1) agent-browser `errors --clear` is a no-op — use
+  performance entries for health checks; (2) headless clipboard needs a
+  stub to verify URL construction (real browsers work via the Copy link
+  code path); (3) wave restore listener re-subscribes per render
+  (harmless, documented); (4) experiment links are per-instrument — a
+  cross-instrument "lab tour" link could come later.
+- Next-phase candidates: unify ask-assistant + research-ask into one
+  shared companion component; hyperbola overlay for the escape regime;
+  real content replacement (name/portrait/channels/CV) when the owner is
+  ready; print stylesheet expansion; "open a shared experiment" toast
+  deep-links back to the lab after navigation away.

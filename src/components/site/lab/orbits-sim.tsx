@@ -11,6 +11,13 @@ import {
   subscribeMotion as subscribeReduceMotion,
 } from "@/lib/motion-preference";
 import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
+import {
+  EXPERIMENT_EVENT,
+  restoreFlag,
+  restoreNumber,
+  type ExperimentSpec,
+} from "./experiment-link";
+import { ShareExperimentButton } from "./share-experiment";
 
 /**
  * ORBITAL MECHANICS — the Newtonian two-body problem, live.
@@ -475,6 +482,26 @@ export function OrbitsSim() {
         p.showTrails === showTrails
     )?.id ?? null;
 
+  /* ---------- shared-link restore ---------- */
+
+  useEffect(() => {
+    const onRestore = (e: Event) => {
+      const spec = (e as CustomEvent<ExperimentSpec>).detail;
+      if (spec?.tab !== "orbits") return;
+      const m = restoreNumber(spec.params, "m", 0.05, 0.5, 0.18);
+      const f = restoreNumber(spec.params, "f", 0.5, 1.5, 1.0);
+      setMassRatio(m);
+      setLaunchF(f);
+      setShowAnalytic(restoreFlag(spec.params, "a", true));
+      setShowTrails(restoreFlag(spec.params, "t", true));
+      // f only takes effect on reset, so restoring replays the launch.
+      resetSim(f);
+      if (!playing && !reduceMotion) setPlayingOverride(true);
+    };
+    window.addEventListener(EXPERIMENT_EVENT, onRestore);
+    return () => window.removeEventListener(EXPERIMENT_EVENT, onRestore);
+  }, [resetSim, playing, reduceMotion]);
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
     if (e.key === " ") {
       e.preventDefault();
@@ -529,6 +556,20 @@ export function OrbitsSim() {
               activeId={activePresetId}
               onSelect={applyPreset}
             />
+
+            <div>
+              <ShareExperimentButton
+                tab="orbits"
+                preset={activePresetId}
+                instrument="the orbital-mechanics bench"
+                params={() => ({
+                  m: massRatio.toFixed(2),
+                  f: launchF.toFixed(2),
+                  a: showAnalytic ? 1 : 0,
+                  t: showTrails ? 1 : 0,
+                })}
+              />
+            </div>
 
             <div className="space-y-3">
               <div className="flex items-baseline justify-between">

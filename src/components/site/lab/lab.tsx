@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Tex } from "@/components/site/tex";
+import {
+  EXPERIMENT_EVENT,
+  isExperimentHash,
+  parseExperimentHash,
+  type ExperimentSpec,
+} from "./experiment-link";
 import { LensingSim } from "./lensing-sim";
 import { OrbitsSim } from "./orbits-sim";
 import { WaveSim } from "./wave-sim";
@@ -15,10 +22,17 @@ export type LabTab = "lensing" | "orbits" | "wave";
  * INTERACTIVE PHYSICS LABORATORY
  * Three working instruments, not animations: light deflection,
  * orbits, and quantum tunneling — each paired with its governing
- * equations and stated assumptions.
+ * equations and stated assumptions. Every bench state is shareable:
+ * #experiment=<instrument>?<params> restores it from a link.
  */
 export function PhysicsLab() {
   const [tab, setTab] = useState<LabTab>("lensing");
+  // Bumped on every parsed #experiment= so the delivery effect re-runs even
+  // when the link targets the already-active instrument.
+  const [restoreTick, setRestoreTick] = useState(0);
+
+  // A parsed #experiment= spec waiting for its instrument to mount.
+  const pendingSpecRef = useRef<ExperimentSpec | null>(null);
 
   // External control (command palette) — switch instruments on demand
   useEffect(() => {
@@ -32,8 +46,55 @@ export function PhysicsLab() {
     return () => window.removeEventListener("phys:lab-tab", onOpen);
   }, []);
 
+  // Shared-link restore: parse on mount and on every hashchange, then
+  // hand the spec to whichever instrument the link names.
+  useEffect(() => {
+    const apply = () => {
+      const spec = parseExperimentHash(window.location.hash);
+      if (!spec) return;
+      pendingSpecRef.current = spec;
+      setTab(spec.tab);
+      setRestoreTick((t) => t + 1);
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, []);
+
+  // Once the requested tab is mounted (its own effects have run, so the
+  // instrument has measured its canvas), deliver the spec and scroll the
+  // visitor down to the bench. Deferred by a frame so a fresh mount can
+  // settle; notebook deep-links are unaffected (different prefix).
+  useEffect(() => {
+    const spec = pendingSpecRef.current;
+    if (!spec || spec.tab !== tab) return;
+    pendingSpecRef.current = null;
+    const id = window.setTimeout(() => {
+      const calm =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+        window.localStorage.getItem("phys:motion-reduced") === "1";
+      document
+        .getElementById("lab")
+        ?.scrollIntoView({ behavior: calm ? "auto" : "smooth" });
+      window.dispatchEvent(
+        new CustomEvent<ExperimentSpec>(EXPERIMENT_EVENT, { detail: spec })
+      );
+      toast.info("Experiment restored from a shared link.", {
+        description: "The instrument was set up exactly as it was shared.",
+      });
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [tab, restoreTick]);
+
   const switchTab = useCallback((v: string) => {
-    if (v === "lensing" || v === "orbits" || v === "wave") setTab(v);
+    if (v === "lensing" || v === "orbits" || v === "wave") {
+      setTab(v);
+      // A manual switch leaves the shared setup behind — keep the URL
+      // honest by clearing the stale experiment hash (no history entry).
+      if (isExperimentHash(window.location.hash)) {
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    }
   }, []);
 
   return (

@@ -8,6 +8,13 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
+import {
+  EXPERIMENT_EVENT,
+  restoreFlag,
+  restoreNumber,
+  type ExperimentSpec,
+} from "./experiment-link";
+import { ShareExperimentButton } from "./share-experiment";
 
 /**
  * GRAVITATIONAL LENSING — a working thin-lens ray-shooting simulation.
@@ -509,6 +516,37 @@ export function LensingSim() {
           p.showRing === showRing
       )?.id ?? null);
 
+  /* ---------- shared-link restore ---------- */
+
+  useEffect(() => {
+    const onRestore = (e: Event) => {
+      const spec = (e as CustomEvent<ExperimentSpec>).detail;
+      if (spec?.tab !== "lensing") return;
+      const e2 = restoreNumber(spec.params, "e", MASS_MIN, MASS_MAX, DEFAULT_THETA_E);
+      setThetaE(e2);
+      thetaERef.current = e2;
+      const d: Mode = spec.params["d"] === "grid" ? "grid" : "stars";
+      setMode(d);
+      modeRef.current = d;
+      const r = restoreFlag(spec.params, "r", true);
+      setShowRing(r);
+      ringRef.current = r;
+
+      // Lens position is shared as canvas-normalized fractions so the link
+      // survives different screen sizes.
+      const { w, h } = sizeRef.current;
+      if (w > 1 && h > 1) {
+        const nx = restoreNumber(spec.params, "x", 0, 1, DEFAULT_LENS.x);
+        const ny = restoreNumber(spec.params, "y", 0, 1, DEFAULT_LENS.y);
+        lensRef.current = { x: nx * w, y: ny * h };
+      }
+      setLensMoved(restoreFlag(spec.params, "m", false));
+      dirtyRef.current = true;
+    };
+    window.addEventListener(EXPERIMENT_EVENT, onRestore);
+    return () => window.removeEventListener(EXPERIMENT_EVENT, onRestore);
+  }, []);
+
   /* ---------- UI ---------- */
 
   return (
@@ -547,6 +585,28 @@ export function LensingSim() {
               activeId={activePresetId}
               onSelect={applyPreset}
             />
+
+            <div>
+              <ShareExperimentButton
+                tab="lensing"
+                preset={activePresetId}
+                instrument="the lensing bench"
+                params={() => ({
+                  e: Math.round(thetaE),
+                  d: mode,
+                  r: showRing ? 1 : 0,
+                  x: (sizeRef.current.w > 1
+                    ? lensRef.current.x / sizeRef.current.w
+                    : DEFAULT_LENS.x
+                  ).toFixed(3),
+                  y: (sizeRef.current.h > 1
+                    ? lensRef.current.y / sizeRef.current.h
+                    : DEFAULT_LENS.y
+                  ).toFixed(3),
+                  m: lensMoved ? 1 : 0,
+                })}
+              />
+            </div>
 
             <div className="space-y-3">
               <div className="flex items-baseline justify-between">
