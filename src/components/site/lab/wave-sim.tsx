@@ -9,6 +9,7 @@ import {
   getMotionReduced as getReduceMotion,
   subscribeMotion as subscribeReduceMotion,
 } from "@/lib/motion-preference";
+import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
 
 /**
  * QUANTUM WAVE PACKET — the one-dimensional time-dependent Schrödinger
@@ -76,6 +77,50 @@ function planeWaveT(E: number, V0: number, w: number): number {
   const s = Math.sin(k2 * w);
   return 1 / (1 + (V0 * V0 * s * s) / (4 * E * dE));
 }
+
+/* ---------- one-tap experiments ----------
+ *
+ * Plane-wave comparison values (same formula as the readout):
+ * · tunnel: E = 1.40 < V₀ = 1.60, w = 2.0 → T_pw ≈ 0.14 — the
+ *   classically forbidden leak, exponential in κw
+ * · over:   E = 2.20 > V₀ = 1.60, w = 2.0 → T_pw ≈ 0.76 — mostly over the
+ *   wall, with a visible reflection ripple
+ * · thin:   E = 1.00 < V₀ = 1.60, w = 0.8 → T_pw ≈ 0.49 — halve the width
+ *   and nearly half the packet walks through a wall it cannot climb
+ */
+
+type WavePreset = Preset & {
+  energy: number;
+  v0: number;
+  w: number;
+};
+
+const WAVE_PRESETS: readonly WavePreset[] = [
+  {
+    id: "tunnel",
+    label: "Textbook tunneling",
+    title: "E = 1.40 < V₀ = 1.60 · w = 2.0 — the classically forbidden leak; plane-wave T ≈ 0.14",
+    energy: 1.4,
+    v0: 1.6,
+    w: 2.0,
+  },
+  {
+    id: "over",
+    label: "Over the wall",
+    title: "E = 2.20 > V₀ = 1.60 · w = 2.0 — mostly transmitted (plane-wave T ≈ 0.76) with a reflection ripple",
+    energy: 2.2,
+    v0: 1.6,
+    w: 2.0,
+  },
+  {
+    id: "thin",
+    label: "Thin barrier",
+    title: "E = 1.00 < V₀ = 1.60 · w = 0.8 — a thin wall leaks almost half the packet; plane-wave T ≈ 0.49",
+    energy: 1.0,
+    v0: 1.6,
+    w: 0.8,
+  },
+];
 
 export function WaveSim() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -510,6 +555,34 @@ export function WaveSim() {
     resetSim();
   };
 
+  /* ---------- presets: parameters + refactored solver + fresh packet ---------- */
+
+  const applyPreset = (preset: WavePreset) => {
+    setEnergy(preset.energy);
+    setBarrierV(preset.v0);
+    setBarrierW(preset.w);
+    // Write the refs directly so the rebuild below sees the new values
+    // immediately (the state→ref mirrors only run after the next render).
+    energyRef.current = preset.energy;
+    v0Ref.current = preset.v0;
+    wRef.current = preset.w;
+    buildSystem();
+    resetSim();
+    // E applies to the packet on reset; V₀ and w refactorise the tridiagonal
+    // solver — all done above. Run the experiment immediately unless the
+    // visitor prefers calm, in which case it stays paused, matching the
+    // instrument's initial reduced-motion state.
+    if (!playing && !reduceMotion) setPlayingOverride(true);
+  };
+
+  const activePresetId =
+    WAVE_PRESETS.find(
+      (p) =>
+        presetParamEq(p.energy, energy) &&
+        presetParamEq(p.v0, barrierV) &&
+        presetParamEq(p.w, barrierW)
+    )?.id ?? null;
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
     if (e.key === " ") {
       e.preventDefault();
@@ -561,6 +634,13 @@ export function WaveSim() {
           </h4>
 
           <div className="mt-5 space-y-5">
+            <PresetChips
+              ariaLabel="Experiment presets for the quantum wave packet"
+              presets={WAVE_PRESETS}
+              activeId={activePresetId}
+              onSelect={applyPreset}
+            />
+
             <div className="space-y-3">
               <div className="flex items-baseline justify-between">
                 <Label htmlFor="packet-energy" className="text-sm">

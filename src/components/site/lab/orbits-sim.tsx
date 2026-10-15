@@ -10,6 +10,7 @@ import {
   getMotionReduced as getReduceMotion,
   subscribeMotion as subscribeReduceMotion,
 } from "@/lib/motion-preference";
+import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
 
 /**
  * ORBITAL MECHANICS — the Newtonian two-body problem, live.
@@ -25,6 +26,64 @@ import {
  */
 
 const DT = 0.002;
+
+/* ---------- one-tap experiments ----------
+ *
+ * Launch at r₀ = 1 with tangential speed f·v_circ (v_circ = 1, GM = 1):
+ *   ε = f²/2 − 1,  h = f,  e = √(1 + 2εh²),  a = −1/(2ε) if bound.
+ * · circle:  f = 1.00 → ε = −0.500, e = 0.000, T = 2π
+ * · ellipse: f = 0.75 → ε = −0.719, e = 0.438 (launch at apoapsis), T ≈ 3.65
+ * · escape:  f = 1.45 → ε = +0.051, e = 1.103 — just past f = √2 ≈ 1.414,
+ *   the conic opens into a hyperbola and the body never returns
+ * · binary:  m₂/m₁ = 0.5 at f = 1 — both bodies orbit the barycentre at
+ *   1/3 and 2/3 of the separation: the exoplanet wobble, at full tilt
+ */
+
+type OrbitsPreset = Preset & {
+  massRatio: number;
+  launchF: number;
+  showAnalytic: boolean;
+  showTrails: boolean;
+};
+
+const ORBITS_PRESETS: readonly OrbitsPreset[] = [
+  {
+    id: "circle",
+    label: "Perfect circle",
+    title: "f = 1.00 · m₂/m₁ = 0.20 — exactly circular: ε = −0.50, e = 0, period T = 2π",
+    massRatio: 0.2,
+    launchF: 1.0,
+    showAnalytic: true,
+    showTrails: true,
+  },
+  {
+    id: "ellipse",
+    label: "Elliptical orbit",
+    title: "f = 0.75 · m₂/m₁ = 0.20 — bound ellipse: ε = −0.72, e = 0.44, launch at apoapsis, T ≈ 3.6",
+    massRatio: 0.2,
+    launchF: 0.75,
+    showAnalytic: true,
+    showTrails: true,
+  },
+  {
+    id: "escape",
+    label: "Close escape",
+    title: "f = 1.45 · m₂/m₁ = 0.20 — just past escape speed √2 ≈ 1.414: ε = +0.05, e = 1.10, unbound",
+    massRatio: 0.2,
+    launchF: 1.45,
+    showAnalytic: false,
+    showTrails: true,
+  },
+  {
+    id: "binary",
+    label: "Binary dance",
+    title: "m₂/m₁ = 0.50 (maximum) · f = 1.00 — both bodies waltz around the barycentre at ⅓ and ⅔ of the separation",
+    massRatio: 0.5,
+    launchF: 1.0,
+    showAnalytic: true,
+    showTrails: true,
+  },
+];
 
 type Vec = { x: number; y: number };
 
@@ -392,6 +451,30 @@ export function OrbitsSim() {
     resetSim(launchF);
   };
 
+  /* ---------- presets: parameters + reset + run (unless calm) ---------- */
+
+  const applyPreset = (preset: OrbitsPreset) => {
+    setMassRatio(preset.massRatio);
+    setLaunchF(preset.launchF);
+    setShowAnalytic(preset.showAnalytic);
+    setShowTrails(preset.showTrails);
+    resetSim(preset.launchF);
+    // f only takes effect on reset, so the preset resets the integration;
+    // mass ratio and the toggles are live. Run the experiment immediately —
+    // unless the visitor prefers calm, in which case it stays paused (the
+    // overlay play button remains available), matching the initial state.
+    if (!playing && !reduceMotion) setPlayingOverride(true);
+  };
+
+  const activePresetId =
+    ORBITS_PRESETS.find(
+      (p) =>
+        presetParamEq(p.massRatio, massRatio) &&
+        presetParamEq(p.launchF, launchF) &&
+        p.showAnalytic === showAnalytic &&
+        p.showTrails === showTrails
+    )?.id ?? null;
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
     if (e.key === " ") {
       e.preventDefault();
@@ -440,6 +523,13 @@ export function OrbitsSim() {
           </h4>
 
           <div className="mt-5 space-y-5">
+            <PresetChips
+              ariaLabel="Experiment presets for orbital mechanics"
+              presets={ORBITS_PRESETS}
+              activeId={activePresetId}
+              onSelect={applyPreset}
+            />
+
             <div className="space-y-3">
               <div className="flex items-baseline justify-between">
                 <Label htmlFor="mass-ratio" className="text-sm">
@@ -476,14 +566,15 @@ export function OrbitsSim() {
                 id="launch-speed"
                 aria-label="Initial tangential speed as a fraction of circular speed"
                 min={0.5}
-                max={1.25}
+                max={1.5}
                 step={0.01}
                 value={[launchF]}
                 onValueChange={([v]) => setLaunchF(v)}
               />
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Applies on reset — from f &lt; 1 (dropping toward periapsis) to
-                f &gt; 1 (climbing toward apoapsis).
+                Applies on reset — f &lt; 1 drops from apoapsis, f &gt; 1 climbs
+                from periapsis, and past f = √2 ≈ 1.41 the conic opens and the
+                body escapes for good.
               </p>
             </div>
 

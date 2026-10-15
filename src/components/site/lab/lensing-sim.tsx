@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
 
 /**
  * GRAVITATIONAL LENSING — a working thin-lens ray-shooting simulation.
@@ -33,6 +34,58 @@ const MASS_MAX = 140;
 const DEFAULT_THETA_E = 72;
 const DEFAULT_LENS = { x: 0.55, y: 0.42 }; // fractions of canvas size
 
+/* ---------- one-tap experiments ----------
+ *
+ * Physics notes (point-mass lens, β = θ − θ_E²θ/|θ|²):
+ * · "Einstein ring" — a source aligned with the lens (|β| → 0) images onto
+ *   the ring of radius θ_E; a large θ_E makes the ring unmissable.
+ * · "Double image" — any misalignment |β| = u·θ_E splits the source into two
+ *   images at θ± = ½(β ± √(β² + 4θ_E²)); with u = 0.35 they sit at
+ *   +1.19 θ_E and −0.84 θ_E, straddling the ring, total magnification
+ *   μ = (u² + 2)/(u√(u² + 4)) ≈ 3.0.
+ * · "Caustic grid" — the coordinate grid in the source plane is mapped
+ *   through the lens equation; the tangential stretching and the fold at
+ *   θ_E show the lens mapping itself.
+ */
+
+type LensingPreset = Preset & {
+  thetaE: number;
+  mode: Mode;
+  showRing: boolean;
+  /** "aligned" resets the lens to the default plate position; "offset" drags it ~0.35 θ_E off alignment. */
+  placement: "aligned" | "offset";
+};
+
+const LENSING_PRESETS: readonly LensingPreset[] = [
+  {
+    id: "ring",
+    label: "Einstein ring",
+    title: "θ_E = 110 px · starfield · guide on — lens realigned with the plate; sources near the axis bloom into a ring",
+    thetaE: 110,
+    mode: "stars",
+    showRing: true,
+    placement: "aligned",
+  },
+  {
+    id: "double",
+    label: "Double image",
+    title: "θ_E = 70 px · lens offset by 0.35 θ_E — aligned sources split into two images at +1.19 θ_E and −0.84 θ_E (μ ≈ 3)",
+    thetaE: 70,
+    mode: "stars",
+    showRing: true,
+    placement: "offset",
+  },
+  {
+    id: "caustic",
+    label: "Caustic grid",
+    title: "θ_E = 90 px · coordinate grid — the source-plane grid warps through the lens mapping; drag the lens to sweep the caustic",
+    thetaE: 90,
+    mode: "grid",
+    showRing: true,
+    placement: "aligned",
+  },
+];
+
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
@@ -55,6 +108,9 @@ export function LensingSim() {
   const [thetaE, setThetaE] = useState(DEFAULT_THETA_E);
   const [showRing, setShowRing] = useState(true);
   const [mode, setMode] = useState<Mode>("stars");
+  // False until the visitor moves the lens by hand — presets place it too,
+  // so lens placement participates in the active-preset comparison.
+  const [lensMoved, setLensMoved] = useState(false);
 
   // Mirrors for the render loop
   const thetaERef = useRef(thetaE);
@@ -372,6 +428,7 @@ export function LensingSim() {
       x: Math.min(Math.max(p.x, 0), w),
       y: Math.min(Math.max(p.y, 0), h),
     };
+    setLensMoved(true);
     dirtyRef.current = true;
   };
 
@@ -384,6 +441,7 @@ export function LensingSim() {
         x: Math.min(Math.max(p.x, 0), w),
         y: Math.min(Math.max(p.y, 0), h),
       };
+      if (!lensMoved) setLensMoved(true);
       dirtyRef.current = true;
     }
   };
@@ -402,6 +460,7 @@ export function LensingSim() {
     }
     if (handled) {
       e.preventDefault();
+      setLensMoved(true);
       dirtyRef.current = true;
     }
   };
@@ -413,6 +472,42 @@ export function LensingSim() {
     thetaERef.current = DEFAULT_THETA_E;
     dirtyRef.current = true;
   };
+
+  /* ---------- presets: set every parameter and place the lens ---------- */
+
+  const applyPreset = (preset: LensingPreset) => {
+    setThetaE(preset.thetaE);
+    thetaERef.current = preset.thetaE;
+    setMode(preset.mode);
+    modeRef.current = preset.mode;
+    setShowRing(preset.showRing);
+    ringRef.current = preset.showRing;
+
+    const { w, h } = sizeRef.current;
+    let x = w * DEFAULT_LENS.x;
+    let y = h * DEFAULT_LENS.y;
+    if (preset.placement === "offset") {
+      // ~0.35 θ_E of misalignment: two well-separated images (u = |β|/θ_E)
+      const off = (0.35 * preset.thetaE) / Math.SQRT2;
+      x += off;
+      y += off;
+    }
+    lensRef.current = {
+      x: Math.min(Math.max(x, 0), w),
+      y: Math.min(Math.max(y, 0), h),
+    };
+    setLensMoved(false);
+    dirtyRef.current = true;
+  };
+
+  const activePresetId = lensMoved
+    ? null
+    : (LENSING_PRESETS.find(
+        (p) =>
+          presetParamEq(p.thetaE, thetaE) &&
+          p.mode === mode &&
+          p.showRing === showRing
+      )?.id ?? null);
 
   /* ---------- UI ---------- */
 
@@ -446,6 +541,13 @@ export function LensingSim() {
           </h4>
 
           <div className="mt-5 space-y-5">
+            <PresetChips
+              ariaLabel="Experiment presets for gravitational lensing"
+              presets={LENSING_PRESETS}
+              activeId={activePresetId}
+              onSelect={applyPreset}
+            />
+
             <div className="space-y-3">
               <div className="flex items-baseline justify-between">
                 <Label htmlFor="lens-mass" className="text-sm">

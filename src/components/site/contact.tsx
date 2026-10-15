@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, Loader2, Send, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Fingerprint, Github, GraduationCap, Link2, Linkedin, Loader2, Mail, Send, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,15 @@ import { cn } from "@/lib/utils";
  * "to be added" state), and a form wired to a real backend
  * (/api/contact → validated, honeypotted, persisted).
  */
+
+/** Channel glyphs — one per channel id, a quiet anchor for scanning */
+const channelIcons: Record<string, typeof Mail> = {
+  email: Mail,
+  github: Github,
+  linkedin: Linkedin,
+  scholar: GraduationCap,
+  orcid: Fingerprint,
+};
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Please tell me your name.").max(80),
@@ -119,26 +128,32 @@ export function Contact() {
                   Channels
                 </h3>
                 <ul className="mt-4 divide-y divide-border border-y border-border">
-                  {contactChannels.map((c) => (
-                    <li key={c.id} className="flex items-center justify-between gap-4 py-3.5">
-                      <span className="text-sm text-foreground/90">{c.label}</span>
-                      {c.href ? (
-                        <a
-                          href={c.href}
-                          className="font-mono text-xs text-photon underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-                        >
-                          {c.hint}
-                        </a>
-                      ) : (
-                        <span className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground/70">
-                          {c.hint}
-                          <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[9px] uppercase tracking-[0.12em]">
-                            to be added
-                          </span>
+                  {contactChannels.map((c) => {
+                    const Icon = channelIcons[c.id] ?? Link2;
+                    return (
+                      <li key={c.id} className="flex items-center justify-between gap-4 py-3.5">
+                        <span className="flex items-center gap-3 text-sm text-foreground/90">
+                          <Icon className="size-4 text-muted-foreground/70" aria-hidden="true" />
+                          {c.label}
                         </span>
-                      )}
-                    </li>
-                  ))}
+                        {c.href ? (
+                          <a
+                            href={c.href}
+                            className="font-mono text-xs text-photon underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                          >
+                            {c.hint}
+                          </a>
+                        ) : (
+                          <span className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground/70">
+                            {c.hint}
+                            <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[9px] uppercase tracking-[0.12em]">
+                              to be added
+                            </span>
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
                 <p className="mt-4 text-xs italic leading-relaxed text-muted-foreground/80">
                   Accounts and documents appear here only when they actually

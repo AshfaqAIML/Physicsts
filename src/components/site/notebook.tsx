@@ -159,9 +159,9 @@ export function Notebook() {
                       : `${note.title} — planned, not yet written`
                   }
                   className={cn(
-                    "group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-4 py-6 text-left sm:gap-x-8",
+                    "group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-4 py-6 text-left transition-colors sm:gap-x-8",
                     readable
-                      ? "transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                      ? "hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
                       : "cursor-default opacity-60"
                   )}
                 >
@@ -273,6 +273,30 @@ function ReadingView({
 }) {
   const essay = note.essay!;
   const [active, setActive] = useState(essay.sections[0]?.id ?? "");
+  const articleRef = useRef<HTMLElement | null>(null);
+
+  // Scroll-spy — the contents rail tracks the section under the eye
+  // as the essay scrolls, not only on explicit clicks.
+  useEffect(() => {
+    const article = articleRef.current;
+    if (!article) return;
+    const sections = essay.sections
+      .map((s) => article.querySelector(`#${s.id}`))
+      .filter((el): el is HTMLElement => el !== null);
+    if (sections.length === 0) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        }
+      },
+      // A band just below the header marks "currently reading"
+      { root: article, rootMargin: "-15% 0px -70% 0px" }
+    );
+    sections.forEach((s) => io.observe(s));
+    return () => io.disconnect();
+  }, [essay.sections]);
 
   return (
     <div className="grid h-[92vh] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -314,7 +338,7 @@ function ReadingView({
       </aside>
 
       {/* The essay */}
-      <article className="overflow-y-auto">
+      <article ref={articleRef} className="overflow-y-auto">
         <DialogHeader className="sticky top-0 z-10 border-b border-border bg-background/90 px-6 py-5 text-left backdrop-blur-sm sm:px-10">
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
             Scientific Notebook · {note.category}

@@ -91,7 +91,7 @@ export function Hero() {
           >
             <a
               href="#projects"
-              className="group inline-flex h-12 items-center gap-2.5 rounded-md bg-primary px-7 text-sm font-medium text-primary-foreground transition-transform duration-300 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              className="group inline-flex h-12 items-center gap-2.5 rounded-md bg-primary px-7 text-sm font-medium text-primary-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring dark:hover:shadow-photon/25"
             >
               Explore My Work
               <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />

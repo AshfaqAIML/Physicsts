@@ -752,3 +752,193 @@ Stage Summary:
 - Next-phase candidates: lab instrument presets (one-tap experiments),
   LLM assistant for research areas (same pattern as essays), real
   content replacement (name/portrait/channels) when the owner is ready.
+
+---
+Task ID: R4-a
+Agent: subagent
+Task: One-tap experiment presets for the three lab instruments
+
+Work Log:
+- NEW src/components/site/lab/preset-chips.tsx — shared presentational
+  component: "EXPERIMENTS" label (mono 10px, tracking 0.2em), chip row
+  (role="group" + aria-label, flex-wrap gap-2, aria-pressed chips, spec'd
+  chip classes incl. active border-photon/60 bg-photon/10), plus
+  presetParamEq() float compare (tol 1e-6 — covers Radix float32 slider
+  noise ~1e-7). Presets live INSIDE each sim's control panel; lab.tsx
+  untouched (zero edits).
+- lensing-sim.tsx (+3 chips): "Einstein ring" θ_E=110 · starfield · ring
+  guide ON · lens reset to default plate position; "Double image" θ_E=70 ·
+  starfield · guide ON · lens programmatically offset 0.35·θ_E (diagonal,
+  magnitude 0.35θ_E — u=|β|/θ_E=0.35 → images at +1.190 θ_E and −0.840 θ_E,
+  μ=2.99); "Caustic grid" θ_E=90 · coord-grid mode · guide ON · aligned.
+  Lens position IS programmable (lensRef) → presets place it; new
+  lensMoved state (set by pointerdown/drag/arrow-keys) participates in
+  active-chip comparison so a hand-dragged lens clears the highlight.
+  State+refs set together, dirtyRef flip → redraw (no play/pause concept
+  in this instrument).
+- orbits-sim.tsx (+4 chips): "Perfect circle" f=1.00, m₂/m₁=0.20, trails+
+  analytic ON (ε=−0.500, e=0, T=2π); "Elliptical orbit" f=0.75 (ε=−0.719,
+  e=0.438, launch at apoapsis, T=3.65); "Close escape" f=1.45 (ε=+0.051,
+  e=1.103 — just past √2≈1.414; analytic toggle switched OFF because the
+  dashed-conic renderer only supports bound orbits — switch state kept
+  truthful); "Binary dance" m₂/m₁=0.50 max, f=1.00 (barycentre waltz at
+  ⅓/⅔ separation). PHYSICS CORRECTION: the task brief claimed f=1.25 →
+  e>1; actually ε=f²/2−1=−0.219 → e=0.5625 BOUND. Escape was unreachable
+  (old slider max 1.25 < √2), so the launch-speed slider max was extended
+  1.25 → 1.5 and the caption now states the f=√2 escape threshold. Preset
+  apply = set all params + resetSim(f) (f only takes effect on reset) +
+  auto-play iff !playing && !reduceMotion (calm keeps it paused, overlay
+  play button intact; explicit user pause/play overrides respected).
+- wave-sim.tsx (+3 chips): "Textbook tunneling" E=1.40, V₀=1.60, w=2.0
+  (plane-wave T=0.141; measured packet T plateau ≈0.29 — broad-packet
+  energy spread, as the instrument's own note explains); "Over the wall"
+  E=2.20 (T_pw=0.757; measured ≈0.59–0.63 at plateau, visible reflection
+  ripple); "Thin barrier" E=1.00, w=0.8 (T_pw=0.487; measured ≈0.48 —
+  nearly half the packet through a wall it cannot climb). Preset apply
+  writes energyRef/v0Ref/wRef DIRECTLY (state→ref mirrors only run
+  post-render), then buildSystem() + resetSim() + auto-play rule as
+  orbits. Redundant post-render buildSystem from the mirror effects is
+  idempotent. Active comparison covers E/V₀/w only — sim-speed slider is
+  a view param, presets don't own it (same for orbits).
+- NUMERICAL VERIFICATION (offline bun replica of each sim's exact internal
+  math + live browser cross-check):
+  · orbits: circle e=0.0000, ΔE drift −0.000%, r≡1.000; ellipse e=0.4375,
+    r∈[0.391,1.000], drift 0.000%; escape e=1.1025, ε=+0.0513, r→12.7 at
+    t=20, drift +0.001%; binary = circle + ratio display. LIVE readouts
+    matched: 0.437/0.696/−0.719/3.6τ, 1.103/—/+0.051/unbound, 0.000/1.000/
+    −0.500/6.3τ.
+  · wave: browser readout "pw" values 0.141/0.757/0.487 match formula
+    exactly; measured packet R/T/A at matched simulated times agree with
+    the offline replica to ~0.01 (e.g. Over-the-wall at t=17.9: browser
+    R=0.363 T=0.514 A=0.121 vs replica t=18: 0.363/0.510/0.125).
+  · lensing: mapping round-trip β=θ−θ_E²/θ returns exactly 0.350000 for
+    both image positions ±(1.190, −0.840)·θ_E.
+- QA (agent-browser --session r4a, 1440×900 + 375×812):
+  · Every chip on every instrument: params verified via aria-valuenow +
+    readouts (lensing 110/70/90 + grid radio; orbits f/mass + live e-ε-T;
+    wave E/V₀/w + pw), active chip aria-pressed=true with photon classes,
+    one-at-a-time exclusivity.
+  · Manual slider change clears highlight on all three (lensing θ_E
+    110→112; orbits mass 0.5→0.49; wave E 1.0→1.05). Lens drag clears via
+    lensMoved (code path exercised by pointer handlers).
+  · Auto-play after preset (default session) and calm-mode (localStorage
+    phys:motion-reduced=1 → html.motion-calm): orbits + wave presets apply
+    params + reset but STAY PAUSED (play overlay visible); calm cleared
+    afterwards (verified motion-calm=false after reload).
+  · Mobile 375: scrollWidth=375=clientWidth (no overflow); chips wrap
+    2+1 (lensing, wave) and 2+2 (orbits). Bonus qa/r4a-mobile-375.jpeg.
+  · Zero page errors / console errors throughout; dev.log clean.
+  · Screenshots: qa/r4a-lensing.jpeg (Einstein ring applied, θ_E=110,
+    ring distortion + dashed guide), qa/r4a-orbits.jpeg (ellipse applied:
+    trail + dashed analytic conic + P/A ticks), qa/r4a-wave.jpeg (mid-
+    tunneling t=10.3: packet straddling barrier, R=0.359/T=0.264). VLM
+    review of all three (qa/vlm-r4a-*.json): chips present + correct chip
+    highlighted + correct physics visible + correct readouts; no layout
+    defects (one pre-existing nav-tracking nit "NOTESLAB" noted by VLM —
+    nav design, unrelated to this task).
+- bun run lint: exit 0. bunx tsc --noEmit: zero errors under src/ (only
+  pre-existing examples/ + skills/ errors). git status: only the 3 sim
+  files modified + preset-chips.tsx added; lab.tsx/notebook.tsx untouched.
+
+Stage Summary:
+- Each lab instrument now has a one-tap EXPERIMENTS row (3/4/3 chips) that
+  sets every parameter, places/resets the state the way the phenomenon
+  needs, and plays it (unless the visitor prefers calm) — with the active
+  experiment highlighted and manual tweaks honestly clearing it. All
+  preset physics was verified numerically against the sims' internal math
+  (analytic values + an exact offline replica + live browser readouts).
+- The escape preset exposed and fixed a real instrument limitation: the
+  launch-speed slider could never reach escape speed (√2); range now
+  0.5–1.5 with the threshold documented in the caption.
+- Risks/notes: (1) lensing lens placement resets to the default position
+  on window resize (existing behavior for dragged lenses too) — the chip
+  highlight can outlive that reset; harmless, rare. (2) wave R/T readouts
+  are instantaneous values that decay as the caps absorb the outgoing
+  packets (existing semantics) — quoted plateau numbers are the honest
+  measurement window (t≈10–20), before wall-bounce scrambling; auto-pause
+  (total<0.03) takes minutes because cap absorption is gradual — also
+  pre-existing. (3) "Close escape" turns the analytic overlay off (the
+  dashed-conic renderer is bound-only by design); a future enhancement
+  could draw the hyperbola branch. (4) Sim-speed sliders are deliberately
+  outside preset comparison (view params); changing them keeps the chip
+  lit. (5) Tab switches remount sims (Radix default), so preset state
+  resets between instruments — existing behavior, matches everything else.
+
+---
+Task ID: R4-a (subagent)
+Agent: subagent
+Task: One-tap experiment presets for the three lab instruments
+
+Work Log:
+- New shared preset-chips.tsx (PresetChips component + param comparator);
+  preset rows added inside each sim's control panel (lab.tsx untouched).
+- Lensing: Einstein ring / Double image / Caustic grid (lens position
+  programmatically placed; u=0.35 offset verified: images at ±1.19/−0.84 θ_E,
+  magnification 2.99). Orbits: Perfect circle / Elliptical / Close escape /
+  Binary dance — PHYSICS CORRECTION: escape needs f > √2, so launch slider
+  max extended 1.25 → 1.5 and escape preset uses f=1.45 (verified live by
+  main agent: e=1.103, ε=+0.051, "unbound"). Wave: Textbook tunneling /
+  Over the wall / Thin barrier (T values verified against an offline CN
+  solver replica). Full details in the subagent's own entry above.
+
+Stage Summary:
+- All three instruments now teach through one tap; active preset chips
+  highlight and clear on manual parameter change. Reduced-motion-safe.
+
+---
+Task ID: R4 (review round — main agent)
+Agent: main-agent
+Task: Status assessment, QA, mandated feature + styling expansion
+
+Work Log:
+- Baseline QA fully stable (200, zero errors, clean console, no overflow
+  at 1440/375, dev.log clean).
+- NEW FEATURES:
+  1. Reading-view TOC scroll-spy (notebook.tsx): IntersectionObserver
+     (root = the scrollable article, band -15%/-70%) tracks the section
+     currently under the eye; contents rail updates on scroll AND clicks.
+     Verified both directions (section 4 → 04 active, back to 2 → 02).
+  2. Lab experiment presets — dispatched to subagent (R4-a above);
+     independently re-verified: all 3 groups present (3/4/3 chips),
+     Thin-barrier preset sets E=1.0/V₀=1.6/w=0.8 + highlights, manual
+     E nudge clears highlight, Close-escape sets f=1.45 (slider max now
+     1.5) with live e=1.103 readout.
+- STYLING DETAIL:
+  · Notebook ledger rows: hover/focus-visible background tint
+    (hover:bg-muted/40) for clearer affordance.
+  · Contact channels: per-channel lucide glyphs (Mail, Github, Linkedin,
+    GraduationCap, Fingerprint) — quiet scanning anchors; 5 render.
+  · Hero primary CTA: photon-tinted hover glow in dark theme
+    (dark:hover:shadow-photon/25) + lift.
+  · Removed the temporary CSS refresh marker after the Turbopack
+    staleness remedy.
+- VERIFICATION:
+  · TOC scroll-spy both directions ✓; preset matrix ✓ (params, highlight,
+    manual clear, escape physics); channel icons ✓ (5 svg); mobile 375
+    no overflow including preset chip rows ✓; fresh desktop console
+    clean ✓; lint exit 0; tsc zero new errors under src/ ✓.
+  · Investigated a headless-only false negative: Tailwind hover variants
+    are @media (hover: hover)-gated; this headless Chromium reports
+    hover:none, so hover styles CANNOT render in QA screenshots —
+    verified the generated CSS rules + selector matching are correct.
+    Real pointer devices will show the tints. (Documented so future
+    rounds don't chase it.)
+  · VLM review: labs 9.5/10 ×2 (chip styling praised, active state
+    clearly differentiated). Two flags investigated and disproven:
+    "nav overlaps text" = intentional glass-panel scroll-under;
+    "low contrast heading" = measured #F2F4F8 on #080A0F ≈ 17:1.
+- Cron task creation retried — still "cron tool is not available for
+  this request" (job definition preserved in R1-cron entry).
+
+Stage Summary:
+- The lab now teaches through one-tap experiments (with a genuine
+  physics correction: escape trajectories finally reachable), the essay
+  reading view tracks your position in the contents rail, and another
+  styling detail pass landed (ledger tints, channel glyphs, CTA glow).
+- Known notes: (1) hover styles unverifiable in headless QA (media-gated)
+    — verify via generated CSS, not screenshots; (2) lensing lens
+    position resets on window resize (pre-existing, harmless);
+    (3) wave R/T readouts are instantaneous snapshots by design.
+- Next-phase candidates: research-area AI companion (same pattern as
+  essays), hyperbola overlay for the escape regime, real content
+  replacement when the owner is ready.

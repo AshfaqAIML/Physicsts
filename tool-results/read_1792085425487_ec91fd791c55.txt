@@ -1,0 +1,718 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+     4→     4→import { Pause, Play, RotateCcw } from "lucide-react";
+     5→     5→import { Button } from "@/components/ui/button";
+     6→     6→import { Label } from "@/components/ui/label";
+     7→     7→import { Slider } from "@/components/ui/slider";
+     8→     8→import {
+     9→     9→  getMotionReduced as getReduceMotion,
+    10→    10→  subscribeMotion as subscribeReduceMotion,
+    11→    11→} from "@/lib/motion-preference";
+    12→    12→
+    13→    13→/**
+    14→    14→ * QUANTUM WAVE PACKET — the one-dimensional time-dependent Schrödinger
+    15→    15→ * equation, solved live on a grid.
+    16→    16→ *
+    17→    17→ * i ∂ψ/∂t = [ −(1/2) ∂²/∂x² + V(x) ] ψ      (natural units ħ = m = 1)
+    18→    18→ *
+    19→    19→ * The integrator is Crank–Nicolson — (I + i·dt/2·H)ψⁿ⁺¹ = (I − i·dt/2·H)ψⁿ —
+    20→    20→ * unconditionally stable and unitary, so probability is conserved exactly
+    21→    21→ * (up to round-off) until the absorbing potential at the domain edges
+    22→    22→ * deliberately removes outgoing waves, mimicking an infinite domain.
+    23→    23→ * The left-side tridiagonal system is factorised once per parameter change
+    24→    24→ * (Thomas algorithm over complex re/im arrays); each step is then O(N).
+    25→    25→ *
+    26→    26→ * Approximations: single particle, non-relativistic, potential barrier
+    27→    27→ * static in time. The transmitted/reflected readouts are packet
+    28→    28→ * measurements; the comparison figure is the plane-wave formula.
+    29→    29→ */
+    30→    30→
+    31→    31→const N = 768;          // grid points
+    32→    32→const X_MIN = -24;      // domain
+    33→    33→const X_MAX = 24;
+    34→    34→const DX = (X_MAX - X_MIN) / N;
+    35→    35→const DT = 0.005;       // Crank–Nicolson is unconditionally stable
+    36→    36→const X0 = -14;          // packet start
+    37→    37→const SIGMA = 1.2;      // position spread
+    38→    38→const CAP_WIDTH = 6;    // absorbing ramp width (each edge)
+    39→    39→const E_MIN = 0.4, E_MAX = 3.0;
+    40→    40→const V0_MIN = 0.2, V0_MAX = 4.0;
+    41→    41→const W_MIN = 0.4, W_MAX = 4.0;
+    42→    42→
+    43→    43→/* ---------- small theme helpers (shared convention with the other sims) ---------- */
+    44→    44→
+    45→    45→function cssVar(name: string): string {
+    46→    46→  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    47→    47→}
+    48→    48→
+    49→    49→function hexToRgb(hex: string): [number, number, number] {
+    50→    50→  const m = hex.replace("#", "");
+    51→    51→  const v = m.length === 3 ? m.split("").map((c) => c + c).join("") : m;
+    52→    52→  const n = parseInt(v, 16);
+    53→    53→  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    54→    54→}
+    55→    55→
+    56→    56→function rgba(rgb: [number, number, number], a: number): string {
+    57→    57→  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+    58→    58→}
+    59→    59→
+    60→    60→const getServerReduceMotion = () => false;
+    61→    61→
+    62→    62→/* ---------- plane-wave transmission through a rectangular barrier ---------- */
+    63→    63→
+    64→    64→function planeWaveT(E: number, V0: number, w: number): number {
+    65→    65→  const dE = E - V0;
+    66→    66→  if (Math.abs(dE) < 1e-6) {
+    67→    67→    // E → V₀ limit: T → 1/(1 + V₀w²/2)
+    68→    68→    return 1 / (1 + (V0 * w * w) / 2);
+    69→    69→  }
+    70→    70→  if (dE < 0) {
+    71→    71→    const kappa = Math.sqrt(2 * Math.max(0, V0 - E));
+    72→    72→    const s = Math.sinh(kappa * w);
+    73→    73→    return 1 / (1 + (V0 * V0 * s * s) / (4 * E * (V0 - E)));
+    74→    74→  }
+    75→    75→  const k2 = Math.sqrt(2 * dE);
+    76→    76→  const s = Math.sin(k2 * w);
+    77→    77→  return 1 / (1 + (V0 * V0 * s * s) / (4 * E * dE));
+    78→    78→}
+    79→    79→
+    80→    80→export function WaveSim() {
+    81→    81→  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    82→    82→
+    83→    83→  // null = automatic: paused when the visitor prefers reduced motion
+    84→    84→  const [playingOverride, setPlayingOverride] = useState<boolean | null>(null);
+    85→    85→  const reduceMotion = useSyncExternalStore(
+    86→    86→    subscribeReduceMotion,
+    87→    87→    getReduceMotion,
+    88→    88→    getServerReduceMotion
+    89→    89→  );
+    90→    90→  const playing = playingOverride ?? !reduceMotion;
+    91→    91→
+    92→    92→  const [energy, setEnergy] = useState(1.4);
+    93→    93→  const [barrierV, setBarrierV] = useState(1.6);
+    94→    94→  const [barrierW, setBarrierW] = useState(1.6);
+    95→    95→  const [speed, setSpeed] = useState(5);
+    96→    96→
+    97→    97→  /* ---------- simulation state (refs; the loop never re-renders React) ---------- */
+    98→    98→
+    99→    99→  const re = useRef(new Float64Array(N));
+   100→   100→  const im = useRef(new Float64Array(N));
+   101→   101→  const vPot = useRef(new Float64Array(N));   // real potential
+   102→   102→  const gamma = useRef(new Float64Array(N));  // absorbing potential
+   103→   103→
+   104→   104→  // Crank–Nicolson factorisation of A = I + i·dt/2·H (complex, stored as re/im)
+   105→   105→  const diagRe = useRef(new Float64Array(N));
+   106→   106→  const diagIm = useRef(new Float64Array(N));
+   107→   107→  const cPrimeRe = useRef(new Float64Array(N));
+   108→   108→  const cPrimeIm = useRef(new Float64Array(N));
+   109→   109→  const pRe = useRef(new Float64Array(N));
+   110→   110→  const pIm = useRef(new Float64Array(N));
+   111→   111→  const rhsRe = useRef(new Float64Array(N));
+   112→   112→  const rhsIm = useRef(new Float64Array(N));
+   113→   113→  const dRe = useRef(new Float64Array(N));
+   114→   114→  const dIm = useRef(new Float64Array(N));
+   115→   115→
+   116→   116→  // off-diagonal of H (real, constant): −1/(2dx²)
+   117→   117→  const H_OFF = -1 / (2 * DX * DX);
+   118→   118→
+   119→   119→  const tRef = useRef(0);
+   120→   120→  const yMaxRef = useRef(0.35);   // smoothed |ψ|² axis scale
+   121→   121→  const doneRef = useRef(false);  // packet fully absorbed
+   122→   122→  const readout = useRef<{ t?: HTMLSpanElement | null; x?: HTMLSpanElement | null; R?: HTMLSpanElement | null; T?: HTMLSpanElement | null; A?: HTMLSpanElement | null }>({});
+   123→   123→
+   124→   124→  const energyRef = useRef(energy);
+   125→   125→  const v0Ref = useRef(barrierV);
+   126→   126→  const wRef = useRef(barrierW);
+   127→   127→  const speedRef = useRef(speed);
+   128→   128→  const playingRef = useRef(playing);
+   129→   129→  const visibleRef = useRef(true);
+   130→   130→  const rafRef = useRef(0);
+   131→   131→  const sizeRef = useRef({ w: 0, h: 0, dpr: 1 });
+   132→   132→
+   133→   133→  /* ---------- build the system for current V₀, w, E ---------- */
+   134→   134→
+   135→   135→  const buildSystem = useCallback(() => {
+   136→   136→    const V0 = v0Ref.current;
+   137→   137→    const w = wRef.current;
+   138→   138→    const E = energyRef.current;
+   139→   139→    const gMax = Math.min(0.35, Math.max(0.03, 0.05 * Math.max(E, V0)));
+   140→   140→
+   141→   141→    for (let j = 0; j < N; j++) {
+   142→   142→      const x = X_MIN + (j + 0.5) * DX;
+   143→   143→      vPot.current[j] = Math.abs(x) < w / 2 ? V0 : 0;
+   144→   144→
+   145→   145→      // absorbing ramp near both edges
+   146→   146→      let g = 0;
+   147→   147→      if (x < X_MIN + CAP_WIDTH) g = (X_MIN + CAP_WIDTH - x) / CAP_WIDTH;
+   148→   148→      else if (x > X_MAX - CAP_WIDTH) g = (x - (X_MAX - CAP_WIDTH)) / CAP_WIDTH;
+   149→   149→      gamma.current[j] = gMax * g * g;
+   150→   150→
+   151→   151→      // H diagonal: 1/dx² + V − iγ  →  A diagonal: 1 + i·(dt/2)·(that)
+   152→   152→      //   1 + i·(dt/2)·(hRe + i·hIm) = [1 − (dt/2)·hIm] + i·(dt/2)·hRe
+   153→   153→      const hDiagRe = 1 / (DX * DX) + vPot.current[j];
+   154→   154→      const hDiagIm = -gamma.current[j];
+   155→   155→      diagRe.current[j] = 1 - (DT / 2) * hDiagIm;
+   156→   156→      diagIm.current[j] = (DT / 2) * hDiagRe;
+   157→   157→    }
+   158→   158→
+   159→   159→    // Dirichlet edges: row 0 and N−1 become identity so ψ stays 0 there
+   160→   160→    diagRe.current[0] = 1; diagIm.current[0] = 0;
+   161→   161→    diagRe.current[N - 1] = 1; diagIm.current[N - 1] = 0;
+   162→   162→
+   163→   163→    // Thomas forward elimination (complex):
+   164→   164→    //   p₀ = b₀,  c'₀ = 0 (identity row)
+   165→   165→    //   pⱼ = bⱼ − a·c'ⱼ₋₁,  c'ⱼ = c/pⱼ
+   166→   166→    // sub/super of A are purely imaginary: i·offIm (offIm = (dt/2)·H_OFF)
+   167→   167→    const offIm = (DT / 2) * H_OFF;
+   168→   168→    for (let j = 0; j < N; j++) {
+   169→   169→      const isEdge = j === 0 || j === N - 1;
+   170→   170→      const aIm = isEdge ? 0 : offIm;        // sub-diagonal of row j (identity on edges)
+   171→   171→      const cUse = isEdge ? 0 : offIm;       // super-diagonal of row j
+   172→   172→
+   173→   173→      let pr: number, pi: number;
+   174→   174→      if (j === 0) {
+   175→   175→        pr = diagRe.current[0];
+   176→   176→        pi = diagIm.current[0];
+   177→   177→      } else {
+   178→   178→        // pⱼ = bⱼ − a·c'ⱼ₋₁  with a = 0 + i·aIm:
+   179→   179→        //   (i·aIm)·(c'r + i·c'i) = −aIm·c'i + i·aIm·c'r
+   180→   180→        const acRe = -aIm * cPrimeIm.current[j - 1];
+   181→   181→        const acIm = aIm * cPrimeRe.current[j - 1];
+   182→   182→        pr = diagRe.current[j] - acRe;
+   183→   183→        pi = diagIm.current[j] - acIm;
+   184→   184→      }
+   185→   185→      pRe.current[j] = pr;
+   186→   186→      pIm.current[j] = pi;
+   187→   187→
+   188→   188→      if (j === N - 1) {
+   189→   189→        cPrimeRe.current[j] = 0;
+   190→   190→        cPrimeIm.current[j] = 0;
+   191→   191→      } else {
+   192→   192→        // c'ⱼ = c/pⱼ with c = 0 + i·cUse (purely imaginary):
+   193→   193→        //   (i·cUse)/(pr + i·pi) = [cUse·pi + i·cUse·pr]/den
+   194→   194→        const den = pr * pr + pi * pi;
+   195→   195→        cPrimeRe.current[j] = (cUse * pi) / den;
+   196→   196→        cPrimeIm.current[j] = (cUse * pr) / den;
+   197→   197→      }
+   198→   198→    }
+   199→   199→  }, []);
+   200→   200→
+   201→   201→  /* ---------- initial Gaussian packet ---------- */
+   202→   202→
+   203→   203→  const resetSim = useCallback(() => {
+   204→   204→    const k0 = Math.sqrt(2 * energyRef.current);
+   205→   205→    let norm = 0;
+   206→   206→    for (let j = 0; j < N; j++) {
+   207→   207→      const x = X_MIN + (j + 0.5) * DX;
+   208→   208→      const env = Math.exp(-((x - X0) * (x - X0)) / (4 * SIGMA * SIGMA));
+   209→   209→      re.current[j] = env * Math.cos(k0 * x);
+   210→   210→      im.current[j] = env * Math.sin(k0 * x);
+   211→   211→      norm += (re.current[j] ** 2 + im.current[j] ** 2) * DX;
+   212→   212→    }
+   213→   213→    const f = 1 / Math.sqrt(norm);
+   214→   214→    for (let j = 0; j < N; j++) {
+   215→   215→      re.current[j] *= f;
+   216→   216→      im.current[j] *= f;
+   217→   217→    }
+   218→   218→    tRef.current = 0;
+   219→   219→    doneRef.current = false;
+   220→   220→    yMaxRef.current = Math.max(0.12, (1 / (SIGMA * Math.sqrt(2 * Math.PI))) * 1.15);
+   221→   221→  }, []);
+   222→   222→
+   223→   223→  /* ---------- one Crank–Nicolson step ---------- */
+   224→   224→
+   225→   225→  const step = useCallback(() => {
+   226→   226→    const reA = re.current, imA = im.current;
+   227→   227→    const vp = vPot.current, gm = gamma.current;
+   228→   228→    const rRe = rhsRe.current, rIm = rhsIm.current;
+   229→   229→    const dt2 = DT / 2;
+   230→   230→
+   231→   231→    // rhs = ψⁿ − i·(dt/2)·Hψⁿ
+   232→   232→    for (let j = 1; j < N - 1; j++) {
+   233→   233→      // (Hψ)ⱼ = H_OFF·(ψⱼ₋₁ + ψⱼ₊₁) + (1/dx² + Vⱼ − iγⱼ)·ψⱼ
+   234→   234→      const hr = H_OFF * (reA[j - 1] + reA[j + 1]) + (1 / (DX * DX) + vp[j]) * reA[j] + gm[j] * imA[j];
+   235→   235→      const hi = H_OFF * (imA[j - 1] + imA[j + 1]) + (1 / (DX * DX) + vp[j]) * imA[j] - gm[j] * reA[j];
+   236→   236→      // −i·(dt/2)·(hr + i·hi) = (dt/2)·hi − i·(dt/2)·hr
+   237→   237→      rRe[j] = reA[j] + dt2 * hi;
+   238→   238→      rIm[j] = imA[j] - dt2 * hr;
+   239→   239→    }
+   240→   240→    rRe[0] = 0; rIm[0] = 0;
+   241→   241→    rRe[N - 1] = 0; rIm[N - 1] = 0;
+   242→   242→
+   243→   243→    const offIm = dt2 * H_OFF;
+   244→   244→
+   245→   245→    // forward: d'₀ = rhs₀/p₀;  d'ⱼ = (rhsⱼ − α·d'ⱼ₋₁)/pⱼ
+   246→   246→    {
+   247→   247→      const pr = pRe.current[0], pi = pIm.current[0];
+   248→   248→      const den = pr * pr + pi * pi;
+   249→   249→      dRe.current[0] = (rRe[0] * pr + rIm[0] * pi) / den;
+   250→   250→      dIm.current[0] = (rIm[0] * pr - rRe[0] * pi) / den;
+   251→   251→    }
+   252→   252→    for (let j = 1; j < N; j++) {
+   253→   253→      const pr = pRe.current[j], pi = pIm.current[j];
+   254→   254→      // α·d'ⱼ₋₁ — α = i·offIm (purely imaginary): i·offIm·(dr + i·di) = −offIm·di + i·offIm·dr
+   255→   255→      const aDr = -offIm * dIm.current[j - 1];
+   256→   256→      const aDi = offIm * dRe.current[j - 1];
+   257→   257→      const isLast = j === N - 1;
+   258→   258→      const nr = rRe[j] - (isLast ? 0 : aDr);
+   259→   259→      const ni = rIm[j] - (isLast ? 0 : aDi);
+   260→   260→      const den = pr * pr + pi * pi;
+   261→   261→      dRe.current[j] = (nr * pr + ni * pi) / den;
+   262→   262→      dIm.current[j] = (ni * pr - nr * pi) / den;
+   263→   263→    }
+   264→   264→
+   265→   265→    // back-substitution: ψⱼ = d'ⱼ − c'ⱼ·ψⱼ₊₁
+   266→   266→    reA[N - 1] = dRe.current[N - 1];
+   267→   267→    imA[N - 1] = dIm.current[N - 1];
+   268→   268→    for (let j = N - 2; j >= 1; j--) {
+   269→   269→      const cr = cPrimeRe.current[j], ci = cPrimeIm.current[j];
+   270→   270→      const xr = reA[j + 1], xi = imA[j + 1];
+   271→   271→      reA[j] = dRe.current[j] - (cr * xr - ci * xi);
+   272→   272→      imA[j] = dIm.current[j] - (cr * xi + ci * xr);
+   273→   273→    }
+   274→   274→    reA[0] = 0; imA[0] = 0;
+   275→   275→
+   276→   276→    tRef.current += DT;
+   277→   277→  }, []);
+   278→   278→
+   279→   279→  /* ---------- measured quantities ---------- */
+   280→   280→
+   281→   281→  const measure = useCallback(() => {
+   282→   282→    let total = 0, left = 0, right = 0, xs = 0;
+   283→   283→    const w = wRef.current;
+   284→   284→    for (let j = 0; j < N; j++) {
+   285→   285→      const p = (re.current[j] ** 2 + im.current[j] ** 2) * DX;
+   286→   286→      total += p;
+   287→   287→      const x = X_MIN + (j + 0.5) * DX;
+   288→   288→      if (x < -(w / 2 + 1)) left += p;
+   289→   289→      else if (x > w / 2 + 1) right += p;
+   290→   290→      xs += x * p;
+   291→   291→    }
+   292→   292→    return { total, left, right, xMean: total > 1e-12 ? xs / total : 0 };
+   293→   293→  }, []);
+   294→   294→
+   295→   295→  /* ---------- drawing ---------- */
+   296→   296→
+   297→   297→  const draw = useCallback(() => {
+   298→   298→    const canvas = canvasRef.current;
+   299→   299→    const ctx = canvas?.getContext("2d");
+   300→   300→    if (!canvas || !ctx) return;
+   301→   301→    const { w, h, dpr } = sizeRef.current;
+   302→   302→    if (!w || !h) return;
+   303→   303→
+   304→   304→    const photon = hexToRgb(cssVar("--photon"));
+   305→   305→    const nebula = hexToRgb(cssVar("--nebula"));
+   306→   306→    const dust = hexToRgb(cssVar("--dust"));
+   307→   307→    const bg = hexToRgb(cssVar("--background"));
+   308→   308→
+   309→   309→    const ML = 46, MR = 14, MT = 18, MB = 34;
+   310→   310→    const plotW = w - ML - MR;
+   311→   311→    const plotH = h - MT - MB;
+   312→   312→
+   313→   313→    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+   314→   314→    ctx.fillStyle = `rgb(${bg[0]}, ${bg[1]}, ${bg[2]})`;
+   315→   315→    ctx.fillRect(0, 0, w, h);
+   316→   316→
+   317→   317→    // dynamic y-scale (smoothed so tunneling tails stay visible)
+   318→   318→    let frameMax = 0.02;
+   319→   319→    for (let j = 0; j < N; j++) {
+   320→   320→      const p = re.current[j] ** 2 + im.current[j] ** 2;
+   321→   321→      if (p > frameMax) frameMax = p;
+   322→   322→    }
+   323→   323→    yMaxRef.current += (frameMax * 1.18 - yMaxRef.current) * 0.09;
+   324→   324→    const yMax = Math.max(0.02, yMaxRef.current);
+   325→   325→
+   326→   326→    const X = (x: number) => ML + ((x - X_MIN) / (X_MAX - X_MIN)) * plotW;
+   327→   327→    const Y = (p: number) => MT + plotH * (1 - Math.min(1, p / yMax));
+   328→   328→
+   329→   329→    // barrier band
+   330→   330→    const wB = wRef.current;
+   331→   331→    const bx0 = X(-wB / 2), bx1 = X(wB / 2);
+   332→   332→    ctx.fillStyle = rgba(nebula, 0.1);
+   333→   333→    ctx.fillRect(bx0, MT, bx1 - bx0, plotH);
+   334→   334→    ctx.strokeStyle = rgba(nebula, 0.55);
+   335→   335→    ctx.lineWidth = 1;
+   336→   336→    ctx.strokeRect(bx0, MT, bx1 - bx0, plotH);
+   337→   337→    ctx.fillStyle = rgba(nebula, 0.9);
+   338→   338→    ctx.font = "10px ui-monospace, monospace";
+   339→   339→    ctx.textAlign = "center";
+   340→   340→    ctx.fillText("V₀", (bx0 + bx1) / 2, MT + 12);
+   341→   341→
+   342→   342→    // axes
+   343→   343→    ctx.strokeStyle = rgba(dust, 0.4);
+   344→   344→    ctx.lineWidth = 1;
+   345→   345→    ctx.beginPath();
+   346→   346→    ctx.moveTo(ML, MT + plotH + 0.5);
+   347→   347→    ctx.lineTo(ML + plotW, MT + plotH + 0.5);
+   348→   348→    ctx.moveTo(ML + 0.5, MT);
+   349→   349→    ctx.lineTo(ML + 0.5, MT + plotH);
+   350→   350→    ctx.stroke();
+   351→   351→
+   352→   352→    // x ticks
+   353→   353→    ctx.fillStyle = rgba(dust, 0.85);
+   354→   354→    ctx.textAlign = "center";
+   355→   355→    for (const tx of [-20, -10, 0, 10, 20]) {
+   356→   356→      const px = X(tx);
+   357→   357→      ctx.beginPath();
+   358→   358→      ctx.moveTo(px, MT + plotH);
+   359→   359→      ctx.lineTo(px, MT + plotH + 4);
+   360→   360→      ctx.strokeStyle = rgba(dust, 0.4);
+   361→   361→      ctx.stroke();
+   362→   362→      ctx.fillText(String(tx), px, MT + plotH + 16);
+   363→   363→    }
+   364→   364→
+   365→   365→    // y-axis label
+   366→   366→    ctx.textAlign = "left";
+   367→   367→    ctx.fillStyle = rgba(dust, 0.75);
+   368→   368→    ctx.fillText("|ψ|²", 8, MT + 4);
+   369→   369→
+   370→   370→    // energy annotation
+   371→   371→    ctx.textAlign = "right";
+   372→   372→    const E = energyRef.current, V0 = v0Ref.current;
+   373→   373→    ctx.fillText(`E = ${E.toFixed(2)} · V₀ = ${V0.toFixed(2)} · E/V₀ = ${(E / Math.max(V0, 1e-9)).toFixed(2)}`, ML + plotW, MT - 6 + 10);
+   374→   374→
+   375→   375→    // |ψ|² filled curve
+   376→   376→    ctx.beginPath();
+   377→   377→    ctx.moveTo(X(X_MIN), Y(0));
+   378→   378→    for (let j = 0; j < N; j++) {
+   379→   379→      const x = X_MIN + (j + 0.5) * DX;
+   380→   380→      ctx.lineTo(X(x), Y(re.current[j] ** 2 + im.current[j] ** 2));
+   381→   381→    }
+   382→   382→    ctx.lineTo(X(X_MAX - DX / 2), Y(0));
+   383→   383→    ctx.closePath();
+   384→   384→    ctx.fillStyle = rgba(photon, 0.14);
+   385→   385→    ctx.fill();
+   386→   386→
+   387→   387→    ctx.beginPath();
+   388→   388→    for (let j = 0; j < N; j++) {
+   389→   389→      const x = X_MIN + (j + 0.5) * DX;
+   390→   390→      const px = X(x), py = Y(re.current[j] ** 2 + im.current[j] ** 2);
+   391→   391→      if (j === 0) ctx.moveTo(px, py);
+   392→   392→      else ctx.lineTo(px, py);
+   393→   393→    }
+   394→   394→    ctx.strokeStyle = rgba(photon, 0.92);
+   395→   395→    ctx.lineWidth = 1.6;
+   396→   396→    ctx.stroke();
+   397→   397→
+   398→   398→    // Re ψ (thin) — only when visible against the scale
+   399→   399→    const reMax = yMax * 0.04;
+   400→   400→    let showRe = false;
+   401→   401→    for (let j = 0; j < N; j++) if (Math.abs(re.current[j]) > reMax) { showRe = true; break; }
+   402→   402→    if (showRe) {
+   403→   403→      ctx.beginPath();
+   404→   404→      for (let j = 0; j < N; j++) {
+   405→   405→        const x = X_MIN + (j + 0.5) * DX;
+   406→   406→        const py = MT + plotH * (1 - Math.max(-1, Math.min(1, (re.current[j] / Math.sqrt(yMax)) * 0.28)));
+   407→   407→        if (j === 0) ctx.moveTo(X(x), py);
+   408→   408→        else ctx.lineTo(X(x), py);
+   409→   409→      }
+   410→   410→      ctx.strokeStyle = rgba(dust, 0.5);
+   411→   411→      ctx.lineWidth = 1;
+   412→   412→      ctx.stroke();
+   413→   413→    }
+   414→   414→
+   415→   415→    // done note
+   416→   416→    if (doneRef.current) {
+   417→   417→      ctx.textAlign = "center";
+   418→   418→      ctx.fillStyle = rgba(dust, 0.9);
+   419→   419→      ctx.fillText("packet absorbed — press R to reset", ML + plotW / 2, MT + 16);
+   420→   420→    }
+   421→   421→  }, []);
+   422→   422→
+   423→   423→  /* ---------- lifecycle ---------- */
+   424→   424→
+   425→   425→  useEffect(() => {
+   426→   426→    const canvas = canvasRef.current;
+   427→   427→    if (!canvas) return;
+   428→   428→
+   429→   429→    const resize = () => {
+   430→   430→      const parent = canvas.parentElement;
+   431→   431→      if (!parent) return;
+   432→   432→      const rect = parent.getBoundingClientRect();
+   433→   433→      if (rect.width < 2 || rect.height < 2) return;
+   434→   434→      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+   435→   435→      sizeRef.current = { w: rect.width, h: rect.height, dpr };
+   436→   436→      canvas.width = Math.round(rect.width * dpr);
+   437→   437→      canvas.height = Math.round(rect.height * dpr);
+   438→   438→    };
+   439→   439→
+   440→   440→    buildSystem();
+   441→   441→    resetSim();
+   442→   442→    resize();
+   443→   443→
+   444→   444→    const ro = new ResizeObserver(resize);
+   445→   445→    ro.observe(canvas.parentElement ?? canvas);
+   446→   446→
+   447→   447→    const io = new IntersectionObserver(
+   448→   448→      (entries) => { visibleRef.current = entries[0]?.isIntersecting ?? true; },
+   449→   449→      { threshold: 0.05 }
+   450→   450→    );
+   451→   451→    io.observe(canvas);
+   452→   452→
+   453→   453→    const onVisibility = () => { visibleRef.current = document.visibilityState === "visible"; };
+   454→   454→    document.addEventListener("visibilitychange", onVisibility);
+   455→   455→
+   456→   456→    const mo = new MutationObserver(() => { /* redraw picks up new colours next frame */ });
+   457→   457→    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+   458→   458→
+   459→   459→    let lastReadout = 0;
+   460→   460→    let last = performance.now();
+   461→   461→    const frame = (now: number) => {
+   462→   462→      rafRef.current = requestAnimationFrame(frame);
+   463→   463→      if (playingRef.current && visibleRef.current) {
+   464→   464→        const sub = speedRef.current;
+   465→   465→        for (let i = 0; i < sub; i++) step();
+   466→   466→        // auto-pause when the packet has been fully absorbed
+   467→   467→        if (!doneRef.current) {
+   468→   468→          const { total } = measure();
+   469→   469→          if (total < 0.03) {
+   470→   470→            doneRef.current = true;
+   471→   471→            setPlayingOverride(false);
+   472→   472→          }
+   473→   473→        }
+   474→   474→      }
+   475→   475→      if (now - last > 8) {
+   476→   476→        last = now;
+   477→   477→        draw();
+   478→   478→      }
+   479→   479→      if (now - lastReadout > 250) {
+   480→   480→        lastReadout = now;
+   481→   481→        const m = measure();
+   482→   482→        const Tpw = planeWaveT(energyRef.current, v0Ref.current, wRef.current);
+   483→   483→        if (readout.current.t) readout.current.t.textContent = tRef.current.toFixed(1);
+   484→   484→        if (readout.current.x) readout.current.x.textContent = m.xMean.toFixed(2);
+   485→   485→        if (readout.current.R) readout.current.R.textContent = m.left.toFixed(3);
+   486→   486→        if (readout.current.T) readout.current.T.textContent = `${m.right.toFixed(3)} · pw ${Tpw.toFixed(3)}`;
+   487→   487→        if (readout.current.A) readout.current.A.textContent = Math.max(0, 1 - m.total).toFixed(3);
+   488→   488→      }
+   489→   489→    };
+   490→   490→    rafRef.current = requestAnimationFrame(frame);
+   491→   491→
+   492→   492→    return () => {
+   493→   493→      cancelAnimationFrame(rafRef.current);
+   494→   494→      ro.disconnect();
+   495→   495→      io.disconnect();
+   496→   496→      mo.disconnect();
+   497→   497→      document.removeEventListener("visibilitychange", onVisibility);
+   498→   498→    };
+   499→   499→  }, [buildSystem, resetSim, step, draw, measure]);
+   500→   500→
+   501→   501→  // mirror React state into refs
+   502→   502→  useEffect(() => { playingRef.current = playing; }, [playing]);
+   503→   503→  useEffect(() => { energyRef.current = energy; }, [energy]);
+   504→   504→  useEffect(() => { v0Ref.current = barrierV; buildSystem(); }, [barrierV, buildSystem]);
+   505→   505→  useEffect(() => { wRef.current = barrierW; buildSystem(); }, [barrierW, buildSystem]);
+   506→   506→  useEffect(() => { speedRef.current = speed; }, [speed]);
+   507→   507→
+   508→   508→  const reset = () => {
+   509→   509→    buildSystem(); // E change affects only γ and the packet — rebuild + reinit
+   510→   510→    resetSim();
+   511→   511→  };
+   512→   512→
+   513→   513→  const onKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
+   514→   514→    if (e.key === " ") {
+   515→   515→      e.preventDefault();
+   516→   516→      setPlayingOverride(!playing);
+   517→   517→    } else if (e.key.toLowerCase() === "r") {
+   518→   518→      e.preventDefault();
+   519→   519→      reset();
+   520→   520→    }
+   521→   521→  };
+   522→   522→
+   523→   523→  const k0 = Math.sqrt(2 * energy);
+   524→   524→  const lambda = (2 * Math.PI) / k0;
+   525→   525→
+   526→   526→  return (
+   527→   527→    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+   528→   528→      <figure className="m-0">
+   529→   529→        <div className="relative h-[380px] overflow-hidden rounded-lg border border-border bg-card sm:h-[460px] lg:h-[560px]">
+   530→   530→          <canvas
+   531→   531→            ref={canvasRef}
+   532→   532→            className="h-full w-full focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+   533→   533→            tabIndex={0}
+   534→   534→            role="application"
+   535→   535→            aria-label="Quantum wave packet tunneling simulation. Probability density evolves toward a potential barrier. Press Space to play or pause, R to reset."
+   536→   536→            onKeyDown={onKeyDown}
+   537→   537→          />
+   538→   538→          {!playing && (
+   539→   539→            <button
+   540→   540→              type="button"
+   541→   541→              onClick={() => setPlayingOverride(true)}
+   542→   542→              className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[1px] transition-colors hover:bg-background/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+   543→   543→              aria-label="Play the simulation"
+   544→   544→            >
+   545→   545→              <span className="flex size-16 items-center justify-center rounded-full border border-border bg-card/90">
+   546→   546→                <Play className="size-6 translate-x-0.5" aria-hidden="true" />
+   547→   547→              </span>
+   548→   548→            </button>
+   549→   549→          )}
+   550→   550→        </div>
+   551→   551→        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+   552→   552→          <span>Fig. L-3 · Wave packet · Crank–Nicolson</span>
+   553→   553→          <span className="tabular-nums">ħ = m = 1 · dt = {DT}</span>
+   554→   554→        </figcaption>
+   555→   555→      </figure>
+   556→   556→
+   557→   557→      <div className="flex flex-col gap-6">
+   558→   558→        <div className="rounded-lg border border-border bg-card p-5">
+   559→   559→          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+   560→   560→            Controls
+   561→   561→          </h4>
+   562→   562→
+   563→   563→          <div className="mt-5 space-y-5">
+   564→   564→            <div className="space-y-3">
+   565→   565→              <div className="flex items-baseline justify-between">
+   566→   566→                <Label htmlFor="packet-energy" className="text-sm">
+   567→   567→                  Packet energy
+   568→   568→                </Label>
+   569→   569→                <span className="font-mono text-xs tabular-nums text-photon">
+   570→   570→                  E = {energy.toFixed(2)} · k₀ = {k0.toFixed(2)}
+   571→   571→                </span>
+   572→   572→              </div>
+   573→   573→              <Slider
+   574→   574→                id="packet-energy"
+   575→   575→                aria-label="Packet kinetic energy"
+   576→   576→                min={E_MIN}
+   577→   577→                max={E_MAX}
+   578→   578→                step={0.05}
+   579→   579→                value={[energy]}
+   580→   580→                onValueChange={([v]) => setEnergy(v)}
+   581→   581→              />
+   582→   582→              <p className="text-xs leading-relaxed text-muted-foreground">
+   583→   583→                Applies on reset. Group velocity v = k₀; de Broglie wavelength
+   584→   584→                λ = 2π/k₀ ≈ {lambda.toFixed(2)} here.
+   585→   585→              </p>
+   586→   586→            </div>
+   587→   587→
+   588→   588→            <div className="space-y-3">
+   589→   589→              <div className="flex items-baseline justify-between">
+   590→   590→                <Label htmlFor="barrier-height" className="text-sm">
+   591→   591→                  Barrier height
+   592→   592→                </Label>
+   593→   593→                <span className="font-mono text-xs tabular-nums text-photon">
+   594→   594→                  V₀ = {barrierV.toFixed(2)}
+   595→   595→                </span>
+   596→   596→              </div>
+   597→   597→              <Slider
+   598→   598→                id="barrier-height"
+   599→   599→                aria-label="Barrier height"
+   600→   600→                min={V0_MIN}
+   601→   601→                max={V0_MAX}
+   602→   602→                step={0.05}
+   603→   603→                value={[barrierV]}
+   604→   604→                onValueChange={([v]) => setBarrierV(v)}
+   605→   605→              />
+   606→   606→              <p className="text-xs leading-relaxed text-muted-foreground">
+   607→   607→                Live. E &lt; V₀ is classically forbidden — yet the packet leaks
+   608→   608→                through.
+   609→   609→              </p>
+   610→   610→            </div>
+   611→   611→
+   612→   612→            <div className="space-y-3">
+   613→   613→              <div className="flex items-baseline justify-between">
+   614→   614→                <Label htmlFor="barrier-width" className="text-sm">
+   615→   615→                  Barrier width
+   616→   616→                </Label>
+   617→   617→                <span className="font-mono text-xs tabular-nums text-photon">
+   618→   618→                  w = {barrierW.toFixed(2)}
+   619→   619→                </span>
+   620→   620→              </div>
+   621→   621→              <Slider
+   622→   622→                id="barrier-width"
+   623→   623→                aria-label="Barrier width"
+   624→   624→                min={W_MIN}
+   625→   625→                max={W_MAX}
+   626→   626→                step={0.05}
+   627→   627→                value={[barrierW]}
+   628→   628→                onValueChange={([v]) => setBarrierW(v)}
+   629→   629→              />
+   630→   630→            </div>
+   631→   631→
+   632→   632→            <div className="space-y-3">
+   633→   633→              <div className="flex items-baseline justify-between">
+   634→   634→                <Label htmlFor="wave-speed" className="text-sm">
+   635→   635→                  Simulation speed
+   636→   636→                </Label>
+   637→   637→                <span className="font-mono text-xs tabular-nums text-photon">
+   638→   638→                  {speed}× dt
+   639→   639→                </span>
+   640→   640→              </div>
+   641→   641→              <Slider
+   642→   642→                id="wave-speed"
+   643→   643→                aria-label="Simulation speed"
+   644→   644→                min={1}
+   645→   645→                max={10}
+   646→   646→                step={1}
+   647→   647→                value={[speed]}
+   648→   648→                onValueChange={([v]) => setSpeed(v)}
+   649→   649→              />
+   650→   650→            </div>
+   651→   651→
+   652→   652→            <div className="flex gap-2">
+   653→   653→              <Button
+   654→   654→                variant={playing ? "outline" : "default"}
+   655→   655→                size="sm"
+   656→   656→                className="flex-1"
+   657→   657→                onClick={() => setPlayingOverride(!playing)}
+   658→   658→                aria-pressed={playing}
+   659→   659→              >
+   660→   660→                {playing ? (
+   661→   661→                  <>
+   662→   662→                    <Pause className="size-3.5" aria-hidden="true" /> Pause
+   663→   663→                  </>
+   664→   664→                ) : (
+   665→   665→                  <>
+   666→   666→                    <Play className="size-3.5" aria-hidden="true" /> Play
+   667→   667→                  </>
+   668→   668→                )}
+   669→   669→              </Button>
+   670→   670→              <Button variant="outline" size="sm" className="flex-1" onClick={reset}>
+   671→   671→                <RotateCcw className="size-3.5" aria-hidden="true" /> Reset
+   672→   672→              </Button>
+   673→   673→            </div>
+   674→   674→          </div>
+   675→   675→        </div>
+   676→   676→
+   677→   677→        <div className="rounded-lg border border-border bg-card p-5">
+   678→   678→          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+   679→   679→            Readout
+   680→   680→          </h4>
+   681→   681→          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-xs tabular-nums">
+   682→   682→            <dt className="text-muted-foreground">time t</dt>
+   683→   683→            <dd className="text-right" ref={(el) => { readout.current.t = el; }}>—</dd>
+   684→   684→            <dt className="text-muted-foreground">⟨x⟩</dt>
+   685→   685→            <dd className="text-right" ref={(el) => { readout.current.x = el; }}>—</dd>
+   686→   686→            <dt className="text-muted-foreground">reflected R</dt>
+   687→   687→            <dd className="text-right" ref={(el) => { readout.current.R = el; }}>—</dd>
+   688→   688→            <dt className="text-muted-foreground">transmitted T</dt>
+   689→   689→            <dd className="text-right text-photon" ref={(el) => { readout.current.T = el; }}>—</dd>
+   690→   690→            <dt className="text-muted-foreground">absorbed</dt>
+   691→   691→            <dd className="text-right" ref={(el) => { readout.current.A = el; }}>—</dd>
+   692→   692→          </dl>
+   693→   693→          <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+   694→   694→            T compares the measured packet transmission with the plane-wave
+   695→   695→            value — a broad packet is a superposition of energies, so the two
+   696→   696→            need not agree exactly. That gap is physics, not error.
+   697→   697→          </p>
+   698→   698→        </div>
+   699→   699→
+   700→   700→        <div className="rounded-lg border border-border bg-card p-5">
+   701→   701→          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+   702→   702→            How it works
+   703→   703→          </h4>
+   704→   704→          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+   705→   705→            The wavefunction is advanced by the Crank–Nicolson method — an
+   706→   706→            implicit, unitary integrator, so probability is conserved to
+   707→   707→            round-off. Absorbing potentials at the domain edges remove
+   708→   708→            outgoing waves as if the box were infinite. Watch the packet
+   709→   709→            split at the barrier: part reflects, part tunnels — and the
+   710→   710→            transmitted piece is slower and dimmer, having selected the lower
+   711→   711→            energy components of the packet.
+   712→   712→          </p>
+   713→   713→        </div>
+   714→   714→      </div>
+   715→   715→    </div>
+   716→   716→  );
+   717→   717→}
+   718→   718→
