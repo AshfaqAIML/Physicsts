@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Clock, ListTree, NotebookPen } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +22,17 @@ import { cn } from "@/lib/utils";
 export function Notebook() {
   const [category, setCategory] = useState<NoteCategory | "All">("All");
   const [open, setOpen] = useState<Note | null>(null);
+
+  // External openers (command palette)
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      const note = notes.find((n) => n.id === id);
+      if (note?.essay) setOpen(note);
+    };
+    window.addEventListener("phys:open-note", onOpen);
+    return () => window.removeEventListener("phys:open-note", onOpen);
+  }, []);
 
   const filtered = useMemo(
     () => (category === "All" ? notes : notes.filter((n) => n.category === category)),

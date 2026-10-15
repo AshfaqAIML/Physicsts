@@ -130,3 +130,125 @@ Stage Summary:
 - Remaining known items: NEXT_PUBLIC_SITE_URL should be set to the real
   domain before deployment; placeholder content (name, facts, channels,
   portrait) awaits the owner's real details; publications empty by design.
+
+---
+Task ID: R1 (resume phase)
+Agent: main-agent
+Task: Status assessment, QA, bug fixes, and feature expansion
+
+Work Log:
+- Read prior worklog (tasks 1–12 complete); verified dev server healthy
+  (GET / 200, clean logs), `bun run lint` clean, no horizontal overflow
+  at 1440/375 px.
+- QA via agent-browser (desktop 1440×900, mobile 375×812) + VLM checks.
+- BUG FIXES:
+  · lensing-sim.tsx draw(): `dark` was referenced outside its scope —
+    every frame threw ReferenceError after the sky/ring/glow drew, so the
+    lens mass glyph never rendered. Added local `const dark = ...` in
+    draw(). Verified visually (glyph + photon rim now render).
+  · orbits-sim.tsx: null-guarded `canvas` in resetSim; tuple-typed
+    `star` ([number, number, number]).
+  · lensing-sim.tsx: tuple-typed `star` (RGB).
+  · ui/slider.tsx: Radix does NOT forward Root-level aria-label to the
+    Thumb (role=slider); wrapper now extracts and forwards it. All lab
+    sliders now have accessible names.
+  · globals.css: `html, body { position: relative }` — silences
+    framer-motion's dev-only scroll-offset warning (container was
+    documentElement/body, both static). Verified: 0 warnings in a fresh
+    browser session.
+  · lab.tsx mobile: 3rd tab overflowed 375px (scrollWidth 418) — tabs
+    now live in a horizontal-scroll wrapper (hidden scrollbar).
+  · Fixed Crank–Nicolson sign bugs caught in self-review BEFORE ever
+    running: A-diagonal real part 1 − (dt/2)·hIm; c′ complex division
+    (i·c)/(p) = [c·pi + i·c·pr]/den; identity rows have zero super-diagonal.
+  · planeWaveT E→V₀ limit corrected to 1/(1 + V₀w²/2).
+- NEW FEATURES (this phase):
+  1. Quantum Wave Packet simulation (wave-sim.tsx) — third lab
+     instrument: 1D TDSE solved by Crank–Nicolson (unitary, unconditionally
+     stable) with complex Thomas-algorithm factorisation precomputed per
+     parameter change; N=768 grid, dt=0.005, natural units; Gaussian
+     packet, square barrier; complex absorbing potential (CAP) at edges;
+     live R/T/absorbed/⟨x⟩/t readouts + plane-wave T comparison; E, V₀, w,
+     speed sliders; Space/R keyboard; reduced-motion starts paused;
+     theme-aware canvas; auto-pause when absorbed. lab.tsx: 3rd tab +
+     mathematics panel (TDSE + tunneling coefficient) + what-to-try +
+     assumptions. Physics verified in-browser: E=1.4 < V₀=1.6 tunnels
+     (T≈0.33 measured vs 0.235 plane-wave — consistent with packet energy
+     spread), R+T+absorbed ≈ 1.
+  2. Command palette ⌘K (command-palette.tsx) — 6 groups: Navigate (8),
+     Laboratory (3, incl. direct tab switching), Research Areas (6, opens
+     detail dialogs), Projects (5, opens briefs), Notebook essays,
+     Actions (theme). Custom events (phys:open-palette, phys:lab-tab,
+     phys:open-research, phys:open-project, phys:open-note) decouple it
+     from section internals; research/projects/notebook/lab listen and
+     open. Nav-bar trigger + mobile-sheet trigger. Verified: search,
+     empty state ("Nothing found in this light cone"), deep links into
+     Cosmology dialog + speed-of-light essay.
+  3. Reading progress hairline (reading-progress.tsx) — top photon bar,
+    scaleX via rAF, direct DOM writes.
+  4. Constellation nav (constellation-nav.tsx) — desktop-only right-rail
+     section dots, scroll-spy IntersectionObserver, labels on hover.
+  5. Ascend button (ascend-button.tsx) — appears past 90vh, smooth
+     scrollTo top. Verified click → scrollY 0.
+  6. Deep-field ambience (deep-field.tsx) — fixed -z-10 canvas: ~110
+     twinkling stars (dark) / faint paper dust (light), 3% parallax,
+     theme-aware via MutationObserver, reduced-motion → static render.
+  7. Custom 404 (app/not-found.tsx) — "outside the light cone" page.
+  8. Second full essay in notes.ts — "Why Is the Speed of Light So
+     Fundamental?" (6 sections, inline $math$ + display velocity-addition
+     formula, 5 real references incl. Einstein 1905, Taylor & Wheeler,
+     BIPM SI brochure). Notebook now has 2 readable example essays.
+  9. Contact form polish — message character counter (x / 4000, amber
+     past 3600), maxLength; verified live.
+  10. Print stylesheet (@media print) — chrome/canvas hidden, ink-on-
+      white, grid/glass/blur removed, KaTeX overflow visible.
+- page.tsx: mounts DeepField, ReadingProgress, ConstellationNav,
+  AscendButton, CommandPalette alongside existing sections.
+- lab.tsx tabs now controlled (value/onValueChange) + listens for
+  phys:lab-tab events from the palette.
+- Full regression QA after changes: desktop + mobile overflow (375=375
+  ✓), theme toggle both directions, palette open/close/deep-links,
+  wave sim run + readouts, lensing glyph, essay reading view (TOC +
+  KaTeX display math verified by VLM), form validation + full submission
+  (Prisma INSERT logged, "Delivered. Thank you." status), mobile menu,
+  mobile wave sim (341px canvas, running).
+- bun run lint: clean. tsc --noEmit: zero errors under src/.
+
+Stage Summary:
+- Site now has THREE physics instruments (lensing, orbits, quantum
+  tunneling), a ⌘K command palette with deep links into every section's
+  dialogs, reading progress, constellation nav, ascend control, ambient
+  starfield, custom 404, second example essay, contact counter, print
+  styles. All QA-verified desktop + mobile, both themes.
+- Known non-blocking dev-mode noise: one React 19 hydration attribute
+  warning (Radix aria-controls useId shift on the mobile Sheet trigger).
+  Present in the ORIGINAL committed code too (2 occurrences); does not
+  affect functionality (sheet opens/closes correctly); treated as
+  dev-mode noise, documented here for honesty.
+- dev server CSS chunk occasionally serves stale content in this
+  sandbox until a further edit + reload (Turbopack HMR quirk); a
+  no-op edit + reload refreshes it.
+- Next-phase candidates: real content replacement (name, portrait,
+  channels, CV), analytic orbit preview thumbnail regeneration, optional
+  LLM-powered "ask about this essay" feature, publication list when real.
+
+---
+Task ID: R1-cron
+Agent: main-agent
+Task: Create 15-minute webDevReview scheduled task (final mandatory step)
+
+Work Log:
+- Attempted to create the recurring cron job (*/15 * * * * *, kind
+  webDevReview, Asia/Calcutta) via the cron tool — both `create` and
+  `list` returned "cron tool is not available for this request" in this
+  session (gateway limitation).
+- The intended job definition is preserved above and in this entry:
+  every 15 minutes, webDevReview kind, message: review the site on
+  :3000, read latest dev.log entries, run bun run lint, verify the
+  three lab simulations, check accessibility/responsive behavior and all
+  sections, fix issues found, append findings to worklog.md.
+
+Stage Summary:
+- Cron creation BLOCKED by tool availability in this session — retry
+  the exact job definition from this entry when the cron tool is
+  available again (highest-priority carry-over item).

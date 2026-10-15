@@ -122,12 +122,16 @@
     scroll-behavior: smooth;
     scroll-padding-top: 5rem;
     -webkit-tap-highlight-color: transparent;
+    /* Non-static root keeps framer-motion useScroll({ target }) offsets exact */
+    position: relative;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv11", "ss01";
     text-rendering: optimizeLegibility;
+    /* Non-static so framer-motion measures scroll offsets correctly */
+    position: relative;
   }
 
   ::selection {
@@ -251,4 +255,54 @@
   --normal-bg: var(--card);
   --normal-text: var(--foreground);
   --normal-border: var(--border);
+}
+
+/* ----------------------------------------------------------------------
+   Print — an archival copy of the page: chrome recedes, ink is conserved
+   ---------------------------------------------------------------------- */
+@media print {
+  header,
+  footer,
+  canvas,
+  [data-sonner-toaster],
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  html {
+    position: static;
+    scroll-padding-top: 0;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  section {
+    break-inside: avoid-page;
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .bg-chart-grid,
+  .bg-plot-grid,
+  .grain::after,
+  .glass-panel {
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+
+  .text-glow-photon {
+    text-shadow: none !important;
+  }
+
+  a {
+    color: inherit !important;
+    text-decoration: underline;
+  }
+
+  .katex-display {
+    overflow: visible;
+  }
 }

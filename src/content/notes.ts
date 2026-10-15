@@ -122,6 +122,77 @@ const curvatureEssay: Essay = {
 };
 
 /* ------------------------------------------------------------------ */
+/* The second example essay — the speed of light                       */
+/* ------------------------------------------------------------------ */
+
+const lightSpeedEssay: Essay = {
+  title: "Why Is the Speed of Light So Fundamental?",
+  dek: "Not why it equals 299,792,458 m/s — but why there is a speed woven into the geometry of cause and effect at all.",
+  date: "Example draft",
+  readingMinutes: 8,
+  sections: [
+    {
+      id: "strange-postulate",
+      heading: "1 · The strange postulate",
+      paragraphs: [
+        "In 1905 Albert Einstein opened his paper on what we now call special relativity with an assumption that sounds almost casual: light in vacuum propagates at a speed $c$ that is independent of the motion of its source. It sounds like a modest claim about light. It is not. It is a claim about the arena in which everything happens — a statement that space and time are so constituted that one particular speed is agreed upon by every observer who is not accelerating.",
+        "Notice what the postulate does not say. It does not say light is special, and it does not say $c$ is the speed of light. It says there is a universal, invariant speed — a conversion factor between measuring rods and clocks — and that, as it happens, light travels at it. The distinction matters, and it is where most of the mystery dissolves.",
+      ],
+    },
+    {
+      id: "chasing-a-beam",
+      heading: "2 · Chasing a beam of light",
+      paragraphs: [
+        "Einstein said he was sixteen when he first ran the thought experiment: if you could pursue a beam of light at $c$, you should see an electromagnetic field frozen in space — a stationary ripple. But James Clerk Maxwell's equations, the most solidly confirmed physics of the era, admit no such thing. A frozen wave is not a solution; the equations demand that electromagnetic fields propagate, always, at $c$.",
+        "The collision between Galileo's old rule for combining speeds and Maxwell's new electrodynamics could not be patched. Galileo says a rider at speed $v$ beside a beam should measure the beam's speed as $c - v$. Maxwell says every observer measures $c$. Einstein's move was to trust neither the rider's space nor the rider's time as absolute — to let the measuring instruments themselves carry the correction.",
+      ],
+    },
+    {
+      id: "arithmetic-that-protects-c",
+      heading: "3 · The arithmetic that protects c",
+      paragraphs: [
+        "The rule that replaces Galilean addition is one line of algebra. If something moves at speed $u'$ inside a frame that itself moves at $v$, the combined speed is not $u' + v$ but",
+        "$$u = \\frac{u' + v}{1 + u'v/c^{2}}$$",
+        "The denominator is the whole story. Try to stack speeds toward $c$ and the denominator grows exactly as fast as the numerator: set $u' = v = 0.99c$ and the result is $0.99995c$ — not $1.98c$. You can pass any speed below $c$, from any direction, and the answer stays below $c$. The constant is not a wall you can chip at; it is a boundary the arithmetic itself enforces.",
+        "This is not a rule added to physics to protect the speed limit. It is a theorem that follows once simultaneity is allowed to be relative — once the synchronization of distant clocks is recognised as a convention with consequences rather than a fact of nature.",
+      ],
+    },
+    {
+      id: "c-is-not-about-light",
+      heading: "4 · c is not about light",
+      paragraphs: [
+        "Strip the units away and special relativity is the statement that the interval between two events — $ds^{2} = -c^{2}dt^{2} + dx^{2} + dy^{2} + dz^{2}$ — is the same for every inertial observer, even though they disagree about the $t$'s and the $x$'s separately. In this geometry, $c$ is the exchange rate between the time axis and the space axes. It appears in the metric the way a conversion factor appears between miles and kilometres — except that here the two things being related are duration and distance, which we had always assumed were incommensurable.",
+        "Light travels at $c$ for a reason that has nothing to do with light: photons are massless. Any massless particle — the gluon, the (hypothetical) graviton — must move at exactly $c$; any massive particle must move below it. The universal speed is a property of spacetime's causal structure, and massless things are simply the only things light enough to ride it exactly.",
+        "This is why physicists increasingly call $c$ the speed of causality. It is the maximum speed at which influence — any influence — can propagate. The theory of relativity is more honestly the theory of the causal structure of the universe, with light as its most visible courier.",
+      ],
+    },
+    {
+      id: "price-of-the-last-decimal",
+      heading: "5 · The price of the last decimal",
+      paragraphs: [
+        "Why can nothing be accelerated to $c$? Because the energy required diverges. The kinetic energy of a particle of mass $m$ at speed $v$ is $E_{k} = (\\gamma - 1)mc^{2}$, where $\\gamma = 1/\\sqrt{1 - v^{2}/c^{2}}$ grows without bound as $v$ approaches $c$. Every nine you add to the speed costs more energy than all the nines before it.",
+        "Particle accelerators are the practical proof. The Large Electron–Positron collider pushed electrons to $0.9999999999987\\,c$ — and the electrons at LEP and the protons at the LHC differ in speed by less than a bicycle's pace, while differing in energy by factors of hundreds. The boundary is not merely respected; it is where the machine stops, no matter how hard it pushes.",
+      ],
+    },
+    {
+      id: "what-remains-open",
+      heading: "6 · What remains open",
+      paragraphs: [
+        "One honest footnote: since 1983, the metre itself has been defined so that $c$ is exactly 299,792,458 of them per second. Asking why $c$ has that value is now a question about our units, not about nature — the deep question is why there is a finite invariant speed at all, rather than infinity, the value Newton's physics silently assumed. A universe with $c = \\infty$ would have absolute simultaneity, no magnetic fields as we know them, no relativity of any kind. A finite $c$ is the price of electromagnetism working — and it is a price the universe seems content to pay.",
+        "What we do not have is a derivation of that structure from anything deeper. Quantum gravity, whatever it turns out to be, must reproduce an exact finite $c$ in its classical limit — and no candidate theory yet explains why the causal cone has the opening angle it does. That is an open question, and it is honest to leave it open.",
+      ],
+    },
+  ],
+  references: [
+    "Einstein, A. (1905). “Zur Elektrodynamik bewegter Körper.” Annalen der Physik, 17, 891–921.",
+    "Einstein, A. (1916). Relativity: The Special and General Theory. Methuen (English translation).",
+    "Taylor, E. F., & Wheeler, J. A. (1992). Spacetime Physics (2nd ed.). W. H. Freeman.",
+    "Mermin, N. D. (2005). It's About Time: Understanding Einstein's Relativity. Princeton University Press.",
+    "Bureau International des Poids et Mesures (2019). The International System of Units (SI), 9th edition.",
+  ],
+};
+
+/* ------------------------------------------------------------------ */
 /* The notebook                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -141,7 +212,9 @@ export const notes: Note[] = [
     title: "Why Is the Speed of Light So Fundamental?",
     category: "Open Questions",
     excerpt: "Not why is it 299,792,458 m/s — but why is there a convertible speed at all, and what does that buy the universe?",
-    status: "planned",
+    status: "example",
+    readingMinutes: lightSpeedEssay.readingMinutes,
+    essay: lightSpeedEssay,
   },
   {
     id: "qm-tells-us",

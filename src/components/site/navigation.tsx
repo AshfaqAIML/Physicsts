@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, Orbit } from "lucide-react";
+import { Menu, Orbit, Search } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/site/theme-toggle";
@@ -114,6 +114,21 @@ export function Navigation() {
         </ul>
 
         <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("phys:open-palette"))}
+            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            aria-label="Open command palette (search the whole page)"
+          >
+            <Search className="size-4" aria-hidden="true" />
+            <span
+              aria-hidden="true"
+              className="hidden rounded border border-border bg-background/50 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] sm:inline-block"
+            >
+              ⌘K
+            </span>
+          </button>
+
           <ThemeToggle />
 
           {/* Mobile menu */}
@@ -159,6 +174,20 @@ export function Navigation() {
                   ))}
                 </ul>
               </nav>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  window.dispatchEvent(new Event("phys:open-palette"));
+                }}
+                className="mt-6 flex w-full items-center justify-between rounded-md border border-dashed border-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <span className="flex items-center gap-2">
+                  <Search className="size-3.5" aria-hidden="true" />
+                  Search everything
+                </span>
+                <span aria-hidden="true">⌘K</span>
+              </button>
             </SheetContent>
           </Sheet>
         </div>

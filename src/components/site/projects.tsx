@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUpRight, BookMarked, FlaskConical, Github } from "lucide-react";
 import {
   Dialog,
@@ -21,6 +21,17 @@ import { cn } from "@/lib/utils";
  */
 export function Projects() {
   const [open, setOpen] = useState<Project | null>(null);
+
+  // External openers (command palette)
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      const p = projects.find((x) => x.id === id);
+      if (p) setOpen(p);
+    };
+    window.addEventListener("phys:open-project", onOpen);
+    return () => window.removeEventListener("phys:open-project", onOpen);
+  }, []);
 
   return (
     <section

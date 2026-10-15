@@ -1,3 +1,8 @@
+import { AscendButton } from "@/components/site/ascend-button";
+import { CommandPalette } from "@/components/site/command-palette";
+import { ConstellationNav } from "@/components/site/constellation-nav";
+import { DeepField } from "@/components/site/deep-field";
+import { ReadingProgress } from "@/components/site/reading-progress";
 import { About } from "@/components/site/about";
 import { Contact } from "@/components/site/contact";
 import { Footer } from "@/components/site/footer";
@@ -23,7 +28,12 @@ export default function Home() {
         Skip to content
       </a>
 
+      <DeepField />
+      <ReadingProgress />
       <Navigation />
+      <ConstellationNav />
+      <AscendButton />
+      <CommandPalette />
 
       <main className="flex-1">
         <Hero />

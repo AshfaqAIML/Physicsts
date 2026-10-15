@@ -94,7 +94,7 @@ export function LensingSim() {
 
     const photon = hexToRgb(cssVar("--photon"));
     const nebula = hexToRgb(cssVar("--nebula"));
-    const star = dark ? [242, 244, 248] : hexToRgb(cssVar("--foreground"));
+    const star: RGB = dark ? [242, 244, 248] : hexToRgb(cssVar("--foreground"));
 
     // Faint nebular patches (restrained, ≤ 6% alpha)
     for (let i = 0; i < 3; i++) {
@@ -148,6 +148,7 @@ export function LensingSim() {
     if (!W || !H) return;
 
     const dpr = sizeRef.current.dpr;
+    const dark = document.documentElement.classList.contains("dark");
     const block = Math.max(2, Math.round(dpr));
     const bw = Math.ceil(W / block);
     const bh = Math.ceil(H / block);

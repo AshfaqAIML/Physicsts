@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUpRight, BookOpen, Tag } from "lucide-react";
 import {
   Dialog,
@@ -21,6 +21,17 @@ import { cn } from "@/lib/utils";
  */
 export function ResearchInterests() {
   const [openArea, setOpenArea] = useState<ResearchArea | null>(null);
+
+  // External openers (command palette)
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      const area = researchAreas.find((a) => a.id === id);
+      if (area) setOpenArea(area);
+    };
+    window.addEventListener("phys:open-research", onOpen);
+    return () => window.removeEventListener("phys:open-research", onOpen);
+  }, []);
 
   return (
     <section

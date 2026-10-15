@@ -65,6 +65,7 @@ export function Contact() {
   });
 
   const subjectValue = watch("subject");
+  const messageValue = watch("message");
 
   const onSubmit = async (values: FormValues) => {
     setStatus("sending");
@@ -235,10 +236,24 @@ export function Contact() {
               </div>
 
               <div className="mt-6 space-y-2">
-                <Label htmlFor="contact-message">Message</Label>
+                <div className="flex items-baseline justify-between">
+                  <Label htmlFor="contact-message">Message</Label>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "font-mono text-[10px] tabular-nums",
+                      (messageValue?.length ?? 0) > 3600
+                        ? "text-amber-500"
+                        : "text-muted-foreground/60"
+                    )}
+                  >
+                    {messageValue?.length ?? 0} / 4000
+                  </span>
+                </div>
                 <Textarea
                   id="contact-message"
                   rows={6}
+                  maxLength={4000}
                   placeholder="A question, an idea, a correction — all welcome."
                   aria-invalid={Boolean(errors.message)}
                   aria-describedby={errors.message ? "contact-message-error" : undefined}

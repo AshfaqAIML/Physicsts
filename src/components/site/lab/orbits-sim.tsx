@@ -113,7 +113,7 @@ export function OrbitsSim() {
     if (!keepLensPosition) {
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext("2d");
-      if (ctx) {
+      if (canvas && ctx) {
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -156,7 +156,7 @@ export function OrbitsSim() {
     const bg = hexToRgb(cssVar("--background"));
     const photon = hexToRgb(cssVar("--photon"));
     const dust = hexToRgb(cssVar("--dust"));
-    const star = dark ? [242, 244, 248] : hexToRgb(cssVar("--foreground"));
+    const star: [number, number, number] = dark ? [242, 244, 248] : hexToRgb(cssVar("--foreground"));
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
