@@ -522,3 +522,233 @@ Stage Summary:
   channels, CV) still awaits the owner; optional LLM-powered "ask about
   this essay" assistant; publication list when real; analytics-free
   performance pass (canvas frame budgets) if ever needed.
+
+---
+Task ID: R3-a
+Agent: subagent
+Task: "Ask about this essay" — LLM-powered Socratic companion in the notebook
+reading view (the site's first AI feature)
+
+Work Log:
+- Read skills/LLM/SKILL.md fully before any backend code; probed the SDK
+  first with a one-off bun script confirming the exact call shape works:
+  default import ZAI, `await ZAI.create()`, `zai.chat.completions.create({
+  messages, thinking: { type: "disabled" } })`, answer at
+  `completion.choices?.[0]?.message?.content`. The `system` role IS accepted
+  (SDK ChatMessage type allows system|user|assistant), so the conversation is
+  [{role:"system", …}, …history, {role:"user", question}] as specced.
+- NEW src/app/api/ask/route.ts (POST only, `export const dynamic =
+  "force-dynamic"` + Cache-Control: no-store on every response):
+  · Zod validation matching the contact route's style: noteId non-empty;
+    question trimmed 5–600; history array (default []) max 8 entries, each
+    role enum "user"|"assistant" + content trimmed 1–2000. Failures → 400
+    { error } with the first human-readable issue message.
+  · Rate limit copied from the contact route: in-memory sliding window,
+    12 requests / 10 min / IP (x-forwarded-for first hop, fallback "local")
+    → 429 { error } ("That is a lot of questions for one sitting…").
+  · Unknown noteId or note without essay → 404 { error: "Essay not found." }.
+  · System prompt (honest + grounded): study companion for ONE essay, not
+    its author; the essay's actual title, dek, every section heading +
+    paragraphs with $…$/$$…$$ delimiters stripped but LaTeX source kept
+    inline (math stays discussable), plus the essay's verbatim reference
+    list; capped at 8000 chars with a graceful line-boundary cut + truncation
+    note. Style rules: reader's language, ≤250 words, Socratic but direct
+    (answer first, at most ONE closing probe, never a bare question), plain
+    language/short paragraphs, LaTeX inside $…$ for the UI's <Prose>, NEVER
+    invent citations/quotes/page numbers/historical claims, say so when
+    unsure, flag answers that go beyond the essay.
+  · SDK failure or empty completion → console.error (server log only) + 502
+    { error: "The assistant is momentarily unavailable…" } — no stack leaks.
+  · The SDK import lives ONLY in this route file (never client code).
+- NEW src/components/site/ask-assistant.tsx ("use client", no SDK import):
+  · Collapsed: full-width dashed mono uppercase toggle "ASK ABOUT THIS
+    ESSAY — AI COMPANION" (Sparkles + rotating ChevronDown, aria-expanded/
+    aria-controls, site dashed-affordance styling + focus-visible ring).
+  · Expanded panel (rounded-lg border border-border bg-card/60): header row
+    "Socratic companion" + "AI · can make mistakes" tag; one-line honest
+    disclosure; message list (max-h-60, overflow-y-auto, aria-live=polite,
+    auto-scrolls to newest) — user turns right-aligned bubbles, assistant
+    turns with photon left rule rendered via existing <Prose> (answers with
+    $math$ typeset; blank-line paragraphs preserved, single breaks kept);
+    Loader2 + mono "Consulting the essay…" while loading.
+  · Input row: shadcn Textarea rows=2 maxLength 600 with mono placeholder;
+    Enter submits / Shift+Enter newline (keydown guard incl.
+    nativeEvent.isComposing); send Button (sm, Send icon + "Ask") disabled
+    while loading or <5 trimmed chars (client-side block). Character counter
+    appears past 500, amber past 560 (contact-form pattern). Errors: inline
+    mono aria-live line for well-formed server errors (400/404/429/502 — no
+    toast); sonner toast ONLY for unexpected failures (network throw /
+    unparseable body). Thread kept fully in state; displays last 12 turns
+    with "…earlier turns kept brief" note; sends last 8 turns as history.
+  · Two suggested-question chips (mono, dashed, fill input + focus it) shown
+    only while the thread is empty.
+- EDIT src/components/site/notebook.tsx only: ReadingView now mounts
+  <AskAssistant note={note} /> inside .reading-measure after the References
+  section, with the "Example essay · placeholder content…" footnote moved to
+  remain the LAST element (DOM order verified: refs 6 → assistant 7 →
+  footnote 8). Panel scrolls with the essay, not fixed. No other files
+  touched (concurrent-agent ownership respected).
+
+QA (curl + agent-browser --session r3a, isolated to avoid session clashes):
+- curl matrix: valid ask → 200 {"answer": …} in ~1.7 s; question "hi" → 400;
+  601 chars → 400; 9 history entries → 400; role "system" in history → 400;
+  malformed JSON → 400; unknown + planned (essay-less) noteIds → 404
+  "Essay not found.".
+- Browser E2E: opened localhost:3000, location.hash="#note-spacetime-curved"
+  → reading dialog; scrolled to toggle, clicked → panel expanded
+  (aria-expanded=true, chips + textarea + disabled Ask visible). Chip click
+  fills input. "hi" keeps Ask disabled (client-side block).
+- Real conversation (3 exchanges, all POST /api/ask 200 in dev.log):
+  · "In one sentence, what does the essay say curvature means?" → "…curvature
+    means that distances and angles between events in spacetime refuse to
+    follow the flat rulebook of Euclidean geometry, as measured by
+    inhabitants within spacetime itself." + one Socratic probe. Grounded in
+    §3 verbatim phrasing.
+  · "Write the triangle-angle rule from section 3 as an equation…" →
+    α+β+γ=π+A/R² rendered by KaTeX (5 .katex nodes, 0 .katex-error) + symbol
+    glossary + probe — proves history/context passing and $…$ rendering.
+  · "What about the rubber sheet?" → quoted the essay's actual line
+    ("explains gravity by using gravity and so explains nothing…") + probe.
+  · Post-error recovery question → "Light bending around the Sun." (§5).
+- Enter submits (press Enter AND synthetic keydown both proven); synthetic
+  Shift+Enter keydown: defaultPrevented=false, no submission (agent-browser
+  cross-CLI keydown/keyup doesn't hold modifiers — tool quirk noted in R2;
+  handler verified via synthetic events instead).
+- Error paths via network route mocks: well-formed {"error": …} → inline
+  mono error, NO toast, input preserved for retry; unparseable body →
+  inline fallback + sonner toast "The essay companion failed to answer.";
+  after unroute, next real question answered normally.
+- Rate limit: burned the sliding window with cheap 404 probes → HTTP 429
+  {"error":"That is a lot of questions for one sitting — please try again
+  in a few minutes."} logged in dev.log (took 16 total hits because early
+  hits had already slid out of the 10-min window — sliding drain works).
+- Counter: 520 → "520 / 600" muted; 570 → amber span verified; ≤500 hidden.
+- No page errors / console errors during the whole session. Mount order
+  refs→assistant→footnote verified in DOM. Mobile 375×812: no horizontal
+  overflow (375=375), panel 293px wide inside viewport.
+- Screenshots: qa/r3a-ask.jpeg (desktop, thread w/ user bubble + photon-rule
+  answer + input row; VLM-verified: header+honesty tag+disclosure, cyan left
+  rule, typeset math confirmed in the bottom-scrolled capture, no layout
+  defects — the "cut-off" second question is the max-h-60 scroll boundary,
+  by design) + qa/r3a-ask-mobile.jpeg (mobile).
+- bun run lint: clean (exit 0). bunx tsc --noEmit: zero errors under src/
+  (only pre-existing examples/ + skills/ errors, untouched).
+
+Stage Summary:
+- The notebook reading view now has an honest AI study companion: a dashed
+  mono toggle expands a "Socratic companion" panel whose answers come from
+  /api/ask — zod-validated, rate-limited (12/10 min/IP), grounded in the
+  essay's real text (LaTeX source kept discussable, references included,
+  8000-char cap), with an honesty header/disclosure and inline error
+  handling. Answers quote the essay accurately, typeset $…$ math via the
+  existing <Prose>, and end with a single probing question; multi-turn
+  history works (last 8 sent, last 12 shown). Lint/tsc clean; verified
+  end-to-end in-browser with real LLM answers, error paths, rate limiting,
+  and mobile layout. No files outside the three owned ones were touched.
+- Risks/notes: (1) rate-limit window was saturated by the 429 test — /api/ask
+  returns 429 until roughly 10 minutes after the last probe (drains
+  automatically; dev-server restart also clears the in-memory map);
+  (2) in-memory rate limiting + no session persistence means reloads reset
+  the visible thread (history lives only in component state, by design —
+  no storage/tracking); (3) answer length/style depends on the model — the
+  ≤250-word instruction is soft; (4) the essay prompt budget (8000 chars)
+  will truncate future longer essays mid-text — the system prompt tells the
+  model to treat post-truncation content as unavailable; (5) agent-browser
+  keydown/keyup across CLI calls does not hold modifiers (Enter-to-submit
+  proven via press + synthetic events; Shift+Enter via synthetic events).
+
+---
+Task ID: R3-a (subagent)
+Agent: subagent
+Task: "Ask about this essay" — LLM-powered Socratic companion
+
+Work Log:
+- Read skills/LLM/SKILL.md; built POST /api/ask (zod validation, 12/10-min/IP
+  rate limit, 404 unknown notes, 502 on SDK failure, no-store). SDK lives
+  only in the route (server-side).
+- ask-assistant.tsx: collapsible dashed panel in the reading view —
+  suggestion chips, Enter-submits/Shift+Enter-newline, char counter,
+  loading dots, answers rendered through <Prose> (KaTeX math typesets),
+  honest "AI · can make mistakes" disclosure, aria-live.
+- notebook.tsx: panel mounted between References and the footnote.
+- E2E verified with REAL answers (curvature summary, math follow-up with
+  α+β+γ=π+A/R² typeset, verbatim §6 quote), full validation matrix
+  (400/404/429 paths), mobile 375 no overflow, lint + tsc clean.
+- Full details in this entry's own worklog section (appended by subagent).
+
+Stage Summary:
+- The site's first AI feature is live and honest: grounded answers about
+  each readable essay, clearly labelled as AI, rate-limited, no fabricated
+  citations.
+
+---
+Task ID: R3 (review round — main agent)
+Agent: main-agent
+Task: Status assessment, QA, mandated feature + styling expansion
+
+Work Log:
+- Baseline QA clean (200, no errors/warnings, no overflow 1440/375).
+- NEW FEATURES:
+  1. Site-level motion preference — "calm the universe"
+     (lib/motion-preference.ts): localStorage override layered over the
+     OS prefers-reduced-motion; explicit choice always wins.
+     · providers.tsx rewritten: useSyncExternalStore-driven MotionConfig
+       (reducedMotion "always" when calm) + context + <html>.motion-calm
+       class hook (CSS: scroll-behavior auto + transition/animation kill,
+       mirroring the media query). Lint-clean (no setState-in-effect).
+     · motion-toggle.tsx: nav Zap/ZapOff button (aria-pressed, M
+       shortcut, hydration-guarded icon), visible on mobile too.
+     · M hotkey in shortcuts-help (+ manual row); "Calm the universe"
+       action in ⌘K palette; palette goTo + ascend button now respect
+       the preference for smooth scrolling.
+     · Canvas wiring: black-hole + deep-field read the lib and react to
+       phys:motion events live (cancel loop + static frame / restart);
+       orbits + wave sims swapped their matchMedia helpers for the shared
+       store — auto-pause under calm, auto-resume on restore (verified:
+       Play overlay appears under calm, disappears on restore).
+  2. LLM "Ask about this essay" companion — dispatched to subagent
+     (R3-a above); re-verified myself post-restart: curl POST /api/ask
+     → HTTP 200 with a real grounded answer; panel present in the
+     reading view (DOM + screenshot).
+- STYLING DETAIL:
+  · Research cards: photon-cyan top-edge line that sweeps in on hover
+    (before: gradient, origin-left, 500ms). Projects cards: same in
+    nebula violet (matching their example badges).
+  · Publications empty state: faint "uncharted constellation" SVG
+    (hairline connections + photon stars, aria-hidden, 16/22% opacity).
+  · .link-quiet utility: animated underline that grows from the left —
+    applied to footer index links.
+  · aria-keyshortcuts on nav triggers (⌘K palette, L lexicon, M motion).
+  · Print: almanac month pager hidden via data-print="hide".
+- VERIFICATION:
+  · Motion system: toggle click → html.motion-calm + localStorage "1" +
+     aria-pressed true + label swap; M hotkey toggles both ways; palette
+     action present; 3 rapid toggles → zero page errors; deep-field
+     renders a static frame under calm (lit pixels verified); orbits
+     auto-pause/auto-resume verified; fresh browser session → zero
+     page errors.
+  · Radix tabs note: synthetic eval clicks don't activate Radix tabs —
+    real agent-browser clicks DO (verified switching works; not a bug).
+  · Overflow: 1440=1440, 375=375. lint exit 0; tsc zero errors under
+    src/. VLM review of ask-panel + publications constellation:
+    9.5/10, zero defects.
+  · Dev server died mid-round (post-subagent) — restarted detached,
+    dev.log was truncated at some point during the subagent's run (its
+    api/ask log lines lost), so I re-verified /api/ask live via curl.
+- Cron task creation retried again this round — STILL "cron tool is not
+  available for this request" (gateway limitation; same job definition
+  preserved in R1-cron entry).
+
+Stage Summary:
+- The site now has: a genuinely accessible site-level motion preference
+  wired through framer-motion AND all five canvas instruments, plus its
+  first AI feature (grounded essay Q&A), plus a styling detail pass
+  (card edges, constellation, link underlines, print polish).
+- Known notes: (1) dev.log truncated once during R3-a — verify API
+  health by curl, not only logs, after restarts; (2) motion preference
+  is per-browser (localStorage) — first paint always animates until
+  hydration reads the store; (3) ask-assistant thread is session-only
+  by design.
+- Next-phase candidates: lab instrument presets (one-tap experiments),
+  LLM assistant for research areas (same pattern as essays), real
+  content replacement (name/portrait/channels) when the owner is ready.

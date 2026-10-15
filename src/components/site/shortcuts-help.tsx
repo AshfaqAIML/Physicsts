@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTheme } from "next-themes";
+import { getMotionReduced, setMotionReduced } from "@/lib/motion-preference";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,11 @@ export function ShortcutsHelp() {
         window.dispatchEvent(new Event("phys:open-lexicon"));
         return;
       }
+      if (e.key === "m") {
+        e.preventDefault();
+        setMotionReduced(!getMotionReduced());
+        return;
+      }
       if (e.key === "t") {
         e.preventDefault();
         setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -88,6 +94,7 @@ export function ShortcutsHelp() {
             <ShortcutRow keys={["⌘", "K"]} note="Command palette — Ctrl K on Windows and Linux" />
             <ShortcutRow keys={["?"]} note="This operating manual" />
             <ShortcutRow keys={["L"]} note="Open the physics lexicon" />
+            <ShortcutRow keys={["M"]} note="Calm the universe — reduce or restore motion" />
             <ShortcutRow keys={["T"]} note="Switch Deep Field (dark) ↔ Archival Journal (light)" />
           </ShortcutGroup>
 

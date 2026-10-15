@@ -1,0 +1,525 @@
+     1→     1→# Project Worklog — The Physicist Portfolio
+     2→     2→
+     3→     3→A cinematic, scientifically honest personal portfolio for a physicist /
+     4→     4→scientific thinker. Single-page Next.js 16 App Router site on `/`.
+     5→     5→
+     6→     6→---
+     7→     7→
+     8→     8→Task ID: 1–3
+     9→     9→Agent: main-agent
+    10→    10→Task: Foundation — design system, content layer, shared components
+    11→    11→
+    12→    12→Work Log:
+    13→    13→- Installed `katex` (v0.19.0) for mathematical typesetting.
+    14→    14→- Prisma schema: replaced scaffold models with `ContactMessage` (id, name, email,
+    15→    15→  subject, message, read, createdAt) — pushed to SQLite successfully.
+    16→    16→- `src/app/globals.css`: full design system. Dark "Deep Field" theme (default):
+    17→    17→  obsidian #080A0F bg, midnight #0C1220 cards, soft white #F2F4F8, silver
+    18→    18→  #A7B0C0, photon cyan #78DCE8, nebula violet #A99BFF. Light "Archival Journal"
+    19→    19→  theme: paper #F5F3EE, ink #14161D, darker cyan #0E7C8C / violet #5D50D4.
+    20→    20→  Utilities: bg-chart-grid, bg-plot-grid, grain, glass-panel, drop-cap,
+    21→    21→  reading-measure, custom scrollbar, reduced-motion handling.
+    22→    22→- `src/app/layout.tsx`: fonts Instrument_Serif (--font-instrument), Inter
+    23→    23→  (--font-inter), IBM_Plex_Mono (--font-plex-mono); metadata (title template,
+    24→    24→  OG, twitter, robots); Providers (next-themes defaultTheme=dark + framer
+    25→    25→  MotionConfig reducedMotion="user"); katex css import; sonner Toaster.
+    26→    26→- Content layer (typed, presentation-free):
+    27→    27→  - `src/content/site.ts` — identity, nav, contact channels (null hrefs =
+    28→    28→    honest "to be added" states)
+    29→    29→  - `src/content/profile.ts` — about copy, placeholder facts, driving questions, approach
+    30→    30→  - `src/content/research.ts` — 6 research areas w/ equations, concepts, real reading lists
+    31→    31→  - `src/content/projects.ts` — 5 EXAMPLE projects (status:"example"), full structure
+    32→    32→  - `src/content/publications.ts` — honest empty state config
+    33→    33→  - `src/content/notes.ts` — 9 notes (1 full example essay w/ TOC sections,
+    34→    34→    inline $math$, real references; 8 planned topics)
+    35→    35→- Shared components: `tex.tsx` (Tex + Prose KaTeX renderers), `reveal.tsx`
+    36→    36→  (reduced-motion-aware scroll reveal), `section-heading.tsx` (mono index +
+    37→    37→  serif display), `theme-toggle.tsx`, `providers.tsx`.
+    38→    38→
+    39→    39→Stage Summary:
+    40→    40→- Design system live; content fully separated from presentation.
+    41→    41→- All placeholders honestly labelled; nothing fabricated (no fake degrees,
+    42→    42→  publications, or affiliations).
+    43→    43→- Next: Task 4-a (Physics Lab sims via subagent) + Task 4-b (Navigation &
+    44→    44→  cinematic Hero) in parallel.
+    45→    45→
+    46→    46→---
+    47→    47→Task ID: 4-a, 4-b, 5, 6, 7, 8, 9, 10, 11, 12
+    48→    48→Agent: main-agent
+    49→    49→Task: Full site implementation — hero, all sections, lab, contact, SEO, QA
+    50→    50→
+    51→    51→Work Log:
+    52→    52→- Physics Laboratory (src/components/site/lab/):
+    53→    53→  · lensing-sim.tsx — REAL thin-lens ray-shooting: every pixel block traced
+    54→    54→    backwards through β = θ − θ_E²·θ/|θ|²; conserved surface brightness;
+    55→    55→    procedural star field (theme-aware "photographic plate" in light mode);
+    56→    56→    coordinate-grid source plane mode; mass slider (θ_E 24–140 px); dashed
+    57→    57→    Einstein-ring guide; drag-to-move lens (pointer + keyboard arrows, Shift
+    58→    58→    fine control); live b/δθ readout; IntersectionObserver + dirty-flag
+    59→    59→    rendering; DPR-aware.
+    60→    60→  · orbits-sim.tsx — Newtonian two-body (GM=1 units), velocity Verlet dt
+    61→    61→    0.002, substeps 1–15; mass-ratio slider (live barycentre shift), launch
+    62→    62→    speed f∈[0.5,1.25]×v_circ (applies on reset), analytic conic overlay with
+    63→    63→    P/A ticks, fading trails, Doppler-glowing bodies, velocity vector,
+    64→    64→    live readouts (e, a, ε, T, ΔE drift); Space/R keyboard; reduced-motion
+    65→    65→    starts paused via useSyncExternalStore (no setState-in-effect).
+    66→    66→  · lab.tsx — tabs, figure captions, KaTeX mathematics panels, honest
+    67→    67→    assumptions blocks.
+    68→    68→- Navigation: scroll-spy IntersectionObserver, glass panel after 24px
+    69→    69→  scroll, mobile Sheet menu with serif items, ThemeToggle (Sun/Moon).
+    70→    70→- Hero (hero.tsx + black-hole.tsx): procedural Gargantua-inspired black hole
+    71→    71→  (1150 Keplerian particles, lensed far-side arc, secondary image, photon
+    72→    72→  ring, Doppler beaming, star/nebula backdrop; ink-plate rendering in light
+    73→    73→  theme); staggered entrance; parallax (content fade/rise, scene scale);
+    74→    74→  Einstein field equation rendered by KaTeX with "1915" caption;
+    75→    75→  "DESCEND INTO THE UNIVERSE" animated scroll indicator. Fixed after QA:
+    76→    76→  scene moved to x=0.62 + left readability scrim (VLM-flagged text/disk
+    77→    77→  overlap in light theme).
+    78→    78→- About: editorial split layout, sticky portrait plate (generated
+    79→    79→  silhouette-under-stars placeholder, labelled "Plate I · Portrait
+    80→    80→  (placeholder)"), drop-cap first paragraph, facts table with dashed
+    81→    81→  "placeholder" badges, driving questions ledger, approach grid,
+    82→    82→  M42 marginalia.
+    83→    83→- Research: 6 area cards w/ KaTeX equations + detail dialogs (concepts,
+    84→    84→  reading lists); "interests not credentials" disclaimer.
+    85→    85→- Projects: 5 example-concept cards (dashed violet badges), full brief
+    86→    86→  dialogs (motivation → background → math → methodology → findings →
+    87→    87→  limitations → references → honest repository placeholder).
+    88→    88→- Publications: honest empty state "Research and writing in progress.",
+    89→    89→  dormant filter rail (dashed, aria-disabled) + explanation.
+    90→    90→- Notebook: category filter chips, 9-row ledger (1 full example essay
+    91→    91→  w/ TOC sidebar, reading measure, drop cap, inline $math$, references;
+    92→    92→  8 planned topics disabled with "Planned — not yet written" badges).
+    93→    93→- Contact: channels list (null hrefs → "to be added" states), CV honesty
+    94→    94→  panel, react-hook-form + zod form, honeypot field, aria-live status,
+    95→    95→  sonner toasts.
+    96→    96→- API /api/contact: zod validation, honeypot discard, in-memory rate limit
+    97→    97→  (5/10min/IP), Prisma ContactMessage persistence.
+    98→    98→- Footer: colophon grid, sticky-bottom compliant (mt-auto + safe-area
+    99→    99→  padding), c² note.
+   100→   100→- page.tsx: min-h-screen flex-col assembly + skip link.
+   101→   101→- SEO: icon.svg favicon (orbit mark), robots.ts, sitemap.ts, OG image
+   102→   102→  (generated 1344×768 black hole), full metadata in layout.
+   103→   103→- Generated assets: public/portrait.jpg (864×1152), public/og.jpg.
+   104→   104→- README.md: setup, env vars, content-editing guide, architecture,
+   105→   105→  deployment. .env.example created.
+   106→   106→
+   107→   107→QA (agent-browser + VLM verification, screenshots in qa/):
+   108→   108→- Desktop 1440×900: hero, about, research grid + dialog, projects + dialog,
+   109→   109→  publications, reading view, lab (lensing + orbits), contact — all verified
+   110→   110→  visually via VLM; equations render properly (not raw LaTeX); no page
+   111→   111→  errors; clean console after reload (one transient framer-motion warning
+   112→   112→  from Fast Refresh only).
+   113→   113→- Interactions verified: research dialog, project dialog, essay reading
+   114→   114→  view, lab tab switch, mass slider, lens drag (lens displaced + distortion
+   115→   115→  confirmed), Space/R keyboard on orbits (Play↔Pause toggled), theme toggle
+   116→   116→  (dark↔light both verified visually), form validation errors (name/email/
+   117→   117→  subject), successful submission → "Delivered. Thank you." → Prisma INSERT
+   118→   118→  confirmed in DB.
+   119→   119→- Mobile 375×812: no horizontal overflow (scrollWidth=clientWidth), hero
+   120→   120→  readable, mobile sheet menu works, lab fits, footer correct.
+   121→   121→- dev.log: all 200s, POST /api/contact 200, no runtime errors.
+   122→   122→- bun run lint: clean.
+   123→   123→
+   124→   124→Stage Summary:
+   125→   125→- COMPLETE, browser-verified single-page site with all 8 sections, 2 working
+   126→   126→  physics simulations, real backend for contact form, dark/light themes,
+   127→   127→  SEO complete, honest content integrity throughout.
+   128→   128→- Server running on :3000 (started detached; note: sandbox kills direct
+   129→   129→  background children — must use double-fork: `( ( setsid bun run dev ... & ) & )`).
+   130→   130→- Remaining known items: NEXT_PUBLIC_SITE_URL should be set to the real
+   131→   131→  domain before deployment; placeholder content (name, facts, channels,
+   132→   132→  portrait) awaits the owner's real details; publications empty by design.
+   133→   133→
+   134→   134→---
+   135→   135→Task ID: R1 (resume phase)
+   136→   136→Agent: main-agent
+   137→   137→Task: Status assessment, QA, bug fixes, and feature expansion
+   138→   138→
+   139→   139→Work Log:
+   140→   140→- Read prior worklog (tasks 1–12 complete); verified dev server healthy
+   141→   141→  (GET / 200, clean logs), `bun run lint` clean, no horizontal overflow
+   142→   142→  at 1440/375 px.
+   143→   143→- QA via agent-browser (desktop 1440×900, mobile 375×812) + VLM checks.
+   144→   144→- BUG FIXES:
+   145→   145→  · lensing-sim.tsx draw(): `dark` was referenced outside its scope —
+   146→   146→    every frame threw ReferenceError after the sky/ring/glow drew, so the
+   147→   147→    lens mass glyph never rendered. Added local `const dark = ...` in
+   148→   148→    draw(). Verified visually (glyph + photon rim now render).
+   149→   149→  · orbits-sim.tsx: null-guarded `canvas` in resetSim; tuple-typed
+   150→   150→    `star` ([number, number, number]).
+   151→   151→  · lensing-sim.tsx: tuple-typed `star` (RGB).
+   152→   152→  · ui/slider.tsx: Radix does NOT forward Root-level aria-label to the
+   153→   153→    Thumb (role=slider); wrapper now extracts and forwards it. All lab
+   154→   154→    sliders now have accessible names.
+   155→   155→  · globals.css: `html, body { position: relative }` — silences
+   156→   156→    framer-motion's dev-only scroll-offset warning (container was
+   157→   157→    documentElement/body, both static). Verified: 0 warnings in a fresh
+   158→   158→    browser session.
+   159→   159→  · lab.tsx mobile: 3rd tab overflowed 375px (scrollWidth 418) — tabs
+   160→   160→    now live in a horizontal-scroll wrapper (hidden scrollbar).
+   161→   161→  · Fixed Crank–Nicolson sign bugs caught in self-review BEFORE ever
+   162→   162→    running: A-diagonal real part 1 − (dt/2)·hIm; c′ complex division
+   163→   163→    (i·c)/(p) = [c·pi + i·c·pr]/den; identity rows have zero super-diagonal.
+   164→   164→  · planeWaveT E→V₀ limit corrected to 1/(1 + V₀w²/2).
+   165→   165→- NEW FEATURES (this phase):
+   166→   166→  1. Quantum Wave Packet simulation (wave-sim.tsx) — third lab
+   167→   167→     instrument: 1D TDSE solved by Crank–Nicolson (unitary, unconditionally
+   168→   168→     stable) with complex Thomas-algorithm factorisation precomputed per
+   169→   169→     parameter change; N=768 grid, dt=0.005, natural units; Gaussian
+   170→   170→     packet, square barrier; complex absorbing potential (CAP) at edges;
+   171→   171→     live R/T/absorbed/⟨x⟩/t readouts + plane-wave T comparison; E, V₀, w,
+   172→   172→     speed sliders; Space/R keyboard; reduced-motion starts paused;
+   173→   173→     theme-aware canvas; auto-pause when absorbed. lab.tsx: 3rd tab +
+   174→   174→     mathematics panel (TDSE + tunneling coefficient) + what-to-try +
+   175→   175→     assumptions. Physics verified in-browser: E=1.4 < V₀=1.6 tunnels
+   176→   176→     (T≈0.33 measured vs 0.235 plane-wave — consistent with packet energy
+   177→   177→     spread), R+T+absorbed ≈ 1.
+   178→   178→  2. Command palette ⌘K (command-palette.tsx) — 6 groups: Navigate (8),
+   179→   179→     Laboratory (3, incl. direct tab switching), Research Areas (6, opens
+   180→   180→     detail dialogs), Projects (5, opens briefs), Notebook essays,
+   181→   181→     Actions (theme). Custom events (phys:open-palette, phys:lab-tab,
+   182→   182→     phys:open-research, phys:open-project, phys:open-note) decouple it
+   183→   183→     from section internals; research/projects/notebook/lab listen and
+   184→   184→     open. Nav-bar trigger + mobile-sheet trigger. Verified: search,
+   185→   185→     empty state ("Nothing found in this light cone"), deep links into
+   186→   186→     Cosmology dialog + speed-of-light essay.
+   187→   187→  3. Reading progress hairline (reading-progress.tsx) — top photon bar,
+   188→   188→    scaleX via rAF, direct DOM writes.
+   189→   189→  4. Constellation nav (constellation-nav.tsx) — desktop-only right-rail
+   190→   190→     section dots, scroll-spy IntersectionObserver, labels on hover.
+   191→   191→  5. Ascend button (ascend-button.tsx) — appears past 90vh, smooth
+   192→   192→     scrollTo top. Verified click → scrollY 0.
+   193→   193→  6. Deep-field ambience (deep-field.tsx) — fixed -z-10 canvas: ~110
+   194→   194→     twinkling stars (dark) / faint paper dust (light), 3% parallax,
+   195→   195→     theme-aware via MutationObserver, reduced-motion → static render.
+   196→   196→  7. Custom 404 (app/not-found.tsx) — "outside the light cone" page.
+   197→   197→  8. Second full essay in notes.ts — "Why Is the Speed of Light So
+   198→   198→     Fundamental?" (6 sections, inline $math$ + display velocity-addition
+   199→   199→     formula, 5 real references incl. Einstein 1905, Taylor & Wheeler,
+   200→   200→     BIPM SI brochure). Notebook now has 2 readable example essays.
+   201→   201→  9. Contact form polish — message character counter (x / 4000, amber
+   202→   202→     past 3600), maxLength; verified live.
+   203→   203→  10. Print stylesheet (@media print) — chrome/canvas hidden, ink-on-
+   204→   204→      white, grid/glass/blur removed, KaTeX overflow visible.
+   205→   205→- page.tsx: mounts DeepField, ReadingProgress, ConstellationNav,
+   206→   206→  AscendButton, CommandPalette alongside existing sections.
+   207→   207→- lab.tsx tabs now controlled (value/onValueChange) + listens for
+   208→   208→  phys:lab-tab events from the palette.
+   209→   209→- Full regression QA after changes: desktop + mobile overflow (375=375
+   210→   210→  ✓), theme toggle both directions, palette open/close/deep-links,
+   211→   211→  wave sim run + readouts, lensing glyph, essay reading view (TOC +
+   212→   212→  KaTeX display math verified by VLM), form validation + full submission
+   213→   213→  (Prisma INSERT logged, "Delivered. Thank you." status), mobile menu,
+   214→   214→  mobile wave sim (341px canvas, running).
+   215→   215→- bun run lint: clean. tsc --noEmit: zero errors under src/.
+   216→   216→
+   217→   217→Stage Summary:
+   218→   218→- Site now has THREE physics instruments (lensing, orbits, quantum
+   219→   219→  tunneling), a ⌘K command palette with deep links into every section's
+   220→   220→  dialogs, reading progress, constellation nav, ascend control, ambient
+   221→   221→  starfield, custom 404, second example essay, contact counter, print
+   222→   222→  styles. All QA-verified desktop + mobile, both themes.
+   223→   223→- Known non-blocking dev-mode noise: one React 19 hydration attribute
+   224→   224→  warning (Radix aria-controls useId shift on the mobile Sheet trigger).
+   225→   225→  Present in the ORIGINAL committed code too (2 occurrences); does not
+   226→   226→  affect functionality (sheet opens/closes correctly); treated as
+   227→   227→  dev-mode noise, documented here for honesty.
+   228→   228→- dev server CSS chunk occasionally serves stale content in this
+   229→   229→  sandbox until a further edit + reload (Turbopack HMR quirk); a
+   230→   230→  no-op edit + reload refreshes it.
+   231→   231→- Next-phase candidates: real content replacement (name, portrait,
+   232→   232→  channels, CV), analytic orbit preview thumbnail regeneration, optional
+   233→   233→  LLM-powered "ask about this essay" feature, publication list when real.
+   234→   234→
+   235→   235→---
+   236→   236→Task ID: R1-cron
+   237→   237→Agent: main-agent
+   238→   238→Task: Create 15-minute webDevReview scheduled task (final mandatory step)
+   239→   239→
+   240→   240→Work Log:
+   241→   241→- Attempted to create the recurring cron job (*/15 * * * * *, kind
+   242→   242→  webDevReview, Asia/Calcutta) via the cron tool — both `create` and
+   243→   243→  `list` returned "cron tool is not available for this request" in this
+   244→   244→  session (gateway limitation).
+   245→   245→- The intended job definition is preserved above and in this entry:
+   246→   246→  every 15 minutes, webDevReview kind, message: review the site on
+   247→   247→  :3000, read latest dev.log entries, run bun run lint, verify the
+   248→   248→  three lab simulations, check accessibility/responsive behavior and all
+   249→   249→  sections, fix issues found, append findings to worklog.md.
+   250→   250→
+   251→   251→Stage Summary:
+   252→   252→- Cron creation BLOCKED by tool availability in this session — retry
+   253→   253→  the exact job definition from this entry when the cron tool is
+   254→   254→  available again (highest-priority carry-over item).
+   255→   255→
+   256→   256→---
+   257→   257→Task ID: R2-a
+   258→   258→Agent: subagent
+   259→   259→Task: Notebook essay deep-links (#note-<noteId>) + Copy-link button in reading view
+   260→   260→
+   261→   261→Work Log:
+   262→   262→- Only file modified: src/components/site/notebook.tsx (no other files touched).
+   263→   263→- Deep-link helpers at module scope: NOTE_HASH_PREFIX = "#note-", noteHash(note),
+   264→   264→  readableNoteFromHash(hash) (requires the note to have an essay; planned/unknown
+   265→   265→  ids resolve to null).
+   266→   266→- Notebook component:
+   267→   267→  · openNote(note) — user-initiated opens (ledger row click, phys:open-note
+   268→   268→    command-palette event): setOpen + history.pushState("#note-<id>") when the
+   269→   269→    hash isn't already exactly that. pushState changes the hash with no scroll
+   270→   270→    jump and no hashchange echo; Back therefore closes the essay.
+   271→   271→  · hashchange listener + initial-load call (syncFromHash): #note-<id> → open
+   272→   272→    that essay (never touches history — initial load and back/forward stay
+   273→   273→    history-neutral); non-#note- hash → close the reading view (Back/Forward
+   274→   274→    away from a deep link); #note-<planned/unknown> → ignored.
+   275→   275→  · TOC-anchor immunity: the reading view's contents links (href="#<section-id>")
+   276→   276→    would otherwise look like "moved away" and close the dialog. ReadingView now
+   277→   277→    reports the hash it is about to navigate to via onContentsNavigate; the
+   278→   278→    parent stores it in contentsHash ref and the hashchange handler ignores
+   279→   279→    exactly that hash. (Expected-hash matching, not a bare flag, so a stale
+   280→   280→    expectation never misclassifies a real Back/Forward.)
+   281→   281→  · Manual close (Dialog onOpenChange false): if the hash points at THIS essay
+   282→   282→    (its #note- hash, or a stale in-dialog #<section-id> anchor of this essay —
+   283→   283→    small extension so the URL never keeps a dangling section fragment), clear
+   284→   284→    it via history.replaceState(null, "", pathname + search) — no history entry.
+   285→   285→    All window access lives in effects/handlers only (SSR-safe).
+   286→   286→- ReadingView: new toolbar row under the dek in the sticky DialogHeader — mono
+   287→   287→  "N min read · date" metadata (now visible on mobile where the TOC aside is
+   288→   288→  hidden) on the left, CopyLinkButton on the right.
+   289→   289→- CopyLinkButton (new): site-language button (rounded-md border, font-mono
+   290→   290→  10px uppercase tracking-[0.18em], hover:border-photon/50, focus-visible ring),
+   291→   291→  aria-label="Copy a link to this essay". onClick copies
+   292→   292→  `${origin}${pathname}#note-<id>` via navigator.clipboard.writeText; on
+   293→   293→  unavailability/failure falls back to a hidden textarea +
+   294→   294→  document.execCommand("copy") (try/catch/finally, always removes the scratch
+   295→   295→  node). Success → toast.success("Link copied — share this essay.", { description:
+   296→   296→  "The URL now points directly to this essay." }) + label/icon swap to
+   297→   297→  Check/"Copied" for 2 s (timeout cleaned up on unmount); failure →
+   298→   298→  toast.error("Could not copy the link.").
+   299→   299→- bun run lint: clean. bunx tsc --noEmit: zero errors under src/ (only
+   300→   300→  pre-existing examples/ + skills/ errors outside the app tree).
+   301→   301→
+   302→   302→QA (agent-browser, isolated --session r2a to avoid clashing with a concurrent
+   303→   303→agent sharing the default browser session — a Lexicon dialog was found open in
+   304→   304→it mid-test):
+   305→   305→- window.location.hash = "#note-spacetime-curved" → curvature reading dialog
+   306→   306→  opens, Copy-link button present. Hash set to "#note-speed-of-light" while
+   307→   307→  open → dialog swaps essays. "#note-qm-tells-us" (planned, no essay) →
+   308→   308→  ignored, dialog unchanged.
+   309→   309→- TOC anchor click (#force-to-geometry): hash becomes #force-to-geometry,
+   310→   310→  dialog STAYS open, active TOC item updates. Back → #note-spacetime-curved,
+   311→   311→  dialog still open; Back again → #notes, dialog closed; Forward →
+   312→   312→  #note-spacetime-curved, dialog re-opens.
+   313→   313→- Escape close with #note-… hash → dialog closed, URL cleared to "/" via
+   314→   314→  replaceState (no history entry). Same with a stale #strange-postulate
+   315→   315→  section hash (speed-of-light essay) → cleared to "/".
+   316→   316→- Ledger click on "Why Is the Speed of Light…" → URL
+   317→   317→  /#note-speed-of-light (pushState) → Back → dialog closed, URL "/".
+   318→   318→- phys:open-note CustomEvent (palette path) → dialog opens with
+   319→   319→  /#note-spacetime-curved.
+   320→   320→- Full page load at http://localhost:3000#note-spacetime-curved → dialog opens
+   321→   321→  on mount with no history manipulation.
+   322→   322→- Copy button click → sonner success toast (title + description verified in
+   323→   323→  [data-sonner-toast]), label swapped to "Copied", reset to "Copy link" after
+   324→   324→  ~2 s. clipboard.readText denied by headless permissions (expected), but the
+   325→   325→  success toast proves the write path resolved.
+   326→   326→- Mobile 375×812: no horizontal overflow (375=375), button wraps under the
+   327→   327→  dek, visible at x=41 y=287. No console errors, no page errors.
+   328→   328→- Screenshot: qa/r2a-notebook.jpeg (1440×900, real JPEG). VLM check: COPY LINK
+   329→   329→  button with icon on the right of the metadata line, cleanly styled, no
+   330→   330→  overlap; dialog/TOC/essay render correct.
+   331→   331→
+   332→   332→Stage Summary:
+   333→   333→- Notebook essays are now fully deep-linkable and shareable: #note-<id> works
+   334→   334→  on load, back/forward, and in-dialog essay swaps; Back reliably closes an
+   335→   335→  essay opened by click; manual close leaves a clean URL. Reading view has a
+   336→   336→  subtle, accessible Copy-link affordance with clipboard fallback + toast
+   337→   337→  feedback. Lint/tsc clean; browser-verified desktop + mobile.
+   338→   338→- Risks/notes: (1) hashchange-driven close triggers on ANY non-#note- hash
+   339→   339→  change not caused by an in-dialog contents click (nav anchors can't be
+   340→   340→  clicked while the modal is open, so this is back/forward in practice);
+   341→   341→  (2) browser Forward onto an old in-dialog section fragment (after
+   342→   342→  contents-click + Back) keeps the dialog open and scrolls — deliberately
+   343→   343→  lenient; (3) a #note-<planned-id> URL is silently ignored rather than
+   344→   344→  opening an empty state (matches spec "only open notes with an essay").
+   345→   345→
+   346→   346→---
+   347→   347→Task ID: R2-b
+   348→   348→Agent: subagent
+   349→   349→Task: "The Lexicon" — searchable physics glossary dialog, site-wide
+   350→   350→
+   351→   351→Work Log:
+   352→   352→- Read worklog + reference components (command-palette, notebook ledger/chips,
+   353→   353→  dialog, tex, section-heading) before writing anything.
+   354→   354→- NEW src/content/lexicon.ts: typed content layer (LexiconCategory union of 7
+   355→   355→  ordered categories, LexiconTerm interface with id/term/category/formula/
+   356→   356→  formulaLabel/definition/seeAlso) + 24 real, verified terms — Classical
+   357→   357→  Mechanics (Lagrangian, Hamiltonian, Action, Euler–Lagrange Equation,
+   358→   358→  Noether's Theorem), Relativity (Metric Tensor, Einstein Field Equations,
+   359→   359→  Schwarzschild Radius, Proper Time, Spacetime Interval), Quantum Theory
+   360→   360→  (Wavefunction, Uncertainty Principle, Schrödinger Equation, Pauli Exclusion
+   361→   361→  Principle, Quantum Tunneling), Statistical & Thermal (Entropy, Boltzmann
+   362→   362→  Constant, Canonical Ensemble), Fields & Particles (Electromagnetic Field
+   363→   363→  Tensor, Gauge Symmetry, Renormalization), Mathematics (Tensor), Cosmology
+   364→   364→  (Cosmological Constant, Hubble Parameter). Every formula is canonical and
+   365→   365→  KaTeX-escaped correctly in TS source (double backslashes); every claim is
+   366→   366→  textbook physics (Boltzmann's k_B exact 2019 SI value, Schwarzschild 1916,
+   367→   367→  Pauli 1925, Heisenberg 1927, Schrödinger 1926, accelerating expansion 1998);
+   368→   368→  cross-referenced seeAlso ids all validated at render.
+   369→   369→- NEW src/components/site/lexicon.tsx ("use client"): Dialog listening for
+   370→   370→  window event `phys:open-lexicon` (palette/nav/mobile decoupling pattern),
+   371→   371→  internal open state + query/category reset on each open. DialogContent
+   372→   372→  sm:max-w-2xl, border-border bg-card/95 backdrop-blur-xl, flex-col with
+   373→   373→  max-h-[85vh]; header (photon mono eyebrow "THE LEXICON — 24 TERMS" with live
+   374→   374→  count, visible DialogTitle "A Field Guide to the Language.", DialogDescription
+   375→   375→  lede), Search-icon mono input (aria-label, focus-visible ring, autofocus via
+   376→   376→  30ms timer after Radix mounts), notebook-style category chips (aria-pressed,
+   377→   377→  active border-photon/60 bg-photon/10), scrollable ledger
+   378→   378→  (divide-y divide-border border-y) with mono 01… index, serif term
+   379→   379→  (hover:text-photon), category pill, definition, centered KaTeX formula plate
+   380→   380→  (w-fit max-w-full overflow-x-auto border-border/70 bg-background/60 +
+   381→   381→  mono formulaLabel), and "→ See also:" photon buttons that set the search to
+   382→   382→  the target term + reset category to All + refocus input. Multi-word
+   383→   383→  case-insensitive AND search over term+definition+category+formulaLabel+
+   384→   384→  formula. Empty state "No terms in this light cone." (role=status). Footer
+   385→   385→  microcopy "Definitions are standard physics — see the notebook essays for
+   386→   386→  worked ideas." No framer-motion; CSS transitions only.
+   387→   387→- EDIT src/components/site/navigation.tsx: BookMarked icon button (h-9,
+   388→   388→  aria-label "Open the physics lexicon") next to the ⌘K trigger; mobile Sheet
+   389→   389→  "The Lexicon" dashed-border button after "Search everything" (closes sheet,
+   390→   390→  dispatches event). Minimal diffs; untouched everything else.
+   391→   391→- EDIT src/components/site/command-palette.tsx: new "Reference" CommandGroup
+   392→   392→  between Notebook and Actions — "Open the lexicon — physics glossary" item
+   393→   393→  (BookMarked icon, value "lexicon glossary dictionary terms reference",
+   394→   394→  run() → dispatch phys:open-lexicon). Existing groups untouched.
+   395→   395→- EDIT src/app/page.tsx: <Lexicon /> mounted right after <CommandPalette />.
+   396→   396→- Did NOT touch notebook.tsx / research.tsx / projects.tsx / footer.tsx /
+   397→   397→  globals.css (concurrent agent owns notebook.tsx).
+   398→   398→
+   399→   399→QA (agent-browser, default session; desktop 1440×900 + mobile 375×812):
+   400→   400→- Nav button click → dialog opens: 24 term rows, 24/24 KaTeX expressions
+   401→   401→  rendered with 0 .katex-error nodes, eyebrow/footer/count correct, focus
+   402→   402→  lands in the search input.
+   403→   403→- Search "entropy" → exactly 1 row (Entropy). Nonsense query → aria-live
+   404→   404→  "No terms in this light cone." visible, 0 rows.
+   405→   405→- Category chip "Cosmology" (aria-pressed=true, others false) → exactly
+   406→   406→  Cosmological Constant + Hubble Parameter.
+   407→   407→- seeAlso click ("Einstein Field Equations") → query set to that term,
+   408→   408→  category reset to All, exactly 1 matching row, focus back in input.
+   409→   409→- ⌘K path: Ctrl+K → typed "lexicon" → single "Open the lexicon — physics
+   410→   410→  glossary" option selected → Enter → palette closes, lexicon opens with 24
+   411→   411→  terms + focused empty search.
+   412→   412→- Mobile: sheet menu shows SEARCH EVERYTHING + THE LEXICON; lexicon button →
+   413→   413→  sheet unmounts, dialog opens (343px wide), dialog height exactly 690px =
+   414→   414→  85vh, inner ledger scrolls (scrollTop 600 verified), no horizontal overflow.
+   415→   415→- Light "Archival Journal" theme verified (ink-on-paper, cyan accents legible).
+   416→   416→- VLM review of qa/r2b-lexicon.jpeg: PASS on composition, typeset formulas
+   417→   417→  (no raw LaTeX), no overflow/clipping, ledger consistency, dark scientific
+   418→   418→  aesthetic — zero defects. VLM on mobile+light flagged "missing formula/
+   419→   419→  truncated definition" for the Action row — disproven via DOM (plate visible
+   420→   420→  198px, full 197-char definition present); artifact of the mid-scroll crop.
+   421→   421→- Screenshots: qa/r2b-lexicon.jpeg (desktop dark), qa/r2b-lexicon-mobile.jpeg,
+   422→   422→  qa/r2b-lexicon-light.jpeg; VLM JSONs qa/vlm-r2b-lexicon.json,
+   423→   423→  qa/vlm-r2b-mobile-light.json.
+   424→   424→- bun run lint: clean (exit 0). bunx tsc --noEmit: zero errors under src/
+   425→   425→  (only pre-existing examples/ + skills/ errors outside app tree). dev.log:
+   426→   426→  clean compiles, all GET / 200.
+   427→   427→
+   428→   428→Stage Summary:
+   429→   429→- The Lexicon is live site-wide: 24 accurate physics terms with correct
+   430→   430→  KaTeX formulas, reachable from the nav bar, the mobile sheet menu, and the
+   431→   431→  ⌘K palette (Reference group), all through the phys:open-lexicon event.
+   432→   432→  Search + category filtering + see-also cross-links + empty state verified
+   433→   433→  in-browser on desktop and mobile, dark and light themes; lint and tsc
+   434→   434→  clean. Fully decoupled from section internals; notebook.tsx untouched.
+   435→   435→- Risks/notes: (1) seeAlso sets the search to the target's full term name —
+   436→   436→  multi-word terms match any term containing all those words (by design, the
+   437→   437→  target is always included); (2) the dialog renders all 24 rows at once —
+   438→   438→  fine at this scale, would need virtualization if the glossary grew past
+   439→   439→  ~200 terms; (3) "N terms" eyebrow count is derived from data, so it stays
+   440→   440→  honest if terms are added later.
+   441→   441→
+   442→   442→---
+   443→   443→Task ID: R2 (review round — main agent)
+   444→   444→Agent: main-agent
+   445→   445→Task: Status assessment, QA, bug fixes, mandated styling detail + feature expansion
+   446→   446→
+   447→   447→Work Log:
+   448→   448→- Baseline assessment: dev server healthy (GET / 200), console clean, no page
+   449→   449→  errors, no horizontal overflow (1440 & 375). VLM baseline review 7/10 —
+   450→   450→  flagged items were intentional honest placeholders or screenshot-scroll
+   451→   451→  artifacts; two actionable nits (low-contrast floating control, hover label
+   452→   452→  never showing) fixed below.
+   453→   453→- Dispatched two parallel subagents (see R2-a / R2-b entries):
+   454→   454→  · R2-a: notebook essay deep-links (#note-<id> — initial load, back/forward,
+   455→   455→    TOC-anchor immunity, hash cleanup on close) + "Copy link" button with
+   456→   456→    sonner toast. Browser-verified by subagent; re-verified in regression.
+   457→   457→  · R2-b: The Lexicon — 24-term searchable physics glossary dialog (search +
+   458→   458→    category chips + KaTeX formula plates + see-also links), reachable from
+   459→   459→    nav bar, mobile sheet, and ⌘K palette Reference group.
+   460→   460→- NEW FEATURES (built by main agent this round):
+   461→   461→  1. Keyboard shortcuts help ("The Keyboard, a Quiet Instrument.") — ?
+   462→   462→     opens an operating-manual dialog (shortcuts-help.tsx). Component also
+   463→   463→     owns the new global letter hotkeys: L → lexicon, T → theme toggle —
+   464→   464→     all guarded against typing contexts and against any open dialog/palette
+   465→   465→     stage. Palette Reference group gained "Keyboard shortcuts — the
+   466→   466→     operating manual" item; palette footer hint now reads "...esc close · ?
+   467→   467→     manual".
+   468→   468→  2. "This month in physics history" footer almanac (physics-history.tsx +
+   469→   469→     physicsHistory content in site.ts) — 12 real, verifiable milestones
+   470→   470→     (Galileo's moons 1610, Chadwick's neutron 1932, Einstein's birth/1905
+   471→   471→     papers/1915 field equations, Great Debate 1920, Eddington 1919, Higgs
+   472→   472→     2012, Faraday 1831, Solvay 1927, Planck 1900). Opens on the current
+   473→   473→     month (October → Solvay 1927 verified), chevrons page all 12 with
+   474→   474→     aria-live announcement + month counter; footer restructured so the
+   475→   475→     strip is a full-bleed section between colophon grid and bottom bar.
+   476→   476→- STYLING DETAIL polish (mandated):
+   477→   477→  · .equation-plate utility (globals.css) — display equations framed as
+   478→   478→    instrument plates: fine plotting grid, hairline border, photon-cyan
+   479→   479→    register-mark corner ticks. Applied to research + projects dialog
+   480→   480→    equations (replacing plain bordered blocks); print rule added.
+   481→   481→  · Research & projects card equation strips now carry bg-plot-grid texture.
+   482→   482→  · Ascend button: group class added so the "ASCEND" hover label finally
+   483→   483→    shows (was dead code); icon lifts on hover; bg contrast raised
+   484→   484→    (bg-card/90); near page bottom it now fades out (footer's own "Back to
+   485→   485→    orbit" takes over) — fixes VLM-flagged FAB/copyright crowding on mobile.
+   486→   486→  · Nav + footer wordmark orbit icon spins 180° on hover (700ms ease-out).
+   487→   487→  · A11y: mobile Sheet gained SheetDescription (observatory note) — kills
+   488→   488→    the last Radix "Missing Description" console warning.
+   489→   489→- VERIFICATION (agent-browser desktop 1440×900 + mobile 375×812):
+   490→   490→  · Hotkeys: synthetic keydown "?" opens manual (headless Chromium cannot
+   491→   491→    synthesise "?" via press — handler proven via KeyboardEvent); L opens
+   492→   492→    lexicon; T toggles dark↔light (class swap verified both ways).
+   493→   493→  · Almanac: October shown on load, next → November 1915 EFE entry,
+   494→   494→    prev/next buttons present, mobile stacked layout 9/10 per VLM.
+   495→   495→  · Equation plate present in research dialog (DOM + screenshot; VLM 9/10).
+   496→   496→  · Shortcuts dialog VLM 9/10 (kbd styling, alignment, contrast praised).
+   497→   497→  · Regression: essay deep-link opens + copy-link button present + Escape
+   498→   498→    clears hash; mobile sheet contains "Search everything" + "The Lexicon"
+   499→   499→    and the lexicon opens from it; FAB opacity 0 at bottom, 1 mid-scroll;
+   500→   500→    scrollWidth=clientWidth at 1440 and 375; zero page errors; console
+   501→   501→    clean after reload + sheet open.
+   502→   502→  · bun run lint: clean (exit 0). bunx tsc --noEmit: zero errors under src/
+   503→   503→    (pre-existing examples/ + skills/ errors only). dev.log: GET / 200s,
+   504→   504→    no runtime errors ("Failed to start server" line is from a harmless
+   505→   505→    duplicate EADDRINUSE dev-server attempt, not the running instance).
+   506→   506→
+   507→   507→Stage Summary:
+   508→   508→- Site now additionally has: essay deep-linking + copy-link, a 24-term
+   509→   509→  searchable lexicon, global hotkeys with an operating-manual dialog, and a
+   510→   510→  physics-history almanac — plus equation-plate framing and micro-polish
+   511→   511→  across cards, buttons, wordmark, and mobile sheet. All QA-verified desktop
+   512→   512→  + mobile, both themes, lint + tsc clean.
+   513→   513→- Known non-blocking notes: agent-browser `keyboard type` dispatches no
+   514→   514→  page key events (tool quirk; hotkeys verified via synthetic
+   515→   515→  KeyboardEvents); Radix aria-controls useId hydration warning on the
+   516→   516→  mobile sheet trigger remains dev-mode noise (pre-existing, functional).
+   517→   517→- Cron task creation retried twice this round — cron tool still returns
+   518→   518→  "not available for this request" (gateway limitation). The intended job:
+   519→   519→  every 15 min (0 */15 * * * *), kind webDevReview, tz Asia/Calcutta,
+   520→   520→  message as recorded in the R1-cron entry. REMAINING CARRY-OVER.
+   521→   521→- Next-phase candidates: real content replacement (name, portrait,
+   522→   522→  channels, CV) still awaits the owner; optional LLM-powered "ask about
+   523→   523→  this essay" assistant; publication list when real; analytics-free
+   524→   524→  performance pass (canvas frame budgets) if ever needed.
+   525→   525→

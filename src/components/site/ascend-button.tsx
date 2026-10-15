@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
+import { getMotionReduced } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
 
 /**
@@ -39,7 +40,9 @@ export function AscendButton() {
   return (
     <button
       type="button"
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() =>
+        window.scrollTo({ top: 0, behavior: getMotionReduced() ? "auto" : "smooth" })
+      }
       aria-label="Return to the top of the page"
       className={cn(
         "group fixed bottom-6 right-6 z-40 flex size-11 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-lg backdrop-blur-md transition-all duration-500 hover:border-photon/50 hover:text-photon focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring",

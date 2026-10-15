@@ -5,6 +5,10 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import {
+  getMotionReduced as getReduceMotion,
+  subscribeMotion as subscribeReduceMotion,
+} from "@/lib/motion-preference";
 
 /**
  * QUANTUM WAVE PACKET — the one-dimensional time-dependent Schrödinger
@@ -53,13 +57,6 @@ function rgba(rgb: [number, number, number], a: number): string {
   return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
 }
 
-const subscribeReduceMotion = (cb: () => void) => {
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-};
-const getReduceMotion = () =>
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const getServerReduceMotion = () => false;
 
 /* ---------- plane-wave transmission through a rectangular barrier ---------- */

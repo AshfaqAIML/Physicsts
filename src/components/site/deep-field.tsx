@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getMotionReduced } from "@/lib/motion-preference";
 
 /**
  * DEEP FIELD AMBIENCE — a very quiet, fixed starfield behind the page:
@@ -30,7 +31,7 @@ export function DeepField() {
     let running = true;
     let visible = true;
     let last = 0;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let reduce = getMotionReduced();
 
     const seed = () => {
       const dark = document.documentElement.classList.contains("dark");
@@ -99,9 +100,26 @@ export function DeepField() {
     if (!reduce) raf = requestAnimationFrame(frame);
     else draw(0, window.scrollY);
 
+    // Site-level motion preference ("calm the universe")
+    const onMotion = () => {
+      reduce = getMotionReduced();
+      if (reduce) {
+        if (raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+        draw(0, window.scrollY);
+      } else if (!raf) {
+        last = 0;
+        raf = requestAnimationFrame(frame);
+      }
+    };
+    window.addEventListener("phys:motion", onMotion);
+
     return () => {
       running = false;
       cancelAnimationFrame(raf);
+      window.removeEventListener("phys:motion", onMotion);
       ro.disconnect();
       mo.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);

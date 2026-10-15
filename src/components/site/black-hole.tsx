@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getMotionReduced } from "@/lib/motion-preference";
 
 /**
  * BLACK HOLE — a procedural, physically-inspired visualisation.
@@ -232,7 +233,7 @@ export function BlackHoleCanvas() {
       for (const p of particles) p.phi += p.omega * dt;
     };
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let reduced = getMotionReduced();
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -242,6 +243,7 @@ export function BlackHoleCanvas() {
       if (reduced) {
         draw(0);
         cancelAnimationFrame(raf);
+        raf = 0;
         return;
       }
       draw(dt);
@@ -254,6 +256,22 @@ export function BlackHoleCanvas() {
     } else {
       raf = requestAnimationFrame(frame);
     }
+
+    // Site-level motion preference ("calm the universe")
+    const onMotion = () => {
+      reduced = getMotionReduced();
+      if (reduced) {
+        if (raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+        draw(0);
+      } else if (visible && !raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    };
+    window.addEventListener("phys:motion", onMotion);
 
     const ro = new ResizeObserver(() => {
       resize();
@@ -286,6 +304,7 @@ export function BlackHoleCanvas() {
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("phys:motion", onMotion);
       ro.disconnect();
       io.disconnect();
       mo.disconnect();

@@ -170,6 +170,19 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* Site-level motion preference ("calm the universe") — mirrors the
+     OS-level media query for visitors who choose calm explicitly */
+  html.motion-calm {
+    scroll-behavior: auto;
+  }
+  html.motion-calm *,
+  html.motion-calm *::before,
+  html.motion-calm *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @layer utilities {
@@ -269,6 +282,21 @@
     right: -1px;
     border-bottom: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
     border-right: 1px solid color-mix(in oklab, var(--photon) 60%, transparent);
+  }
+
+  /* Quiet animated underline for inline links — grows from the left,
+     recedes to the right; currentColor keeps it inheriting context */
+  .link-quiet {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 calc(100% - 0.05em);
+    background-repeat: no-repeat;
+    padding-bottom: 0.05em;
+    transition: background-size 0.4s cubic-bezier(0.21, 0.47, 0.32, 0.98);
+  }
+  .link-quiet:hover,
+  .link-quiet:focus-visible {
+    background-size: 100% 1px;
   }
 }
 

@@ -55,7 +55,7 @@ export function Projects() {
                 onClick={() => setOpen(p)}
                 aria-haspopup="dialog"
                 aria-label={`Open project details: ${p.title}`}
-                className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring sm:p-8"
+                className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring before:absolute before:inset-x-0 before:top-0 before:h-px before:origin-left before:scale-x-0 before:bg-gradient-to-r before:from-transparent before:via-nebula/70 before:to-transparent before:transition-transform before:duration-500 hover:before:scale-x-100 sm:p-8"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">

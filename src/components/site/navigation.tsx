@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BookMarked, Menu, Orbit, Search } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { MotionToggle } from "@/components/site/motion-toggle";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { navItems, site } from "@/content/site";
 import { cn } from "@/lib/utils";
@@ -119,6 +120,7 @@ export function Navigation() {
             onClick={() => window.dispatchEvent(new Event("phys:open-palette"))}
             className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             aria-label="Open command palette (search the whole page)"
+            aria-keyshortcuts="Meta+K Control+K"
           >
             <Search className="size-4" aria-hidden="true" />
             <span
@@ -134,9 +136,12 @@ export function Navigation() {
             onClick={() => window.dispatchEvent(new Event("phys:open-lexicon"))}
             className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             aria-label="Open the physics lexicon"
+            aria-keyshortcuts="L"
           >
             <BookMarked className="size-4" aria-hidden="true" />
           </button>
+
+          <MotionToggle />
 
           <ThemeToggle />
 

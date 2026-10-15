@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AskAssistant } from "@/components/site/ask-assistant";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Prose } from "@/components/site/tex";
@@ -375,11 +376,15 @@ function ReadingView({
                 </li>
               ))}
             </ol>
-            <p className="mt-10 font-mono text-[9px] uppercase leading-relaxed tracking-[0.16em] text-muted-foreground/60">
-              Example essay · placeholder content until replaced by genuine
-              writing
-            </p>
           </section>
+
+          {/* AI study companion — grounded in this essay's actual text */}
+          <AskAssistant note={note} />
+
+          <p className="mt-10 font-mono text-[9px] uppercase leading-relaxed tracking-[0.16em] text-muted-foreground/60">
+            Example essay · placeholder content until replaced by genuine
+            writing
+          </p>
         </div>
       </article>
     </div>

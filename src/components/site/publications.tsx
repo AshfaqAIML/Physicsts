@@ -42,8 +42,40 @@ export function Publications() {
             </div>
 
             {/* Empty state */}
-            <div className="bg-card px-6 py-16 text-center sm:px-12">
-              <span className="mx-auto flex size-12 items-center justify-center rounded-full border border-border text-muted-foreground">
+            <div className="relative bg-card px-6 py-16 text-center sm:px-12">
+              {/* A faint uncharted constellation — points not yet named */}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 520 220"
+                className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.16] dark:opacity-[0.22]"
+                preserveAspectRatio="xMidYMid slice"
+              >
+                <g
+                  stroke="currentColor"
+                  strokeWidth="0.75"
+                  fill="none"
+                  className="text-muted-foreground"
+                >
+                  <path d="M40 170 L105 120 L180 138 L255 82 L330 104 L410 58" />
+                  <path d="M105 120 L150 60 M255 82 L305 30 M330 104 L390 160 M410 58 L480 96" />
+                </g>
+                <g className="text-photon">
+                  {[
+                    [40, 170], [105, 120], [180, 138], [255, 82], [330, 104],
+                    [410, 58], [150, 60], [305, 30], [390, 160], [480, 96],
+                  ].map(([cx, cy], i) => (
+                    <circle
+                      key={i}
+                      cx={cx}
+                      cy={cy}
+                      r={i % 3 === 0 ? 2.4 : 1.5}
+                      fill="currentColor"
+                    />
+                  ))}
+                </g>
+              </svg>
+
+              <span className="mx-auto flex size-12 items-center justify-center rounded-full border border-border bg-background/70 text-muted-foreground backdrop-blur-sm">
                 <Hourglass className="size-5" aria-hidden="true" />
               </span>
               <h3 className="mt-6 font-serif text-2xl text-foreground sm:text-3xl">

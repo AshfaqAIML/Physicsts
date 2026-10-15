@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import {
+  getMotionReduced as getReduceMotion,
+  subscribeMotion as subscribeReduceMotion,
+} from "@/lib/motion-preference";
 
 /**
  * ORBITAL MECHANICS — the Newtonian two-body problem, live.
@@ -38,15 +42,6 @@ function hexToRgb(hex: string): [number, number, number] {
 function rgba(rgb: [number, number, number], a: number): string {
   return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
 }
-
-const subscribeReduceMotion = (cb: () => void) => {
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-};
-
-const getReduceMotion = () =>
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const getServerReduceMotion = () => false;
 

@@ -47,7 +47,7 @@ export function PhysicsHistory() {
           </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-2">
+        <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-2" data-print="hide">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
             {monthName} · {String(index + 1).padStart(2, "0")}/
             {String(physicsHistory.length).padStart(2, "0")}

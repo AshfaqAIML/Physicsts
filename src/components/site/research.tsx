@@ -54,7 +54,7 @@ export function ResearchInterests() {
                 type="button"
                 onClick={() => setOpenArea(area)}
                 aria-haspopup="dialog"
-                className="group flex h-full w-full flex-col rounded-lg border border-border bg-card/80 p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-photon/50 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card/80 p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-photon/50 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring before:absolute before:inset-x-0 before:top-0 before:h-px before:origin-left before:scale-x-0 before:bg-gradient-to-r before:from-transparent before:via-photon/70 before:to-transparent before:transition-transform before:duration-500 hover:before:scale-x-100"
               >
                 <div className="flex items-start justify-between gap-4">
                   <span className="font-mono text-[11px] tabular-nums text-photon">

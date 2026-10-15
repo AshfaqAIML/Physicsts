@@ -17,6 +17,8 @@ import {
   FolderGit2,
   Keyboard,
   Waves,
+  Zap,
+  ZapOff,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -32,6 +34,7 @@ import { navItems } from "@/content/site";
 import { researchAreas } from "@/content/research";
 import { projects } from "@/content/projects";
 import { notes } from "@/content/notes";
+import { getMotionReduced, setMotionReduced } from "@/lib/motion-preference";
 
 /**
  * THE SPECTRAL CONSOLE (⌘K / Ctrl+K)
@@ -48,7 +51,9 @@ const getServerMounted = () => false;
 const sectionIcons = [Home, Atom, Telescope, FolderGit2, BookOpen, NotebookPen, FlaskConical, Mail];
 
 function goTo(hash: string) {
-  document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" });
+  document
+    .querySelector(hash)
+    ?.scrollIntoView({ behavior: getMotionReduced() ? "auto" : "smooth" });
 }
 
 export function CommandPalette() {
@@ -229,6 +234,22 @@ export function CommandPalette() {
         <CommandSeparator />
 
         <CommandGroup heading={<GroupLabel>Actions</GroupLabel>}>
+          <CommandItem
+            value="action calm universe reduce motion animation accessibility calm still"
+            onSelect={() => run(() => setMotionReduced(!getMotionReduced()))}
+          >
+            {getMotionReduced() ? (
+              <Zap className="size-4 text-muted-foreground" aria-hidden="true" />
+            ) : (
+              <ZapOff className="size-4 text-muted-foreground" aria-hidden="true" />
+            )}
+            <span className="flex-1">
+              {getMotionReduced()
+                ? "Restore motion — let the universe move"
+                : "Calm the universe — reduce motion"}
+            </span>
+            <Kbd>M</Kbd>
+          </CommandItem>
           <CommandItem
             value="action toggle theme dark light"
             onSelect={() => run(() => setTheme(resolvedTheme === "dark" ? "light" : "dark"))}
