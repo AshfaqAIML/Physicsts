@@ -76,7 +76,7 @@ export function Hero() {
             initial={reduce ? false : { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.5, ease }}
-            className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
+            className="mt-7 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
           >
             I explore the ideas, mathematical structures, and physical
             principles that help us understand the universe — from the
@@ -87,6 +87,7 @@ export function Hero() {
             initial={reduce ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.68, ease }}
+            data-print="hide"
             className="mt-10 flex flex-wrap items-center gap-4"
           >
             <a
@@ -133,6 +134,7 @@ export function Hero() {
         initial={reduce ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.2, delay: 1.6 }}
+        data-print="hide"
         className="group absolute inset-x-0 bottom-7 z-10 mx-auto flex w-fit flex-col items-center gap-3 rounded-sm pb-1 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
         aria-label="Scroll down to the About section"
       >

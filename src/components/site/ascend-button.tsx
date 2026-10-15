@@ -40,6 +40,7 @@ export function AscendButton() {
   return (
     <button
       type="button"
+      data-print="hide"
       onClick={() =>
         window.scrollTo({ top: 0, behavior: getMotionReduced() ? "auto" : "smooth" })
       }

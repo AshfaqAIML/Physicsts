@@ -12,6 +12,7 @@ import {
   Moon,
   NotebookPen,
   Orbit,
+  Printer,
   Shuffle,
   Star,
   Sun,
@@ -324,6 +325,14 @@ export function CommandPalette() {
                 : "Calm the universe — reduce motion"}
             </span>
             <Kbd>M</Kbd>
+          </CommandItem>
+          <CommandItem
+            value="action print page paper archival copy pdf save export"
+            onSelect={() => run(() => window.print())}
+          >
+            <Printer className="size-4 text-muted-foreground" aria-hidden="true" />
+            <span className="flex-1">Print this page — an archival copy</span>
+            <Kbd>PDF</Kbd>
           </CommandItem>
           <CommandItem
             value="action toggle theme dark light"

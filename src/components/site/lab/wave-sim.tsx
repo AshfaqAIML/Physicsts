@@ -630,7 +630,7 @@ export function WaveSim() {
   const lambda = (2 * Math.PI) / k0;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div data-print="hide" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <figure className="m-0">
         <div className="relative h-[380px] overflow-hidden rounded-lg border border-border bg-card sm:h-[460px] lg:h-[560px]">
           <canvas

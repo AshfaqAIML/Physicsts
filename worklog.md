@@ -1242,3 +1242,157 @@ Stage Summary:
   real content replacement (name/portrait/channels/CV) when the owner is
   ready; print stylesheet expansion; "open a shared experiment" toast
   deep-links back to the lab after navigation away.
+
+---
+Task ID: R7-e
+Agent: general-purpose
+Task: Unify AskAssistant + ResearchAsk into one shared CompanionPanel
+
+Work Log:
+- Diffed ask-assistant.tsx against research-ask.tsx line by line to
+  enumerate every behavioral difference before writing anything: the
+  two files are byte-identical except for endpoint (/api/ask vs
+  /api/ask-research), payload key (noteId vs areaId), root class
+  ("mt-10" vs none), suggested questions, collapsed/header labels,
+  honesty note, thread/input/send aria labels, loading text,
+  placeholder, and the two toast strings. All limits and mechanics
+  (QUESTION_MIN 5 / MAX 600, HISTORY_SENT 8, TURNS_SHOWN 12, counter
+  at >500 amber >560, Enter-to-send with isComposing guard, inline
+  vs toast error paths, focus-on-open, auto-scroll, AssistantMessage
+  Prose rendering) are shared verbatim.
+- Created src/components/site/companion-panel.tsx exporting
+  CompanionPanel with props: endpoint, buildPayload(question, history)
+  (history arrives pre-capped to HISTORY_SENT), collapsedLabel,
+  headerLabel, honestyNote, threadAriaLabel, loadingText, inputLabel,
+  placeholder, sendAriaLabel, suggestedQuestions, toastFailed,
+  toastUnreachable, className. The fetch/JSON-parse/ok-check/error
+  triage lives once in the shared panel; identical strings ("AI · can
+  make mistakes", "…earlier turns kept brief", the inline unexpected/
+  network error notes, and the unreachable toast description) are
+  shared constants. "use client" first line, quiet physics-flavored
+  comments, Tailwind 4 classes copied byte-identical.
+- Rewrote ask-assistant.tsx (AskAssistant({ note })) and
+  research-ask.tsx (ResearchAsk({ area })) as thin configuration
+  wrappers — exact same exported names and prop signatures, so the
+  notebook.tsx / research.tsx mount points are untouched. No edits to
+  notebook.tsx, research.tsx, src/app/, src/components/ui/, or any API
+  route.
+- VERIFICATION: bun run lint exit 0; npx tsc --noEmit zero errors
+  under src/ (4 pre-existing examples/skills errors ignored).
+  agent-browser on localhost:3000: essay dialog #note-spacetime-curved
+  opened, companion expanded — header "Socratic companion", honesty
+  note, 2 chips, textarea with correct placeholder/sr-only label, Ask
+  button; focus lands in textarea on open; typed "Why does gravity
+  bend light here?" + Enter → user bubble + grounded assistant answer
+  (geodesics) rendered, textarea cleared; 3 chars → Ask disabled,
+  5 chars → enabled. Research area 01 dialog: same structural check
+  plus "What is the central equation saying?" → real answer about
+  δS=0 stationary action. Escape closed both dialogs; console clean
+  (only the concurrent agent's Fast Refresh lines); 0 failed resource
+  entries. VLM screenshot review of the expanded essay panel: header,
+  honesty tag, dashed chips, textarea, Ask button all present, "no
+  visual glitches, broken styling, or misaligned borders".
+
+Stage Summary:
+- The two AI study companions are now one circuit: companion-panel.tsx
+  carries the entire behavior; ask-assistant.tsx and research-ask.tsx
+  are ~45-line configuration wrappers with unchanged names, props, and
+  mount points. Zero behavior change by construction — every differing
+  string became a prop, every shared string a constant, all markup and
+  limits copied verbatim from the originals.
+- Risk noted: buildPayload returns Record<string, unknown> so the
+  wrappers own their endpoint's payload shape (noteId / areaId) — a
+  future third companion only needs a route plus one wrapper. The
+  thread counter thresholds (500/560) are absolute lengths, not
+  fractions of QUESTION_MAX, exactly as before.
+
+---
+Task ID: R7 (review round — main agent) + R7-e (subagent)
+Agent: main-agent
+Task: Status assessment, QA regression, mandated feature + styling expansion
+
+Work Log:
+- Baseline: dev server started detached (200). Full QA regression PASSED:
+  page health (performance entries: 0 failed resources, clean console),
+  hotkeys, #note- deep links (note: use REAL note ids — spacetime-curved,
+  speed-of-light…; section ids like "chasing-a-beam" are in-essay anchors,
+  not note ids), experiment deep-link restore (m=0.31/f=0.85 + toast),
+  lab tab switching, footer almanac cycling, FAB fade zone, contact API
+  zod validation, mobile 375 / desktop 1440 zero overflow, lint 0.
+- TWO QA-METHOD FALSE ALARMS diagnosed (not site bugs): (1) Radix dialogs
+  are position:fixed → offsetParent is always null; use checkVisibility()
+  + getBoundingClientRect instead; (2) Radix Tabs respond to real pointer
+  events, not JS element.click() — use agent-browser click <ref>.
+- REAL BUG FIXED: global letter hotkeys (L/M/R/T) matched only lowercase
+  e.key — Shift-held or CapsLock keypresses were dead. shortcuts-help.tsx
+  now matches e.key.toLowerCase() ("?" stays case-exact).
+- NEW FEATURE — First-sight keyboard hint (keyboard-hint.tsx, mounted in
+  page.tsx): one-time chip, lower-left (2.2s rise delay), teaches ⌘K and
+  ?; retires on use of any taught key (incl. via palette-opened manual),
+  on X-dismiss, or after 30s; persisted in localStorage phys:hint-seen;
+  mounted-gate via useSyncExternalStore (react-hooks/set-state-in-effect
+  compliant); data-print="hide". Verified: appears → dismiss → never
+  returns; ? key retires + opens manual.
+- NEW FEATURE — Resume-reading row (notebook.tsx): dashed "Last read —
+  <title>" row above the category filters, fed by the shared
+  phys:recent-notes trail (ids[0]); click → openNote (pushState deep
+  link); hidden while an essay is on stage; refreshes on the
+  recent-notes-changed event. Verified round-trip + hash.
+- NEW FEATURE — Print system, three parts:
+  · globals.css @media print expanded: @page 14mm/16mm margins; hides
+    nav/forms/tablists/dialogs/toasters (screen-only experiences) +
+    [data-print="hide]; [data-print="only"] reveals the print masthead;
+    body 11.5pt/1.55; orphans/widows 3; h2/h3 break-after avoid;
+    figures+equation-plates+katex-display break-inside avoid; photon
+    accents print in archival teal #0e7c8c (dark-cyan unreadable on
+    white); underlined links with offset.
+  · page.tsx print-only masthead ("The Physicist — Portfolio ·
+    Physics · Mathematics · The Universe · Printed from the site").
+  · lab.tsx print catalogue note (paper cannot run simulations);
+    the three sims' roots (lensing/orbits/wave) carry data-print="hide"
+    so the mathematics cards still print; [role=tablist] hidden in CSS.
+  · Affordances: palette action "Print this page — an archival copy"
+    (window.print) + footer colophon "Print / PDF" button via new
+    print-button.tsx client island (footer stays server-rendered —
+    an early direct onClick in the server footer produced a transient
+    "Event handlers cannot be passed to Client Component props" HMR
+    full-reload, fixed by the island).
+  · Verified: print CSS rules present in served sheets, masthead
+    display:none on screen, window.print stub invoked from both the
+    palette item and footer button.
+- R7-e (general-purpose subagent, parallel): AskAssistant + ResearchAsk
+  unified into shared CompanionPanel (companion-panel.tsx, ~300 lines);
+  both files are thin wrappers with unchanged exported names/props;
+  verified by subagent: lint/tsc clean, both dialogs render + answer
+  real questions, VLM pass. Main agent re-verified the essay companion
+  post-notebook-edit (expand → ask → answer renders, no errors).
+- STYLING DETAIL: text-pretty on SectionHeading ledes + hero intro
+  (prevents typographic rivers); colophon buttons equalized at 160px
+  (min-w-40 justify-center) after measuring VLM's claim (false positive:
+  153 vs 138px, print was narrower — equalized anyway for panel rhythm);
+  VLM 3-shot review otherwise clean (hint chip legible/aligned, resume
+  row consistent, no overlap/clipping).
+- TRANSIENT: dev server process died once mid-round (connection
+  refused; log shows only the known EADDRINUSE noise + the footer HMR
+  error above) — restarted with the double-fork command, 200, all
+  features re-verified afterwards.
+- Cron task creation retried (7th time) — still "cron tool is not
+  available for this request" (gateway limitation; R1-cron spec stands).
+
+Stage Summary:
+- Discoverability + addressability improved: first-time visitors are
+  taught the keyboard, returning readers resume their last essay in one
+  click, and the whole portfolio now prints as a clean archival document
+  (masthead, catalogue note for the lab, ink-conserving typography,
+  teal photon accents, no dead UI). Hotkeys tolerate Shift/CapsLock,
+  and the two AI companions share one implementation.
+- Known notes: (1) VLM width claims must be DOM-measured (false
+  positive again this round); (2) agent-browser `press T` sends
+  uppercase 'T' — lowercase `press t` for letter hotkeys; (3) the hint
+  chip appears once per browser (by design) — QA browsers can clear
+  phys:hint-seen to re-test; (4) cron gateway still unavailable.
+- Next-phase candidates: reading-view "share this essay" with selected
+  text quote; a cross-instrument "lab tour" link (serialize all three
+  benches); print expansion for the reading view (currently dialogs are
+  hidden from print by policy); real content replacement
+  (name/portrait/channels/CV) when the owner is ready.

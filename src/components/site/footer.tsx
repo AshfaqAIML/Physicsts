@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUp, Orbit } from "lucide-react";
 import { PhysicsHistory } from "@/components/site/physics-history";
+import { PrintButton } from "@/components/site/print-button";
 import { navItems, site } from "@/content/site";
 
 /**
@@ -63,13 +64,16 @@ export function Footer() {
               Every fact on this site is real or clearly marked as a
               placeholder.
             </p>
-            <a
-              href="#home"
-              className="mt-6 inline-flex items-center gap-2 rounded-md border border-border px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-            >
-              <ArrowUp className="size-3.5" aria-hidden="true" />
-              Back to orbit
-            </a>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <a
+                href="#home"
+                className="inline-flex min-w-40 items-center justify-center gap-2 rounded-md border border-border px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              >
+                <ArrowUp className="size-3.5" aria-hidden="true" />
+                Back to orbit
+              </a>
+              <PrintButton />
+            </div>
           </div>
         </div>
       </div>

@@ -401,15 +401,30 @@
 }
 
 /* ----------------------------------------------------------------------
-   Print — an archival copy of the page: chrome recedes, ink is conserved
+   Print — an archival copy of the page: chrome recedes, ink is conserved.
+   The interactive universe (dialogues, instruments, forms, navigation)
+   stays on the screen where it belongs; paper receives the record.
    ---------------------------------------------------------------------- */
 @media print {
+  @page {
+    margin: 14mm 16mm;
+  }
+
   header,
   footer,
+  nav,
   canvas,
+  form,
   [data-sonner-toaster],
+  [role="dialog"],
+  [role="tablist"],
   [data-print="hide"] {
     display: none !important;
+  }
+
+  /* The print-only masthead (name · discipline · provenance) */
+  [data-print="only"] {
+    display: block !important;
   }
 
   html {
@@ -420,12 +435,31 @@
   body {
     background: #fff !important;
     color: #000 !important;
+    font-size: 11.5pt;
+    line-height: 1.55;
   }
 
+  /* Sections flow naturally; their headings never strand at a page foot */
   section {
-    break-inside: avoid-page;
     padding-top: 1.5rem !important;
     padding-bottom: 1.5rem !important;
+  }
+  section h2,
+  section h3 {
+    break-after: avoid;
+  }
+  p,
+  li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Small units refuse to be split across pages */
+  figure,
+  .equation-plate,
+  .katex-display,
+  blockquote {
+    break-inside: avoid;
   }
 
   .bg-chart-grid,
@@ -451,9 +485,19 @@
     text-shadow: none !important;
   }
 
+  /* Photon accents print in their archival teal — readable on white */
+  .text-photon,
+  .text-photon * {
+    color: #0e7c8c !important;
+  }
+  .drop-cap::first-letter {
+    color: #0e7c8c !important;
+  }
+
   a {
     color: inherit !important;
     text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .katex-display {

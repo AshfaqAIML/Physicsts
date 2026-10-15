@@ -2,6 +2,7 @@ import { AscendButton } from "@/components/site/ascend-button";
 import { CommandPalette } from "@/components/site/command-palette";
 import { ConstellationNav } from "@/components/site/constellation-nav";
 import { DeepField } from "@/components/site/deep-field";
+import { KeyboardHint } from "@/components/site/keyboard-hint";
 import { Lexicon } from "@/components/site/lexicon";
 import { ReadingProgress } from "@/components/site/reading-progress";
 import { ShortcutsHelp } from "@/components/site/shortcuts-help";
@@ -38,8 +39,19 @@ export default function Home() {
       <CommandPalette />
       <Lexicon />
       <ShortcutsHelp />
+      <KeyboardHint />
 
       <main className="flex-1">
+        {/* Print masthead — the archival copy introduces itself properly.
+            Screen visitors never see it; paper always does. */}
+        <div data-print="only" className="hidden border-b border-black/70 pb-3">
+          <p className="font-serif text-2xl leading-tight text-black">
+            The Physicist — Portfolio
+          </p>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-black/70">
+            Physics · Mathematics · The Universe · Printed from the site
+          </p>
+        </div>
         <Hero />
         <About />
         <ResearchInterests />

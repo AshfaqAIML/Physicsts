@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight, Check, Clock, Link2, ListTree, NotebookPen, Shuffle } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, Check, Clock, Link2, ListTree, NotebookPen, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -133,6 +133,29 @@ export function Notebook() {
     if (open?.essay) recordRecentNote(open.id);
   }, [open]);
 
+  // Resume reading — the essay this browser last had open, one quiet
+  // affordance above the ledger. Refreshes from the shared trail so the
+  // palette, deep links, and this row never disagree; hidden while an
+  // essay is already on the reading stage.
+  const [resumeId, setResumeId] = useState<string | null>(null);
+  useEffect(() => {
+    const readTrail = () => {
+      try {
+        const ids: unknown = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+        setResumeId(
+          Array.isArray(ids) && typeof ids[0] === "string" ? ids[0] : null
+        );
+      } catch {
+        setResumeId(null);
+      }
+    };
+    readTrail();
+    window.addEventListener("phys:recent-notes-changed", readTrail);
+    return () => window.removeEventListener("phys:recent-notes-changed", readTrail);
+  }, []);
+  const resumeNote =
+    resumeId === null ? null : readableNotes.find((n) => n.id === resumeId) ?? null;
+
   // Deep links: `#note-<id>` opens that essay on initial load and on
   // back/forward navigation. Hashes without the `#note-` prefix (nav
   // anchors, in-dialog contents anchors) never open anything; only a
@@ -169,6 +192,30 @@ export function Notebook() {
           title="Ideas in Progress."
           lede="Essays and notes on physics, mathematics, and the history of ideas — written to think clearly, published when ready."
         />
+
+        {/* Resume where you left off — only for returning readers */}
+        {resumeNote && !open && (
+          <Reveal delay={0.02} className="mt-12">
+            <button
+              type="button"
+              onClick={() => openNote(resumeNote)}
+              className="group flex w-full flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border border-dashed border-border px-5 py-4 text-left transition-colors hover:border-photon/50 hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              aria-label={`Resume reading the essay: ${resumeNote.title}`}
+            >
+              <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">
+                <BookOpen className="size-3 text-photon/70" aria-hidden="true" />
+                Last read
+              </span>
+              <span className="font-serif text-base text-foreground/90 transition-colors group-hover:text-photon sm:text-lg">
+                {resumeNote.title}
+              </span>
+              <span className="ml-auto hidden items-center gap-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60 transition-colors group-hover:text-photon sm:flex">
+                Resume
+                <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
+              </span>
+            </button>
+          </Reveal>
+        )}
 
         {/* Category filter + the dice */}
         <Reveal delay={0.05} className="mt-12">

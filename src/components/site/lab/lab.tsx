@@ -112,6 +112,12 @@ export function PhysicsLab() {
         />
 
         <Reveal className="mt-12" delay={0.1}>
+          {/* Print catalogue note — paper cannot run the instruments */}
+          <p data-print="only" className="hidden font-mono text-[9.5pt] uppercase tracking-[0.14em] text-black/70">
+            The three instruments — gravitational lensing, orbital mechanics,
+            quantum wave-packet tunnelling — are live on the screen; paper
+            cannot run simulations. This printed copy records their catalogue.
+          </p>
           <Tabs value={tab} onValueChange={switchTab} className="w-full">
             <div className="mb-8 w-full max-w-xl overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <TabsList className="h-auto w-max gap-0 bg-transparent p-0 sm:w-auto">

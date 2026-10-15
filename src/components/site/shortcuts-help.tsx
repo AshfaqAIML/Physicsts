@@ -52,7 +52,9 @@ export function ShortcutsHelp() {
   }, []);
 
   // Global hotkeys — ?, L, M, R, T (silent while typing, on a dialog
-  // stage, or inside the laboratory, where the instruments own the keys)
+  // stage, or inside the laboratory, where the instruments own the keys).
+  // Letters are matched case-insensitively so Caps Lock and Shift-held
+  // keypresses land too — "?" already needs Shift on most keyboards.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -63,22 +65,23 @@ export function ShortcutsHelp() {
         setOpen((o) => !o);
         return;
       }
-      if (e.key === "l") {
+      const key = e.key.toLowerCase();
+      if (key === "l") {
         e.preventDefault();
         window.dispatchEvent(new Event("phys:open-lexicon"));
         return;
       }
-      if (e.key === "m") {
+      if (key === "m") {
         e.preventDefault();
         setMotionReduced(!getMotionReduced());
         return;
       }
-      if (e.key === "r" && !isLaboratoryTarget(e.target)) {
+      if (key === "r" && !isLaboratoryTarget(e.target)) {
         e.preventDefault();
         window.dispatchEvent(new Event("phys:open-random-note"));
         return;
       }
-      if (e.key === "t") {
+      if (key === "t") {
         e.preventDefault();
         setTheme(resolvedTheme === "dark" ? "light" : "dark");
       }
