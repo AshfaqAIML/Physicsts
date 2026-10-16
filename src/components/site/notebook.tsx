@@ -240,7 +240,7 @@ export function Notebook({ essayBodies }: { essayBodies: Record<string, ReactNod
                   aria-pressed={category === c}
                   onClick={() => setCategory(c)}
                   className={cn(
-                    "rounded-full border px-3.5 py-1.5 meta-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    "hit-target rounded-full border px-3.5 py-1.5 meta-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                     category === c
                       ? "border-photon/60 bg-photon/10 text-foreground"
                       : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
@@ -254,7 +254,7 @@ export function Notebook({ essayBodies }: { essayBodies: Record<string, ReactNod
               type="button"
               onClick={openRandomNote}
               title="Open a random readable essay — prefers the current filter"
-              className="chip-btn chip-btn--dashed rounded-full px-3.5 py-1.5 sm:ml-auto"
+              className="hit-target chip-btn chip-btn--dashed rounded-full px-3.5 py-1.5 sm:ml-auto"
             >
               <Shuffle className="size-3" aria-hidden="true" />
               Random page

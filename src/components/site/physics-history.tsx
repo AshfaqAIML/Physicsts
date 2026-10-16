@@ -57,7 +57,7 @@ export function PhysicsHistory() {
               type="button"
               onClick={() => cycle(-1)}
               aria-label="Previous month in physics history"
-              className="flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="hit-target flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
             </button>
@@ -65,7 +65,7 @@ export function PhysicsHistory() {
               type="button"
               onClick={() => cycle(1)}
               aria-label="Next month in physics history"
-              className="flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="hit-target flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <ChevronRight className="size-4" aria-hidden="true" />
             </button>

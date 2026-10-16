@@ -15,6 +15,7 @@ import {
   type ExperimentSpec,
 } from "./experiment-link";
 import { ShareLabTourButton, type ReportedBench } from "./share-lab-tour";
+import { cn } from "@/lib/utils";
 
 // The three instruments are heavy interactive code (canvas, integrators,
 // control bands). They are code-split and mounted only when the visitor
@@ -48,6 +49,10 @@ export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
     orbits: false,
     wave: false,
   });
+  // A shared experiment/tour link means the visitor arrived to see a
+  // bench, not to stroll past the lab — the benches wake immediately so
+  // the delivery never has to reveal the sleeping placeholder.
+  const [wakeEarly, setWakeEarly] = useState(false);
   // Bumped on every parsed #experiment= or #lab-tour= so the delivery
   // effect re-runs even when the link targets the already-active bench.
   const [restoreTick, setRestoreTick] = useState(0);
@@ -132,6 +137,7 @@ export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
     const apply = () => {
       const tour = parseLabTourHash(window.location.hash);
       if (tour) {
+        setWakeEarly(true);
         const segments = new Map<LabTab, ExperimentSpec>();
         for (const spec of tour.specs) segments.set(spec.tab, spec);
         pendingTourRef.current = segments;
@@ -143,6 +149,7 @@ export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
       }
       const spec = parseExperimentHash(window.location.hash);
       if (!spec) return;
+      setWakeEarly(true);
       pendingTourRef.current = null;
       setTourPending([]);
       pendingSpecRef.current = spec;
@@ -288,21 +295,21 @@ export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
                 <TabsList className="h-auto w-max gap-0 bg-transparent p-0 sm:w-auto">
                   <TabsTrigger
                     value="lensing"
-                    className="rounded-l-md rounded-r-none border border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
+                    className="hit-target-y rounded-l-md rounded-r-none border border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
                   >
                     Gravitational Lensing
                     <TourDot pending={tourPending.includes("lensing")} />
                   </TabsTrigger>
                   <TabsTrigger
                     value="orbits"
-                    className="rounded-none border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
+                    className="hit-target-y rounded-none border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
                   >
                     Orbital Mechanics
                     <TourDot pending={tourPending.includes("orbits")} />
                   </TabsTrigger>
                   <TabsTrigger
                     value="wave"
-                    className="rounded-l-none rounded-r-md border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
+                    className="hit-target-y rounded-l-none rounded-r-md border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
                   >
                     Wave Packet
                     <TourDot pending={tourPending.includes("wave")} />
@@ -315,7 +322,7 @@ export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
             </div>
 
             <TabsContent value="lensing" className="mt-0">
-              <BenchGate bench="lensing" onReady={markBenchReady}>
+              <BenchGate bench="lensing" wake={wakeEarly} onReady={markBenchReady}>
                 <LensingSim onReport={reportLensing} />
               </BenchGate>
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -362,7 +369,7 @@ export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
             </TabsContent>
 
             <TabsContent value="orbits" className="mt-0">
-              <BenchGate bench="orbits" onReady={markBenchReady}>
+              <BenchGate bench="orbits" wake={wakeEarly} onReady={markBenchReady}>
                 <OrbitsSim onReport={reportOrbits} />
               </BenchGate>
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -423,7 +430,7 @@ export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
               </div>
             </TabsContent>
             <TabsContent value="wave" className="mt-0">
-              <BenchGate bench="wave" onReady={markBenchReady}>
+              <BenchGate bench="wave" wake={wakeEarly} onReady={markBenchReady}>
                 <WaveSim onReport={reportWave} />
               </BenchGate>
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -504,24 +511,34 @@ function TourDot({ pending }: { pending: boolean }) {
  * BENCH GATE — the laboratory's lazy threshold. Each instrument is heavy
  * interactive code; this gate keeps it out of the page entirely until the
  * visitor comes within the wake margin (~1.5 screens), then mounts it
- * once and for all. The placeholder reserves comparable vertical space
- * so the section's rhythm holds while the bench sleeps, and the whole
- * laboratory is still printed, searched, and screen-read through its
- * server-rendered mathematics and prose. `onReady` fires after the
- * instrument's own effects have attached — the signal the shared-link
- * delivery above waits for.
+ * once and for all. The placeholder reserves the instrument's typical
+ * footprint (measured per bench and breakpoint) so the section's rhythm
+ * holds while the bench sleeps and the wake never shifts the reading
+ * position; `wake` forces the gate open immediately for shared links,
+ * which arrive to see an instrument, not a placeholder. `onReady` fires
+ * after the instrument's own effects have attached — the signal the
+ * shared-link delivery above waits for.
  */
+const BENCH_PLACEHOLDER_MIN_H: Record<LabTab, string> = {
+  lensing: "min-h-[1140px] sm:min-h-[720px]",
+  orbits: "min-h-[1900px] sm:min-h-[1500px]",
+  wave: "min-h-[1550px] sm:min-h-[1130px]",
+};
+
 function BenchGate({
   bench,
+  wake,
   onReady,
   children,
 }: {
   bench: LabTab;
+  /** Skip the sleeping threshold — shared links wake the lab on arrival. */
+  wake: boolean;
   onReady: (bench: LabTab) => void;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(wake);
 
   useEffect(() => {
     if (visible) return;
@@ -553,12 +570,14 @@ function BenchGate({
         children
       ) : (
         <div
-          aria-hidden="true"
-          className="flex min-h-[380px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-card/30 sm:min-h-[460px]"
+          className={cn(
+            "flex items-center justify-center rounded-lg border border-dashed border-border/60 bg-card/30",
+            BENCH_PLACEHOLDER_MIN_H[bench]
+          )}
         >
-          <span className="meta-sm text-muted-foreground/50">
+          <p className="meta-sm text-muted-foreground/60">
             Instrument sleeping — it wakes as you approach.
-          </span>
+          </p>
         </div>
       )}
     </div>

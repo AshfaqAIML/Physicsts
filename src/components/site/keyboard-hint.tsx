@@ -121,7 +121,7 @@ export function KeyboardHint() {
         type="button"
         onClick={retire}
         aria-label="Dismiss the keyboard hint"
-        className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="hit-target absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <X className="size-3" aria-hidden="true" />
       </button>

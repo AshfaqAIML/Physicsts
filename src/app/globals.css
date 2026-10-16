@@ -279,6 +279,17 @@
     position: absolute;
     inset: -5px;
   }
+  /* Vertical-only variant for controls that sit flush against their
+     neighbours horizontally (instrument tabs): the tappable band grows
+     in height without stealing taps from the adjacent target. */
+  .hit-target-y {
+    position: relative;
+  }
+  .hit-target-y::after {
+    content: "";
+    position: absolute;
+    inset: -5px 0;
+  }
 
   /* Editorial drop cap for the reading view — optical alignment tuned:
      slightly raised (padding-top) with more air to its right, so the cap
