@@ -147,7 +147,7 @@ export const lexiconTerms: LexiconTerm[] = [
     formula: "ds^2 = -c^2 dt^2 + dx^2 + dy^2 + dz^2",
     formulaLabel: "Minkowski metric",
     definition:
-      "The invariant separation between two events, combining space and time components in a way all inertial observers agree upon. Its sign divides separations into timelike, lightlike, and spacelike — and only timelike-separated events can be causally connected.",
+      "The invariant separation between two events, combining space and time components in a way all inertial observers agree upon. Its sign divides separations into timelike, lightlike, and spacelike — and only timelike- or lightlike-separated events can be causally connected; nothing links spacelike ones.",
     seeAlso: ["proper-time", "metric-tensor"],
   },
 
@@ -295,10 +295,10 @@ export const lexiconTerms: LexiconTerm[] = [
     id: "cosmological-constant",
     term: "Cosmological Constant",
     category: "Cosmology",
-    formula: "\\rho_\\Lambda = \\frac{\\Lambda c^2}{8\\pi G}",
+    formula: "\\varepsilon_{\\Lambda} = \\frac{\\Lambda c^{4}}{8\\pi G}",
     formulaLabel: "Vacuum energy density",
     definition:
-      "A constant term Λ that general covariance permits in the Einstein equations, acting as a uniform vacuum energy density. Observations of the accelerating expansion of the universe since 1998 find it small but positive — the simplest reading of dark energy.",
+      "A constant term Λ that general covariance permits in the Einstein equations, acting as a uniform vacuum energy of density Λc⁴/8πG and negative pressure. Observations of the accelerating expansion of the universe since 1998 find it small but positive — the simplest reading of dark energy.",
     seeAlso: ["einstein-field-equations", "hubble-parameter"],
   },
   {

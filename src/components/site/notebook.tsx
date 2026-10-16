@@ -577,7 +577,7 @@ function ReadingView({
             </section>
           ))}
 
-          {/* References */}
+          {/* References — linked only where the record was verified */}
           <section className="mt-16 border-t border-border pt-8" aria-labelledby="refs-h">
             <h2 id="refs-h" className="meta-sm text-muted-foreground">
               References
@@ -586,11 +586,52 @@ function ReadingView({
               {essay.references.map((r, i) => (
                 <li key={i} className="flex gap-3">
                   <span className="font-mono text-xs text-photon">[{i + 1}]</span>
-                  <span>{r}</span>
+                  {r.url ? (
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link-quiet inline-flex items-baseline gap-1 rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {r.text}
+                      <ArrowUpRight className="size-3 shrink-0 self-center text-muted-foreground/50" aria-hidden="true" />
+                    </a>
+                  ) : (
+                    <span>{r.text}</span>
+                  )}
                 </li>
               ))}
             </ol>
           </section>
+
+          {/* Further reading — accessible next steps, all links verified */}
+          {essay.furtherReading && essay.furtherReading.length > 0 && (
+            <section className="mt-10" aria-labelledby="further-h">
+              <h2 id="further-h" className="meta-sm text-muted-foreground">
+                Further reading
+              </h2>
+              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+                {essay.furtherReading.map((r) => (
+                  <li key={r.text} className="flex gap-3">
+                    <span aria-hidden="true" className="font-mono text-xs text-nebula">→</span>
+                    {r.url ? (
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link-quiet inline-flex items-baseline gap-1 rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {r.text}
+                        <ArrowUpRight className="size-3 shrink-0 self-center text-muted-foreground/50" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <span>{r.text}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* AI study companion — grounded in this essay's actual text
               (screen companion; the offprint stands on its own) */}

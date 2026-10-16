@@ -33,13 +33,22 @@ export type EssaySection = {
   paragraphs: string[];
 };
 
+/** A reference with an optional verified link — DOI or publisher URL.
+ *  URLs are only added after checking they resolve to the cited work. */
+export type Reference = {
+  text: string;
+  url?: string;
+};
+
 export type Essay = {
   title: string;
   dek: string;
   date: string;
   readingMinutes: number;
   sections: EssaySection[];
-  references: string[];
+  references: Reference[];
+  /** Accessible next steps beyond the citations — links verified live. */
+  furtherReading?: Reference[];
 };
 
 export type Note = {
@@ -99,7 +108,7 @@ const curvatureEssay: Essay = {
       id: "how-we-know",
       heading: "5 · How we know",
       paragraphs: [
-        "This is not a mood — it is the most precisely tested physical framework we have. Light from distant stars bends around the Sun by the amount the geometry predicts, first measured by Eddington's 1919 eclipse expedition. Clocks at different heights tick at measurably different rates; the satellite clocks of GPS would drift by tens of microseconds a day without the correction. Mercury's orbit precesses, gravitational redshift is observed, and in 2015 the LIGO interferometers directly measured gravitational waves — ripples in the geometry itself, from two black holes merging more than a billion years ago. In 2019 the Event Horizon Telescope imaged the shadow of the black hole in galaxy M87.",
+        "This is not a mood — it is the most precisely tested physical framework we have. Light from distant stars bends around the Sun by 1.75 seconds of arc at its limb — twice Newton's prediction — first measured by the eclipse expeditions of 1919. Clocks at different heights tick at measurably different rates; the satellite clocks of GPS would drift by about 38 microseconds a day without the correction. Mercury's orbit precesses by 43 seconds of arc per century more than Newtonian perturbation theory can account for, gravitational redshift is observed, and in 2015 the LIGO interferometers directly measured gravitational waves — ripples in the geometry itself — from two black holes merging roughly 1.3 billion light-years away. In 2019 the Event Horizon Telescope imaged the shadow of the black hole in galaxy M87*.",
         "Each of these is a measurement of geometry. None is a metaphor.",
       ],
     },
@@ -113,11 +122,31 @@ const curvatureEssay: Essay = {
     },
   ],
   references: [
-    "Einstein, A. (1916). “Die Grundlage der allgemeinen Relativitätstheorie.” Annalen der Physik, 49, 769–822.",
-    "Misner, C. W., Thorne, K. S., & Wheeler, J. A. (1973). Gravitation. W. H. Freeman.",
-    "Rindler, W. (2006). Relativity: Special, General, and Cosmological (2nd ed.). Oxford University Press.",
-    "Will, C. M. (2014). “The Confrontation between General Relativity and Experiment.” Living Reviews in Relativity, 17, 4.",
-    "Wheeler, J. A. (1990). A Journey into Gravity and Spacetime. Scientific American Library.",
+    {
+      text: "Einstein, A. (1916). “Die Grundlage der allgemeinen Relativitätstheorie.” Annalen der Physik, 354, 769–822.",
+      url: "https://doi.org/10.1002/andp.19163540702",
+    },
+    { text: "Misner, C. W., Thorne, K. S., & Wheeler, J. A. (1973). Gravitation. W. H. Freeman." },
+    { text: "Rindler, W. (2006). Relativity: Special, General, and Cosmological (2nd ed.). Oxford University Press." },
+    {
+      text: "Will, C. M. (2014). “The Confrontation between General Relativity and Experiment.” Living Reviews in Relativity, 17, 4.",
+      url: "https://doi.org/10.12942/lrr-2014-4",
+    },
+    { text: "Wheeler, J. A. (1990). A Journey into Gravity and Spacetime. Scientific American Library." },
+  ],
+  furtherReading: [
+    {
+      text: "Dyson, F. W., Eddington, A. S., & Davidson, C. (1920). The full report of the 1919 eclipse expeditions — open access at the Royal Society.",
+      url: "https://doi.org/10.1098/rsta.1920.0009",
+    },
+    {
+      text: "Abbott, B. P., et al. — LIGO and Virgo (2016). “Observation of Gravitational Waves from a Binary Black Hole Merger.” Physical Review Letters, 116, 061102.",
+      url: "https://doi.org/10.1103/PhysRevLett.116.061102",
+    },
+    {
+      text: "Einstein Online — the Max Planck Institute for Gravitational Physics' public expositions of general relativity.",
+      url: "https://www.einstein-online.info/en/",
+    },
   ],
 };
 
@@ -127,7 +156,7 @@ const curvatureEssay: Essay = {
 
 const lightSpeedEssay: Essay = {
   title: "Why Is the Speed of Light So Fundamental?",
-  dek: "Not why it equals 299,792,458 m/s — but why there is a speed woven into the geometry of cause and effect at all.",
+  dek: "Not why it equals 299 792 458 m/s — but why there is a speed woven into the geometry of cause and effect at all.",
   date: "Example draft",
   readingMinutes: 8,
   sections: [
@@ -171,24 +200,40 @@ const lightSpeedEssay: Essay = {
       heading: "5 · The price of the last decimal",
       paragraphs: [
         "Why can nothing be accelerated to $c$? Because the energy required diverges. The kinetic energy of a particle of mass $m$ at speed $v$ is $E_{k} = (\\gamma - 1)mc^{2}$, where $\\gamma = 1/\\sqrt{1 - v^{2}/c^{2}}$ grows without bound as $v$ approaches $c$. Every nine you add to the speed costs more energy than all the nines before it.",
-        "Particle accelerators are the practical proof. The Large Electron–Positron collider pushed electrons to $0.9999999999987\\,c$ — and the electrons at LEP and the protons at the LHC differ in speed by less than a bicycle's pace, while differing in energy by factors of hundreds. The boundary is not merely respected; it is where the machine stops, no matter how hard it pushes.",
+        "Particle accelerators are the practical proof. The Large Electron–Positron collider pushed electrons to about $0.999999999988\\,c$ — and the electrons at LEP and the protons at the LHC differ in speed by roughly three metres per second, less than a bicycle's pace, while differing in energy by factors of hundreds. The boundary is not merely respected; it is where the machine stops, no matter how hard it pushes.",
       ],
     },
     {
       id: "what-remains-open",
       heading: "6 · What remains open",
       paragraphs: [
-        "One honest footnote: since 1983, the metre itself has been defined so that $c$ is exactly 299,792,458 of them per second. Asking why $c$ has that value is now a question about our units, not about nature — the deep question is why there is a finite invariant speed at all, rather than infinity, the value Newton's physics silently assumed. A universe with $c = \\infty$ would have absolute simultaneity, no magnetic fields as we know them, no relativity of any kind. A finite $c$ is the price of electromagnetism working — and it is a price the universe seems content to pay.",
+        "One honest footnote: since 1983, the metre itself has been defined so that $c$ is exactly 299 792 458 of them per second. Asking why $c$ has that value is now a question about our units, not about nature — the deep question is why there is a finite invariant speed at all, rather than infinity, the value Newton's physics silently assumed. A universe with $c = \\infty$ would have absolute simultaneity, no magnetic fields as we know them, no relativity of any kind. A finite $c$ is the price of electromagnetism working — and it is a price the universe seems content to pay.",
         "What we do not have is a derivation of that structure from anything deeper. Quantum gravity, whatever it turns out to be, must reproduce an exact finite $c$ in its classical limit — and no candidate theory yet explains why the causal cone has the opening angle it does. That is an open question, and it is honest to leave it open.",
       ],
     },
   ],
   references: [
-    "Einstein, A. (1905). “Zur Elektrodynamik bewegter Körper.” Annalen der Physik, 17, 891–921.",
-    "Einstein, A. (1916). Relativity: The Special and General Theory. Methuen (English translation).",
-    "Taylor, E. F., & Wheeler, J. A. (1992). Spacetime Physics (2nd ed.). W. H. Freeman.",
-    "Mermin, N. D. (2005). It's About Time: Understanding Einstein's Relativity. Princeton University Press.",
-    "Bureau International des Poids et Mesures (2019). The International System of Units (SI), 9th edition.",
+    {
+      text: "Einstein, A. (1905). “Zur Elektrodynamik bewegter Körper.” Annalen der Physik, 322, 891–921.",
+      url: "https://doi.org/10.1002/andp.19053221004",
+    },
+    { text: "Einstein, A. (1916). Relativity: The Special and General Theory. Methuen (English translation)." },
+    { text: "Taylor, E. F., & Wheeler, J. A. (1992). Spacetime Physics (2nd ed.). W. H. Freeman." },
+    { text: "Mermin, N. D. (2005). It's About Time: Understanding Einstein's Relativity. Princeton University Press." },
+    {
+      text: "Bureau International des Poids et Mesures (2019). The International System of Units (SI), 9th edition.",
+      url: "https://www.bipm.org/en/publications/si-brochure",
+    },
+  ],
+  furtherReading: [
+    {
+      text: "NIST Special Publication 330 — the US edition of the SI brochure, including the 1983 definition of the metre.",
+      url: "https://www.nist.gov/pml/special-publication-330",
+    },
+    {
+      text: "Einstein Online — accessible explainers of special relativity and the constancy of light.",
+      url: "https://www.einstein-online.info/en/",
+    },
   ],
 };
 
@@ -211,7 +256,7 @@ export const notes: Note[] = [
     id: "speed-of-light",
     title: "Why Is the Speed of Light So Fundamental?",
     category: "Open Questions",
-    excerpt: "Not why is it 299,792,458 m/s — but why is there a convertible speed at all, and what does that buy the universe?",
+    excerpt: "Not why is it 299 792 458 m/s — but why is there a convertible speed at all, and what does that buy the universe?",
     status: "example",
     readingMinutes: lightSpeedEssay.readingMinutes,
     essay: lightSpeedEssay,

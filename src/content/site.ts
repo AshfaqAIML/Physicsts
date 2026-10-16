@@ -110,7 +110,7 @@ export const physicsHistory: PhysicsMoment[] = [
     month: 1,
     date: "27 February 1932",
     event:
-      "James Chadwick's paper “The Existence of a Neutron” is received by Nature — a new particle quietly unlocks the atomic nucleus.",
+      "James Chadwick's Nature letter “Possible Existence of a Neutron” is published — a new particle quietly unlocks the atomic nucleus.",
   },
   {
     month: 2,

@@ -80,7 +80,13 @@ function essayPlainText(essay: Essay): string {
   if (essay.references.length > 0) {
     parts.push("\nThe essay's own reference list, verbatim:");
     for (const reference of essay.references) {
-      parts.push(`- ${reference}`);
+      parts.push(`- ${reference.text}`);
+    }
+  }
+  if (essay.furtherReading && essay.furtherReading.length > 0) {
+    parts.push("\nThe essay's further-reading suggestions:");
+    for (const reference of essay.furtherReading) {
+      parts.push(`- ${reference.text}`);
     }
   }
   return parts.join("\n");

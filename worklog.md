@@ -2087,3 +2087,99 @@ Stage Summary:
 - Next-phase candidates: design-system token audit for AA-large text
   on accent backgrounds; tab-strip edge fade affordance at mobile;
   osculating-elements graph under the orbits readout (from R11 notes).
+
+---
+Task ID: R13
+Agent: science-editor (main session)
+Task: Academic science-editor + physicist review of ALL portfolio content — scientific clarity, accuracy, credibility, consistency; fix errors, add explicit assumptions/established/open-question distinctions, verify external references, normalise SI notation, de-market language. Strict no-fabrication rules.
+
+Work Log:
+- AUDIT: read profile/site/research/projects/publications/notes/lexicon content + all renderers (research, projects, notebook, hero, footer, lab assumption plates, both ask-API system prompts).
+- REFERENCE VERIFICATION (13 checks via web-search + curl):
+  Einstein 1916 DOI 10.1002/andp.19163540702 (Wiley: Ann. Phys. 354, 769–822) · Einstein 1905
+  DOI 10.1002/andp.19053221004 (322, 891–921) · Einstein 1936 Science DOI 10.1126/science.84.2188.506 ·
+  GW150914 DOI 10.1103/PhysRevLett.116.061102 · EHT M87* DOI 10.3847/2041-8213/ab0ec7 ·
+  Chadwick Nature DOI 10.1038/129312a0 · Will 2014 DOI 10.12942/lrr-2014-4 · Dyson/Eddington 1920
+  DOI 10.1098/rsta.1920.0009 (resolves → Royal Society) · Feynman Lectures caltech domain ·
+  einstein-online.info 200 · NIST SP330 200 · BIPM SI brochure 200. All DOIs resolve 302 → publisher.
+  QED precision claim verified (electron g-factor ~1 part in 10¹², Odom 2006/Hanneke 2008).
+- SCIENCE FIXES (root-cause accuracy, not style):
+  1. LEP electron speed WRONG by 10× in the speed-of-light essay: 0.9999999999987 → 0.999999999988
+     (verified from first principles: γ = 104.5 GeV/0.511 MeV ≈ 204 500 → 1−v/c = 1.2×10⁻¹¹; also
+     confirms "bicycle pace" ≈ 3 m/s LEP↔LHC difference). Recomputed in python, cross-checked web.
+  2. Lexicon spacetime-interval: "only timelike-separated events can be causally connected" was WRONG
+     (lightlike = light signals!). Fixed: timelike OR lightlike; nothing links spacelike.
+  3. Lexicon cosmological-constant: ρ_Λ = Λc²/8πG labelled "vacuum energy density" was ambiguous
+     (that's a mass density). Now ε_Λ = Λc⁴/8πG, labelled energy density, plus negative pressure.
+  4. Research (mathematical-physics area): removed mathematically sloppy pseudo-equation
+     "∇_μT^{μν} = 0 ⟺ symmetry → conservation"; replaced with the actual Noether charge
+     Q = Σ ∂L/∂q̇ᵢ δqᵢ, dQ/dt = 0 with honest label.
+  5. Research (cosmology): Friedmann equation was missing the Λ term; now full first Friedmann
+     equation with +Λc²/3, label "(with Λ)".
+  6. Research (theoretical): Noether sentence had direction reversed ("every conservation law is
+     secretly a symmetry"); now correct implication + the three classic examples.
+  7. Research (quantum): vague "No theory has passed more experimental tests" replaced with the
+     precise claim (QED electron magnetic moment, ~part in a trillion, experiment agrees).
+  8. Projects (curved-spacetime): limitations claim "most of the Newtonian-limit bending" from
+     time curvature replaced with the precise statement (light bending: HALF from time curvature,
+     HALF from space in the weak-field limit).
+  9. Projects (gravitational-phenomena): "first test Einstein's theory passed" was false (Mercury's
+     perihelion, 1915, came first); rewritten as the factor-of-two Newton-vs-Einstein deflection
+     story, "most famous early test".
+  10. Projects (superposition): equation label "A qubit state and the Born rule" conflated
+      normalisation with Born rule; relabelled precisely.
+  11. site.ts Chadwick history entry: paper title was wrong ("The Existence of a Neutron" was the
+      later Proc. Roy. Soc. paper; the Nature letter of 27 Feb 1932 is "Possible Existence of a
+      Neutron"); now correctly titled and phrased "published" not "received".
+  12. Notes (curvature essay "How we know"): vague claims made quantitative — 1.75″ at limb (2×
+      Newton), 43″/century Mercury residual, ~38 μs/day GPS drift, GW150914 ~1.3 billion ly,
+      M87* naming.
+- STRUCTURAL ADDITIONS (content system, architecture preserved):
+  · research.ts: new `established` + `openQuestions` fields on all 6 areas — explicit separation of
+    settled science from open research questions (incl. Yang–Mills Millennium problem, measurement
+    problem, dark matter/energy, hierarchy problem).
+  · research.tsx dialog: "What is settled" (solid plate) / "Open questions" (dashed plate, matching
+    the site's placeholder semantics) — verified balanced, stacks at 390px, 0 overflow.
+  · projects.ts: new `assumptions: string[]` per project (3 explicit assumptions each) + rendered
+    "Assumptions" section in the brief dialog (Methodology → Assumptions → Findings).
+  · projects.ts + notes.ts references upgraded from string[] to {citation/text, url?} objects with
+    VERIFIED links only (DOIs + Caltech Feynman Lectures); books cited without links by policy;
+    honest micro-caption "Links are added only to records verified to resolve".
+  · notes.ts: essays get `furtherReading` field (Dyson–Eddington 1920, GW150914 PRL, Einstein
+    Online; NIST SP 330, BIPM) — rendered as a distinct "Further reading" section with arrow glyphs.
+  · External links render with ArrowUpRight affordance icon, target=_blank, rel noopener,
+    focus-visible outlines (notebook + projects).
+  · SI normalisation: c now "299 792 458 m/s" (thin-space grouping) everywhere in essays, matching
+    the footer + lexicon's existing convention (was comma-grouped "299,792,458").
+  · Citations updated to publisher's own numbering (Ann. Phys. 354/322) to match linked DOIs.
+  · Both LLM companions upgraded: research-ask prompt now includes the area's established/open
+    distinction + a rule to never blur settled results with open questions; essay-ask prompt
+    receives further-reading list too.
+- DE-MARKETING: hero paragraph replaced ("I explore the ideas…smallest scales to largest
+  structures" → specific: notes rebuilding from first principles + live-computed simulations with
+  assumptions stated); hero equation caption now informative ("geometry on the left, matter and
+  energy on the right").
+- NOT CHANGED (deliberately): portrait/imagery remain honest placeholders (no external scientific
+  imagery introduced — none could be license-verified; all visuals remain original procedural
+  work, which the colophon already states); publications empty state kept; profile placeholders kept.
+- QA (agent-browser): hero copy + caption render ✓; research dialog headings [What is settled,
+  Open questions, Related concepts, On the shelf] ✓; Friedmann Λ term renders (572px in 620px
+  plate) ✓; project brief now 8 sections incl. Assumptions ✓; DOI links present as anchors ✓;
+  essay LEP fix + SI normalisation + Further reading section ✓ (4 links + 4 arrow glyphs);
+  lexicon fixes both verified via search ✓; command palette still opens ✓; mobile 390px stacked
+  grid 0 overflow ✓; light + dark heroes fine (VLM "void" claim DISPROVEN by DOM: hero 822px,
+  all 8 sections present with healthy heights). VLM display-equation check flaked once (HTML
+  boilerplate) → DOM-verified mfrac + overflow 0 instead.
+- lint 0 errors · tsc 0 errors (src/) · dev.log clean · all GETs 200.
+
+Stage Summary:
+- Every quantitative claim on the site has been checked; 12 substantive science errors fixed
+  (worst: LEP speed off by an order of magnitude; causal claim excluding lightlike events).
+- The site now explicitly distinguishes established results / simplified educational models /
+  open research questions in three systems: research areas (settled+open plates), projects
+  (assumptions section), lab (existing assumption plates) — plus LLM companions instructed to
+  respect the distinction.
+- 13 external references verified and linked (DOIs resolve); no citation or DOI was added
+  without verification. Strict no-fabrication rules maintained throughout.
+- Next-phase candidates: physics-lab round (trace 1a144361ee9cd015, still pending); design-system
+  token audit; possibly a third example essay (QM formalism) following the new editorial standard.

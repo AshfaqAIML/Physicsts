@@ -78,9 +78,10 @@ export function Hero() {
             transition={{ duration: 1, delay: 0.5, ease }}
             className="mt-7 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
           >
-            I explore the ideas, mathematical structures, and physical
-            principles that help us understand the universe — from the
-            smallest scales of nature to the largest structures of the cosmos.
+            Notes that rebuild spacetime and quantum theory from first
+            principles, and laboratory simulations where every photon,
+            orbit, and wavefront is computed live — assumptions stated
+            beside the results.
           </motion.p>
 
           <motion.div
@@ -126,7 +127,8 @@ export function Hero() {
                 />
               </div>
               <figcaption className="mt-3 meta-sm text-muted-foreground">
-                Einstein field equations · 1915
+                Einstein field equations · 1915 — geometry on the left,
+                matter and energy on the right
               </figcaption>
             </div>
           </motion.figure>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUpRight, BookMarked, FlaskConical, Github } from "lucide-react";
+import { ArrowUpRight, BookMarked, FlaskConical, Github, ListChecks } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -209,6 +209,22 @@ export function Projects() {
                 </div>
 
                 <Detail label="Methodology" body={open.methodology} icon={<FlaskConical className="size-3.5" aria-hidden="true" />} />
+
+                <div>
+                  <h4 className="flex items-center gap-2 meta-sm text-muted-foreground">
+                    <ListChecks className="size-3.5" aria-hidden="true" />
+                    Assumptions
+                  </h4>
+                  <ul className="mt-2.5 space-y-2">
+                    {open.assumptions.map((a) => (
+                      <li key={a} className="flex gap-2.5 text-muted-foreground">
+                        <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
+                        {a}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
                 <Detail label="Findings (illustrative)" body={open.findings} />
                 <Detail label="Limitations" body={open.limitations} />
 
@@ -218,11 +234,27 @@ export function Projects() {
                   </h4>
                   <ul className="mt-3 list-inside space-y-1.5 text-muted-foreground">
                     {open.references.map((r) => (
-                      <li key={r} className="relative pl-4 before:absolute before:left-0 before:text-photon before:content-['—']">
-                        {r}
+                      <li key={r.citation} className="relative pl-4 before:absolute before:left-0 before:text-photon before:content-['—']">
+                        {r.url ? (
+                          <a
+                            href={r.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="link-quiet inline-flex items-baseline gap-1 rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                          >
+                            {r.citation}
+                            <ArrowUpRight className="size-3 shrink-0 self-center text-muted-foreground/50" aria-hidden="true" />
+                          </a>
+                        ) : (
+                          r.citation
+                        )}
                       </li>
                     ))}
                   </ul>
+                  <p className="mt-2.5 meta-xs text-muted-foreground">
+                    Links are added only to records verified to resolve — books
+                    are cited without links.
+                  </p>
                 </div>
 
                 {open.repository ? (

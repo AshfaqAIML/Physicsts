@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, BookOpen, Printer, Tag } from "lucide-react";
+import { ArrowUpRight, BookOpen, CircleDashed, Landmark, Printer, Tag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -201,6 +201,35 @@ export function ResearchInterests() {
                 </div>
 
                 <p className="leading-[1.85] text-muted-foreground">{openArea.detail}</p>
+
+                {/* Established science vs open questions — the honest ledger.
+                    A solid plate for what is settled; a dashed plate for the
+                    frontier, matching the site's placeholder semantics. */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-lg border border-border bg-background/60 p-4">
+                    <h4 className="flex items-center gap-2 meta-sm text-muted-foreground">
+                      <Landmark className="size-3.5 text-photon" aria-hidden="true" />
+                      What is settled
+                    </h4>
+                    <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
+                      {openArea.established}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-dashed border-border p-4">
+                    <h4 className="flex items-center gap-2 meta-sm text-muted-foreground">
+                      <CircleDashed className="size-3.5 text-nebula" aria-hidden="true" />
+                      Open questions
+                    </h4>
+                    <ul className="mt-2.5 space-y-2">
+                      {openArea.openQuestions.map((q) => (
+                        <li key={q} className="flex gap-2 text-xs leading-relaxed text-muted-foreground">
+                          <span aria-hidden="true" className="mt-1 h-1 w-1 shrink-0 rounded-full bg-nebula/70" />
+                          {q}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
 
                 <div>
                   <h4 className="flex items-center gap-2 meta-sm text-muted-foreground">
