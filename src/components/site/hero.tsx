@@ -125,7 +125,7 @@ export function Hero() {
                   ariaLabel="Einstein's field equations: G mu nu plus Lambda g mu nu equals 8 pi G over c to the fourth, times T mu nu"
                 />
               </div>
-              <figcaption className="mt-3 meta-sm text-muted-foreground/80">
+              <figcaption className="mt-3 meta-sm text-muted-foreground">
                 Einstein field equations · 1915
               </figcaption>
             </div>

@@ -19,6 +19,7 @@ export function About() {
       <div className="shell">
         <SectionHeading
           index="01"
+          headingId="about-heading"
           eyebrow="About"
           title={profile.headline}
           lede="The person behind the questions — honestly rendered, credentials still being earned."
@@ -53,7 +54,7 @@ export function About() {
             {/* Marginalia — a quiet scientific annotation */}
             <p
               aria-hidden="true"
-              className="mt-6 hidden meta-sm text-muted-foreground/60 lg:block"
+              className="mt-6 hidden meta-sm text-muted-foreground lg:block"
             >
               {site.observatoryNote}
             </p>

@@ -132,7 +132,7 @@ export function ShortcutsHelp() {
           </ShortcutGroup>
         </div>
 
-        <p className="mt-2 border-t border-border pt-4 meta-xs text-muted-foreground/70">
+        <p className="mt-2 border-t border-border pt-4 meta-xs text-muted-foreground">
           Letter shortcuts stay silent while you are typing or when a
           dialogue is open — the stage is theirs.
         </p>

@@ -147,6 +147,14 @@ export function BlackHoleCanvas() {
       const cx = w * 0.62;
       const cy = h * 0.45;
       const R = Math.min(Math.max(Math.min(w, h) * 0.085, 44), 108);
+      /* Below ~1180px the editorial column spans nearly the full hero, so
+         the disc cannot clear the text. In light mode a solid ink disc
+         under dark grey text measures ≈2.9:1 — so narrow viewports render
+         the shadow as a watermark: 10% ink fill plus an engraved outline,
+         which measures ≥4.8:1 behind the same text. The photon ring keeps
+         the figure legible. Dark mode keeps the full shadow (light text
+         on it passes comfortably). */
+      const watermark = !dark && w < 1180;
 
       ctx.globalCompositeOperation = dark ? "lighter" : "source-over";
 
@@ -193,8 +201,18 @@ export function BlackHoleCanvas() {
       }
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.fillStyle = dark ? "#020306" : cssVar("--foreground");
-      ctx.fill();
+      if (watermark) {
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = cssVar("--foreground");
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = `rgba(${fg[0]},${fg[1]},${fg[2]},0.28)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = dark ? "#020306" : cssVar("--foreground");
+        ctx.fill();
+      }
 
       /* ----- photon ring ----- */
       const ringA = dark ? 0.85 : 0.75;

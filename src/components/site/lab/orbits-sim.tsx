@@ -1091,9 +1091,9 @@ export function OrbitsSim({
 
       <div className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="meta-sm text-muted-foreground">
+          <h3 className="meta-sm text-muted-foreground">
             Controls
-          </h4>
+          </h3>
 
           <div className="mt-5 space-y-5">
             <PresetChips
@@ -1275,7 +1275,7 @@ export function OrbitsSim({
 
         <div className="rounded-lg border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-3">
-            <h4 className="meta-sm text-muted-foreground">Readout</h4>
+            <h3 className="meta-sm text-muted-foreground">Readout</h3>
             <span
               ref={readClass}
               className="tag text-foreground"
@@ -1333,7 +1333,7 @@ export function OrbitsSim({
           >
             —
           </p>
-          <p className="mt-3 border-t border-border pt-3 meta-xs leading-relaxed text-muted-foreground/70">
+          <p className="mt-3 border-t border-border pt-3 meta-xs leading-relaxed text-muted-foreground">
             Units — total mass 1 M☉, lengths in AU ⇒ time in τ = yr/2π ≈
             58.13 d, speed in √(GM☉/AU) = 29.78 km/s, so Kepler III reads
             exactly T[yr] = a[AU]³ᐟ². ε is specific orbital energy in natural

@@ -82,6 +82,7 @@ export function ResearchInterests() {
       <div className="shell">
         <SectionHeading
           index="02"
+          headingId="research-heading"
           eyebrow="Research Interests"
           title="Mapping the Frontiers of Curiosity."
           lede="The directions I read toward and think about — a map of interests being earned, not a list of credentials claimed."
@@ -104,7 +105,7 @@ export function ResearchInterests() {
                 {/* Folio numeral */}
                 <span
                   aria-hidden="true"
-                  className="type-folio text-muted-foreground/50 transition-all duration-300 group-hover:text-photon"
+                  className="type-folio text-muted-foreground transition-all duration-300 group-hover:text-photon"
                 >
                   {area.index}
                 </span>
@@ -115,7 +116,7 @@ export function ResearchInterests() {
                     <span className="type-h3 text-foreground">
                       {area.title}
                     </span>
-                    <span className="meta-sm text-muted-foreground/80">
+                    <span className="meta-sm text-muted-foreground">
                       {area.tagline}
                     </span>
                   </span>
@@ -131,7 +132,7 @@ export function ResearchInterests() {
 
                 {/* Cue */}
                 <ArrowUpRight
-                  className="hidden size-4 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon lg:block"
+                  className="hidden size-4 text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon lg:block"
                   aria-hidden="true"
                 />
               </button>
@@ -140,7 +141,7 @@ export function ResearchInterests() {
         </div>
 
         <Reveal delay={0.15} className="mt-10">
-          <p className="text-center meta-sm text-muted-foreground/70">
+          <p className="text-center meta-sm text-muted-foreground">
             These are directions of study and fascination — not claimed
             specialisations.
           </p>
@@ -174,7 +175,7 @@ export function ResearchInterests() {
                 </DialogDescription>
                 {/* Desk line — honest counts plus the paper deed */}
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                  <p className="meta-xs text-muted-foreground/70">
+                  <p className="meta-xs text-muted-foreground">
                     {openArea.concepts.length} related concepts · {openArea.reading.length} on the shelf
                   </p>
                   <button
@@ -229,7 +230,7 @@ export function ResearchInterests() {
                       <li key={r.title} className="py-3">
                         <p className="text-sm font-medium text-foreground/90">{r.title}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">{r.author}</p>
-                        <p className="mt-1 text-xs italic text-muted-foreground/80">{r.note}</p>
+                        <p className="mt-1 text-xs italic text-muted-foreground">{r.note}</p>
                       </li>
                     ))}
                   </ul>

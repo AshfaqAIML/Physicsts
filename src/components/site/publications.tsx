@@ -19,6 +19,7 @@ export function Publications() {
       <div className="shell">
         <SectionHeading
           index="04"
+          headingId="publications-heading"
           eyebrow="Publications & Academic Contributions"
           title="The Written Record."
           lede="Journal articles, preprints, conference papers, posters, theses, reports, and essays — listed only once they verifiably exist."
@@ -76,7 +77,7 @@ export function Publications() {
                   {p}
                 </p>
               ))}
-              <p className="relative mt-7 meta-sm text-muted-foreground/80">
+              <p className="relative mt-7 meta-sm text-muted-foreground">
                 {publicationsEmptyState.note}
               </p>
             </div>
@@ -104,16 +105,14 @@ export function Publications() {
                       aria-hidden="true"
                       className="h-px grow border-t border-dotted border-border"
                     />
-                    <span
-                      aria-label="0 entries"
-                      className="meta-num text-muted-foreground/70"
-                    >
-                      000
+                    <span className="meta-num text-muted-foreground">
+                      <span aria-hidden="true">000</span>
+                      <span className="sr-only">0 entries</span>
                     </span>
                   </li>
                 ))}
               </ul>
-              <p className="border-t border-border bg-accent/20 px-6 py-3.5 meta-xs text-muted-foreground/70 lg:px-8">
+              <p className="border-t border-border bg-accent/20 px-6 py-3.5 meta-xs text-muted-foreground lg:px-8">
                 Counts move when verified work exists — never before
               </p>
             </div>

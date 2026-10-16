@@ -81,7 +81,7 @@ export function Navigation() {
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-serif text-lg tracking-tight">{site.wordmark}</span>
-            <span className="mt-1 meta-xs text-muted-foreground">
+            <span className="mt-1 hidden meta-xs text-muted-foreground sm:block">
               Physics · Mathematics
             </span>
           </span>
@@ -114,18 +114,21 @@ export function Navigation() {
           ))}
         </ul>
 
+        {/* Narrow screens keep only the motion, theme, and menu keys in
+            the bar — search and the lexicon live inside the sheet menu, so
+            the wordmark never has to fight the toolbar for space. */}
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event("phys:open-palette"))}
-            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="hit-target hidden h-9 items-center gap-2 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:inline-flex"
             aria-label="Open command palette (search the whole page)"
             aria-keyshortcuts="Meta+K Control+K"
           >
             <Search className="size-4" aria-hidden="true" />
             <span
               aria-hidden="true"
-              className="hidden kbd sm:inline-block"
+              className="hidden kbd xl:inline-block"
             >
               ⌘K
             </span>
@@ -134,7 +137,7 @@ export function Navigation() {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event("phys:open-lexicon"))}
-            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="hit-target hidden h-9 items-center gap-2 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:inline-flex"
             aria-label="Open the physics lexicon"
             aria-keyshortcuts="L"
           >
@@ -148,7 +151,7 @@ export function Navigation() {
           {/* Mobile menu */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
-              className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
+              className="hit-target inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
               aria-label="Open navigation menu"
             >
               <Menu className="size-5" />

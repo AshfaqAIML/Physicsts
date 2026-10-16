@@ -116,7 +116,7 @@ export function Lexicon() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search terms, formulas, concepts…"
               aria-label="Search the lexicon"
-              className="h-10 w-full rounded-md border border-border bg-background/60 pr-3 pl-9 font-mono text-xs text-foreground transition-colors placeholder:text-muted-foreground/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="h-10 w-full rounded-md border border-border bg-background/60 pr-3 pl-9 font-mono text-xs text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             />
           </div>
 
@@ -164,7 +164,7 @@ export function Lexicon() {
         </div>
 
         {/* Footer microcopy */}
-        <div className="shrink-0 border-t border-border px-6 py-3 meta-xs text-muted-foreground/70">
+        <div className="shrink-0 border-t border-border px-6 py-3 meta-xs text-muted-foreground">
           Definitions are standard physics — see the notebook essays for worked
           ideas.
         </div>
@@ -197,7 +197,7 @@ function TermRow({
     <article className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 py-6 sm:gap-x-8">
       <span
         aria-hidden="true"
-        className="pt-1 meta-num text-muted-foreground/60"
+        className="pt-1 meta-num text-muted-foreground"
       >
         {String(index + 1).padStart(2, "0")}
       </span>
@@ -207,7 +207,7 @@ function TermRow({
           <h4 className="font-serif text-xl leading-snug text-foreground transition-colors hover:text-photon sm:text-2xl">
             <Highlighted text={term.term} words={words} />
           </h4>
-          <span className="rounded-full border border-border/70 px-2 py-0.5 meta-xs text-muted-foreground/80">
+          <span className="rounded-full border border-border/70 px-2 py-0.5 meta-xs text-muted-foreground">
             {term.category}
           </span>
         </div>
@@ -220,7 +220,7 @@ function TermRow({
           <div className="mx-auto mt-4 w-fit max-w-full overflow-x-auto rounded-md border border-border/70 bg-background/60 px-4 py-2.5 text-center text-foreground/90 [&_.katex-display]:my-0.5">
             <Tex math={term.formula} display ariaLabel={term.formulaLabel ?? term.term} />
             {term.formulaLabel ? (
-              <p className="mt-1.5 meta-xs text-muted-foreground/70">
+              <p className="mt-1.5 meta-xs text-muted-foreground">
                 {term.formulaLabel}
               </p>
             ) : null}
@@ -229,7 +229,7 @@ function TermRow({
 
         {related.length > 0 ? (
           <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5 meta-sm">
-            <span className="text-muted-foreground/60">→ See also:</span>
+            <span className="text-muted-foreground">→ See also:</span>
             {related.map((r, i) => (
               <span key={r.id} className="flex items-baseline gap-1.5">
                 {i > 0 ? (

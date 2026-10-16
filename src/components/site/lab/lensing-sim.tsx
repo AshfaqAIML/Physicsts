@@ -613,9 +613,9 @@ export function LensingSim({
 
       <div className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="meta-sm text-muted-foreground">
+          <h3 className="meta-sm text-muted-foreground">
             Controls
-          </h4>
+          </h3>
 
           <div className="mt-5 space-y-5">
             <PresetChips
@@ -719,9 +719,9 @@ export function LensingSim({
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="meta-sm text-muted-foreground">
+          <h3 className="meta-sm text-muted-foreground">
             How it works
-          </h4>
+          </h3>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             Every block of pixels is traced <em>backwards</em> through the lens
             equation to where its light originated, and the sky is sampled there.

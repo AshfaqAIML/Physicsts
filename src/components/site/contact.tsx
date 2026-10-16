@@ -114,6 +114,7 @@ export function Contact() {
       <div className="shell">
         <SectionHeading
           index="07"
+          headingId="contact-heading"
           eyebrow="Contact & Collaboration"
           title="Every Answer Opens Another Question."
           lede="Interested in physics, mathematics, scientific computing, or exchanging ideas about the universe? I would be glad to connect."
@@ -145,7 +146,7 @@ export function Contact() {
                             {c.hint}
                           </a>
                         ) : (
-                          <span className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground/70">
+                          <span className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
                             {c.hint}
                             <span className="tag tag--dashed">
                               to be added
@@ -156,7 +157,7 @@ export function Contact() {
                     );
                   })}
                 </ul>
-                <p className="mt-4 text-xs italic leading-relaxed text-muted-foreground/80">
+                <p className="mt-4 text-xs italic leading-relaxed text-muted-foreground">
                   Accounts and documents appear here only when they actually
                   exist — nothing on this page is invented.
                 </p>
@@ -260,7 +261,7 @@ export function Contact() {
                       "meta-num",
                       (messageValue?.length ?? 0) > 3600
                         ? "text-amber-500"
-                        : "text-muted-foreground/60"
+                        : "text-muted-foreground"
                     )}
                   >
                     {messageValue?.length ?? 0} / 4000
@@ -298,7 +299,7 @@ export function Contact() {
                 <Button
                   type="submit"
                   disabled={status === "sending"}
-                  className="min-w-40"
+                  className="min-w-40 h-11 px-6"
                 >
                   {status === "sending" ? (
                     <>
@@ -329,7 +330,7 @@ export function Contact() {
                 </p>
               </div>
 
-              <p className="mt-4 text-xs leading-relaxed text-muted-foreground/70">
+              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
                 Handled by this site&apos;s own backend: validated, spam-checked,
                 and stored privately. No third-party trackers, no newsletter,
                 no follow-up you did not ask for.

@@ -42,6 +42,7 @@ export function Projects() {
       <div className="shell">
         <SectionHeading
           index="03"
+          headingId="projects-heading"
           eyebrow="Research & Scientific Projects"
           title="Questions, Made Operational."
           lede="Projects where an idea becomes a computation, a visualisation, or an experiment you can run. The entries below are example concepts — placeholders demonstrating the structure, replaced by real work as it exists."
@@ -73,7 +74,7 @@ export function Projects() {
               <p className="mt-4 font-serif text-lg italic leading-relaxed text-muted-foreground">
                 “{projects[0].question}”
               </p>
-              <span className="mt-auto inline-flex items-center gap-2 pt-8 meta-sm text-muted-foreground/70 transition-colors group-hover:text-photon">
+              <span className="mt-auto inline-flex items-center gap-2 pt-8 meta-sm text-muted-foreground transition-colors group-hover:text-photon">
                 <BookMarked className="size-3.5" aria-hidden="true" />
                 Open the full brief
                 <ArrowUpRight
@@ -130,7 +131,7 @@ export function Projects() {
                       >
                         {projectStatusCopy[p.status].label}
                       </span>
-                      <span className="text-muted-foreground/50">Fig. {String(i + 2).padStart(2, "0")}</span>
+                      <span className="text-muted-foreground">Fig. {String(i + 2).padStart(2, "0")}</span>
                     </span>
                   </div>
 
@@ -147,12 +148,12 @@ export function Projects() {
                   </div>
 
                   <div className="mt-auto flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2 meta-sm text-muted-foreground/70 transition-colors group-hover:text-photon">
+                    <span className="inline-flex items-center gap-2 meta-sm text-muted-foreground transition-colors group-hover:text-photon">
                       <BookMarked className="size-3.5" aria-hidden="true" />
                       Full project brief
                     </span>
                     <ArrowUpRight
-                      className="size-4 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon"
+                      className="size-4 text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon"
                       aria-hidden="true"
                     />
                   </div>
@@ -163,7 +164,7 @@ export function Projects() {
         </div>
 
         <Reveal delay={0.1} className="mt-8">
-          <p className="mx-auto max-w-2xl text-center meta-sm text-muted-foreground/70">
+          <p className="mx-auto max-w-2xl text-center meta-sm text-muted-foreground">
             Example concepts · no fabricated results · replace with actual work
             as it is completed
           </p>
@@ -233,7 +234,7 @@ export function Projects() {
                     View repository
                   </a>
                 ) : (
-                  <p className="rounded-lg border border-dashed border-border p-4 text-center meta-sm text-muted-foreground/70">
+                  <p className="rounded-lg border border-dashed border-border p-4 text-center meta-sm text-muted-foreground">
                     Repository link — added when the code exists
                   </p>
                 )}

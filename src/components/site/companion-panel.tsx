@@ -203,11 +203,11 @@ export function CompanionPanel({
             <p className="meta-sm text-muted-foreground">
               {headerLabel}
             </p>
-            <p className="meta-xs text-muted-foreground/70">
+            <p className="meta-xs text-muted-foreground">
               {HONESTY_TAG}
             </p>
           </div>
-          <p className="border-b border-border px-4 py-2.5 text-xs leading-relaxed text-muted-foreground/80">
+          <p className="border-b border-border px-4 py-2.5 text-xs leading-relaxed text-muted-foreground">
             {honestyNote}
           </p>
 
@@ -237,7 +237,7 @@ export function CompanionPanel({
             )}
 
             {hiddenEarlier && (
-              <p className="mb-4 meta-xs text-muted-foreground/60">
+              <p className="mb-4 meta-xs text-muted-foreground">
                 {HIDDEN_EARLIER}
               </p>
             )}
@@ -306,7 +306,7 @@ export function CompanionPanel({
                       "tabular-nums",
                       question.length > COUNTER_WARN
                         ? "text-amber-500"
-                        : "text-muted-foreground/70"
+                        : "text-muted-foreground"
                     )}
                   >
                     {question.length} / {QUESTION_MAX}

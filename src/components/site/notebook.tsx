@@ -190,6 +190,7 @@ export function Notebook() {
       <div className="shell">
         <SectionHeading
           index="05"
+          headingId="notes-heading"
           eyebrow="Scientific Notebook"
           title="Ideas in Progress."
           lede="Essays and notes on physics, mathematics, and the history of ideas — written to think clearly, published when ready."
@@ -205,14 +206,14 @@ export function Notebook() {
               className="group flex w-full flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border border-dashed border-border px-5 py-4 text-left transition-colors hover:border-photon/50 hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               aria-label={`Resume reading the essay: ${resumeNote.title}`}
             >
-              <span className="flex items-center gap-2 meta-sm text-muted-foreground/80">
+              <span className="flex items-center gap-2 meta-sm text-muted-foreground">
                 <BookOpen className="size-3 text-photon/70" aria-hidden="true" />
                 Last read
               </span>
               <span className="font-serif text-base text-foreground/90 transition-colors group-hover:text-photon sm:text-lg">
                 {resumeNote.title}
               </span>
-              <span className="ml-auto hidden items-center gap-1 meta-sm text-muted-foreground/60 transition-colors group-hover:text-photon sm:flex">
+              <span className="ml-auto hidden items-center gap-1 meta-sm text-muted-foreground transition-colors group-hover:text-photon sm:flex">
                 Resume
                 <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
               </span>
@@ -280,7 +281,7 @@ export function Notebook() {
                       : "cursor-default opacity-60"
                   )}
                 >
-                  <span className="meta-num text-muted-foreground/60">
+                  <span className="meta-num text-muted-foreground">
                     {String(i + 1).padStart(2, "0")}
                   </span>
 
@@ -296,7 +297,7 @@ export function Notebook() {
                     <span className="mt-1.5 block max-w-2xl text-sm leading-relaxed text-muted-foreground">
                       {note.excerpt}
                     </span>
-                    <span className="mt-3 flex flex-wrap items-center gap-3 meta-sm text-muted-foreground/70">
+                    <span className="mt-3 flex flex-wrap items-center gap-3 meta-sm text-muted-foreground">
                       <span className="tag">
                         {note.category}
                       </span>
@@ -318,8 +319,8 @@ export function Notebook() {
                     className={cn(
                       "self-center",
                       readable
-                        ? "text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
-                        : "text-muted-foreground/50"
+                        ? "text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
+                        : "text-muted-foreground"
                     )}
                     aria-hidden="true"
                   >
@@ -486,7 +487,7 @@ function ReadingView({
             ))}
           </ol>
         </nav>
-        <p className="mt-4 border-t border-border px-6 pt-4 meta-xs text-muted-foreground/70">
+        <p className="mt-4 border-t border-border px-6 pt-4 meta-xs text-muted-foreground">
           {essay.readingMinutes} min read · {essay.date}
         </p>
       </aside>
@@ -520,7 +521,7 @@ function ReadingView({
             {essay.dek}
           </DialogDescription>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <p className="meta-xs text-muted-foreground/70">
+            <p className="meta-xs text-muted-foreground">
               {essay.readingMinutes} min read · {essay.date} ·{" "}
               <span aria-hidden="true" data-essay-print="hide" className="tabular-nums">
                 <span ref={percentRef} className="text-photon">
@@ -597,7 +598,7 @@ function ReadingView({
             <AskAssistant note={note} />
           </div>
 
-          <p className="mt-10 meta-xs text-muted-foreground/60">
+          <p className="mt-10 meta-xs text-muted-foreground">
             Example essay · placeholder content until replaced by genuine
             writing
           </p>
@@ -617,13 +618,13 @@ function ReadingView({
                 <span className="mt-2 block truncate font-serif text-lg leading-snug text-foreground sm:text-xl">
                   {nextNote.title}
                 </span>
-                <span className="mt-1.5 block meta-xs text-muted-foreground/70">
+                <span className="mt-1.5 block meta-xs text-muted-foreground">
                   {nextNote.category} · {nextNote.essay!.readingMinutes} min
                   read
                 </span>
               </span>
               <ArrowRight
-                className="size-5 shrink-0 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
+                className="size-5 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
                 aria-hidden="true"
               />
             </button>

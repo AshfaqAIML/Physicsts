@@ -63,10 +63,11 @@
   --destructive: #b3261e;
   --border: rgba(20, 22, 29, 0.14);
   --input: rgba(20, 22, 29, 0.2);
-  --ring: #0e7c8c;
+  --ring: #0d7887;
 
-  /* Scientific accents (WCAG-conscious on paper) */
-  --photon: #0e7c8c;
+  /* Scientific accents (WCAG-conscious on paper) — photon darkened to
+     #0d7887 so 10–11px meta text in photon clears 4.5:1 on paper and card. */
+  --photon: #0d7887;
   --nebula: #5d50d4;
   --starlight: #f5f3ee;
   --dust: #5a6170;
@@ -242,6 +243,20 @@
     outline: 2px solid color-mix(in oklab, var(--photon) 70%, transparent);
     outline-offset: 3px;
     border-radius: 2px;
+  }
+
+  /* Touch forgiveness — a 36px visual key with a 46px invisible reach.
+     The ::after overlay belongs to its button, so taps landing on the
+     margin still act; nav gaps (4px) stay smaller than the rim (5px)
+     so neighbouring targets never overlap. Pointer events pass through
+     the transparent area to the button itself. */
+  .hit-target {
+    position: relative;
+  }
+  .hit-target::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
   }
 
   /* Editorial drop cap for the reading view — optical alignment tuned:

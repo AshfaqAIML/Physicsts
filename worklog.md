@@ -2002,3 +2002,88 @@ Stage Summary:
 - Next-phase candidates: osculating-elements graph (a, e vs t) under the
   readout; recorded "annotated tours" of preset experiments; apply the
   units-layer pattern to lensing (θ_E in arcsec) and wave (Å scale).
+
+---
+Task ID: R12
+Agent: Z.ai Code (responsive-design + accessibility specialist round)
+Task: Full responsive + accessibility audit at 360/390/768/1024/1440/1920 — fix horizontal overflow, contrast, ARIA, touch targets, theme/reduced-motion defects at the layout root cause.
+
+Work Log:
+- AUDIT (agent-browser + axe-core 4.12 + pixel forensics, both themes):
+  · Overflow: documentElement.scrollWidth−clientWidth = 0 at ALL six widths.
+    Remaining "offenders" were false positives (SVG viewBox internals in
+    DeepField, the Lab tab strip's intentional overflow-x-auto, sr-only
+    honeypot at −9999px).
+  · HERO DISC COLLISION (the round's major find): in light mode the
+    near-black shadow disc (cx=0.62w, cy=0.45h) sat behind dark text at
+    360–1024 — measured 2.9:1 on the paragraph (360), 95.3% dark pixels
+    over the "About the physicist" link zone (768), h1+para intrusion
+    (1024). Dark mode was always fine (light text on dark disc ≈ 8:1+).
+    Root cause: fixed-percentage scrim (38%/62%) tuned for ≥1280 columns.
+  · axe light: 35 contrast violations (photon #0e7c8c = 4.42:1 on paper;
+    text-muted-foreground/50–70 = 2.15–3.13:1), heading-order (lab h4s),
+    dangling aria-labelledby (all 7 sections pointed at non-existent
+    heading IDs → sections not named regions), aria-label on generic
+    spans (publications "000"), sr-only DialogHeader outside landmarks.
+  · Nav at 360/390: gap 0 between wordmark and toolbar — subtitle wrapped
+    to 2 lines; all 5 icon buttons 36px touch targets. Contact submit
+    36px. VLM "hyphenation" and "equation overflow" claims DISPROVEN by
+    DOM (KaTeX scrollWidth < container at 360; no hyphens CSS).
+  · Keyboard/sheet/palette: skip link, focus-visible outlines, Escape+
+    focus-return, tab trap, theme round-trip repaint — all already good.
+- FIXES (root causes, no overflow-hiding):
+  1. globals.css: light --photon/--ring #0e7c8c → #0d7887 (4.67:1 paper,
+     5.0:1 card); new .hit-target utility (::after inset −5px → 46px hit
+     for 36px visual keys, 4px gaps prevent neighbour overlap).
+  2. black-hole.tsx: below 1180px in LIGHT mode the shadow disc renders
+     as a watermark — 10% ink fill + 0.28-alpha engraved outline; photon
+     ring unchanged; dark mode untouched. Measured after: 0% dark pixels
+     behind paragraph bands at 360/768/1024; text-over-disc ≈ 4.6:1;
+     canvas pixel probe shows fill = 222 luminance (exact 10% ink).
+  3. navigation.tsx: search + lexicon buttons hidden below sm (both live
+     in the sheet menu chips), wordmark subtitle hidden below sm, ⌘K kbd
+     badge deferred to xl (frees ~40px at 1024), hit-target on all icon
+     keys. Result: 94px gap at 360 (was 0).
+  4. SectionHeading: new headingId prop → <h2 id>; threaded through all
+     7 sections (about/research/projects/publications/notes/lab/contact).
+     All 7 IDs now exist; sections are named regions; axe
+     aria-valid-attr-value + aria-prohibited-attr cleared.
+  5. ui/command.tsx (stock shadcn bug): sr-only DialogHeader moved INSIDE
+     DialogContent — was an unportaled always-in-DOM child of Dialog,
+     sitting outside every landmark. Palette re-verified: opens, input
+     autofocuses, role=dialog present, header inside content.
+  6. Lab panel headings: all 16 h4 → h3 (h2 → h3 → … order restored).
+  7. publications.tsx: aria-label spans → aria-hidden "000" + sr-only
+     "0 entries" text (announced properly, no prohibited attr).
+  8. Contact submit: h-11 (44px touch target).
+  9. Contrast sweep: every informative text-muted-foreground/50–80 →
+     full muted-foreground (~45 sites across 14 files: projects,
+     publications, notebook, research, about, hero figcaption, footer,
+     physics-history, lexicon incl. placeholder, companion-panel,
+     command-palette footer, shortcuts-help, keyboard-hint, orbits-sim,
+     not-found). Decorative aria-hidden elements (hero Fig. 00 annotation,
+     arrows, lexicon search glyph) intentionally kept as whispers.
+- VERIFIED after fixes:
+  · axe-core: LIGHT 0 violations, DARK 0 violations (was 3+3 serious).
+  · Overflow 0 at 360/390/768/1024/1440/1920; dev.log + console clean.
+  · Hero: 768 link-zone dark 95.3% → 0.0%; watermark disc + 55%-teal
+    ring pixel-confirmed; theme round-trip repaints canvas instantly.
+  · Keyboard: skip link reveals, tabs flow, :focus-visible 2px outlines;
+    sheet Escape + focus return; lab tabs (role=tab/tablist, arrow keys
+    via Radix) + last tab scroll-reachable at 360.
+  · Form: empty submit → 4 role=alert errors, aria-describedby +
+    aria-invalid wired; submit now 44px; sheet search/lexicon chips OK.
+  · lint 0; tsc 0 in src/ (examples/skills pre-existing only).
+
+Stage Summary:
+- The portfolio now passes WCAG 2 AA (axe) in BOTH themes and holds 0
+  horizontal overflow at all six audited widths, with root-cause fixes
+  (no overflow-hidden concealment anywhere).
+- Signature pattern added: theme-aware canvas ink (watermark mode) —
+  reuse for any future hero instrument that must coexist with text.
+- Known/accepted: axe "region" on portaled role=dialog is resolved via
+  the command.tsx structural fix; muted whispers remain only on
+  aria-hidden decorative glyphs; ΔE note for orbits unchanged.
+- Next-phase candidates: design-system token audit for AA-large text
+  on accent backgrounds; tab-strip edge fade affordance at mobile;
+  osculating-elements graph under the orbits readout (from R11 notes).

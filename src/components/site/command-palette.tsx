@@ -357,7 +357,7 @@ export function CommandPalette() {
         </CommandGroup>
       </CommandList>
 
-      <div className="flex items-center justify-between border-t border-border px-4 py-2.5 meta-sm text-muted-foreground/70">
+      <div className="flex items-center justify-between border-t border-border px-4 py-2.5 meta-sm text-muted-foreground">
         <span>↑↓ traverse · ↵ engage · esc close · ? manual</span>
         <span aria-hidden="true">⌘K</span>
       </div>
@@ -367,7 +367,7 @@ export function CommandPalette() {
 
 function GroupLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="meta-sm text-muted-foreground/80">
+    <span className="meta-sm text-muted-foreground">
       {children}
     </span>
   );
@@ -377,7 +377,7 @@ function Kbd({ children }: { children: ReactNode }) {
   return (
     <span
       aria-hidden="true"
-      className="rounded border border-border bg-background/60 px-1.5 py-0.5 meta-xs text-muted-foreground/80"
+      className="rounded border border-border bg-background/60 px-1.5 py-0.5 meta-xs text-muted-foreground"
     >
       {children}
     </span>

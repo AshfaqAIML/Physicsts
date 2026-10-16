@@ -33,7 +33,7 @@ export default function NotFound() {
         </Link>
       </div>
 
-      <p className="mt-14 flex items-center gap-2 eyebrow text-muted-foreground/60">
+      <p className="mt-14 flex items-center gap-2 eyebrow text-muted-foreground">
         <Orbit className="size-3.5" aria-hidden="true" />
         The Physicist · single-world line
       </p>

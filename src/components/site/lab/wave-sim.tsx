@@ -683,9 +683,9 @@ export function WaveSim({
 
       <div className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="meta-sm text-muted-foreground">
+          <h3 className="meta-sm text-muted-foreground">
             Controls
-          </h4>
+          </h3>
 
           <div className="mt-5 space-y-5">
             <PresetChips
@@ -818,9 +818,9 @@ export function WaveSim({
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="meta-sm text-muted-foreground">
+          <h3 className="meta-sm text-muted-foreground">
             Readout
-          </h4>
+          </h3>
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-xs tabular-nums">
             <dt className="text-muted-foreground">time t</dt>
             <dd className="text-right" ref={(el) => { readout.current.t = el; }}>—</dd>
@@ -841,9 +841,9 @@ export function WaveSim({
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="meta-sm text-muted-foreground">
+          <h3 className="meta-sm text-muted-foreground">
             How it works
-          </h4>
+          </h3>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             The wavefunction is advanced by the Crank–Nicolson method — an
             implicit, unitary integrator, so probability is conserved to

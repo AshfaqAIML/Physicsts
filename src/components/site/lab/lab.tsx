@@ -230,6 +230,7 @@ export function PhysicsLab() {
       <div className="shell">
         <SectionHeading
           index="06"
+          headingId="lab-heading"
           eyebrow="Interactive Laboratory"
           title="Touch the Mathematics."
           lede="Three working instruments — deflect starlight through a gravitational lens, set a two-body system in motion, or watch a quantum wave packet tunnel through a wall it classically cannot climb."
@@ -283,9 +284,9 @@ export function PhysicsLab() {
               <LensingSim onReport={reportLensing} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                  <h4 className="meta-sm text-muted-foreground">
+                  <h3 className="meta-sm text-muted-foreground">
                     Mathematics
-                  </h4>
+                  </h3>
                   <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
                     <p>
                       A point mass deflects a light ray by an angle inversely
@@ -321,9 +322,9 @@ export function PhysicsLab() {
 
                 <div className="flex flex-col gap-6">
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="meta-sm text-muted-foreground">
+                    <h3 className="meta-sm text-muted-foreground">
                       What to try
-                    </h4>
+                    </h3>
                     <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
                       <li className="flex gap-3">
                         <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
@@ -340,9 +341,9 @@ export function PhysicsLab() {
                     </ul>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="meta-sm text-muted-foreground">
+                    <h3 className="meta-sm text-muted-foreground">
                       Assumptions
-                    </h4>
+                    </h3>
                     <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
                       Thin-lens, point-mass, small-angle approximation. Rays are
                       traced through the lens equation, not integrated as null
@@ -358,9 +359,9 @@ export function PhysicsLab() {
               <OrbitsSim onReport={reportOrbits} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                  <h4 className="meta-sm text-muted-foreground">
+                  <h3 className="meta-sm text-muted-foreground">
                     Mathematics
-                  </h4>
+                  </h3>
                   <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
                     <p>
                       The two-body problem reduces, in the relative
@@ -410,9 +411,9 @@ export function PhysicsLab() {
 
                 <div className="flex flex-col gap-6">
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="meta-sm text-muted-foreground">
+                    <h3 className="meta-sm text-muted-foreground">
                       What to try
-                    </h4>
+                    </h3>
                     <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
                       <li className="flex gap-3">
                         <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
@@ -437,9 +438,9 @@ export function PhysicsLab() {
                     </ul>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="meta-sm text-muted-foreground">
+                    <h3 className="meta-sm text-muted-foreground">
                       Assumptions
-                    </h4>
+                    </h3>
                     <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
                       Newtonian point-mass gravity only — no relativistic
                       precession (Mercury’s famous 43″ per century is absent
@@ -461,9 +462,9 @@ export function PhysicsLab() {
               <WaveSim onReport={reportWave} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                  <h4 className="meta-sm text-muted-foreground">
+                  <h3 className="meta-sm text-muted-foreground">
                     Mathematics
-                  </h4>
+                  </h3>
                   <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
                     <p>
                       Everything here follows from one equation — the
@@ -499,9 +500,9 @@ export function PhysicsLab() {
 
                 <div className="flex flex-col gap-6">
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="meta-sm text-muted-foreground">
+                    <h3 className="meta-sm text-muted-foreground">
                       What to try
-                    </h4>
+                    </h3>
                     <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
                       <li className="flex gap-3">
                         <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
@@ -521,9 +522,9 @@ export function PhysicsLab() {
                     </ul>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="meta-sm text-muted-foreground">
+                    <h3 className="meta-sm text-muted-foreground">
                       Assumptions
-                    </h4>
+                    </h3>
                     <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
                       One non-relativistic particle in one dimension, static
                       barrier. The integration is unitary (Crank–Nicolson);

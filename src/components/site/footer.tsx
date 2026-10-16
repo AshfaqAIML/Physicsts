@@ -29,7 +29,7 @@ export function Footer() {
             <p className="mt-4 max-w-xs font-serif text-base italic leading-relaxed text-muted-foreground">
               “{site.motto}”
             </p>
-            <p className="mt-6 meta-sm text-muted-foreground/60">
+            <p className="mt-6 meta-sm text-muted-foreground">
               {site.observatoryNote}
             </p>
           </div>
@@ -83,10 +83,10 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-6 sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <p className="meta-sm text-muted-foreground/70">
+          <p className="meta-sm text-muted-foreground">
             © {new Date().getFullYear()} {site.name} · built with curiosity
           </p>
-          <p className="meta-sm text-muted-foreground/50">
+          <p className="meta-sm text-muted-foreground">
             c² = 299 792 458 m/s · exact by definition
           </p>
         </div>

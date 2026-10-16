@@ -23,7 +23,7 @@ export function MotionToggle() {
           : "Calm the universe — reduce motion"
       }
       title={reduced ? "Restore motion (M)" : "Calm the universe (M)"}
-      className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="hit-target inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       {/* Placeholder until hydrated — avoids flashing the wrong icon */}
       {ready ? (

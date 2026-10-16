@@ -14,6 +14,7 @@ export function SectionHeading({
   lede,
   meta,
   align = "left",
+  headingId,
   className,
 }: {
   index: string;
@@ -22,6 +23,10 @@ export function SectionHeading({
   lede?: string;
   meta?: string;
   align?: "left" | "center";
+  /** The id the section's aria-labelledby points at — every section
+      passes the id its own <section aria-labelledby> references, so
+      screen readers get a named region and axe sees valid wiring. */
+  headingId?: string;
   className?: string;
 }) {
   return (
@@ -41,13 +46,13 @@ export function SectionHeading({
               aria-hidden="true"
               className="hidden h-px max-w-24 flex-1 bg-gradient-to-r from-border to-transparent lg:block"
             />
-            <span className="hidden meta-xs text-muted-foreground/60 lg:block">
+            <span className="hidden meta-xs text-muted-foreground lg:block">
               {meta}
             </span>
           </>
         ) : null}
       </div>
-      <h2 className="type-h2 mt-5 text-balance text-foreground">
+      <h2 id={headingId} className="type-h2 mt-5 text-balance text-foreground">
         {title}
       </h2>
       {lede ? (
