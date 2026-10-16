@@ -296,6 +296,283 @@
     writing-mode: vertical-rl;
   }
 
+  /* ================================================================
+     DESIGN SYSTEM — role classes
+     The site's editorial grammar, defined once. Components consume
+     roles; they do not hand-assemble sizes, tracking, or spacing.
+
+     TYPE   .type-display .type-h2 .type-h3-feature .type-h3 .type-folio
+            .type-leaf
+     META   .eyebrow .eyebrow-wide .meta-sm .meta-xs .meta-num .kbd
+     LAYOUT .shell .section-pad .section-flow
+     ACTION .btn-key (+ label/glyph) .chip-btn (+ --dashed --block) .tag
+     PLATES .plate-strip .plate-box .equation-plate
+
+     Focus convention (Tailwind utilities at the element):
+     compact controls → focus-visible:outline-offset-2,
+     large surfaces   → focus-visible:outline-offset-4.
+     Muted text opacity tiers: /50 ghost · /60 soft · /70 standard · /80 strong.
+
+     Fluid sizes use clamp() with the 375px mobile floor in mind.
+     ================================================================ */
+
+  /* ---- Type scale (fluid editorial serif) ---- */
+  .type-display {
+    font-family: var(--font-instrument), ui-serif, Georgia, serif;
+    font-size: clamp(2.6rem, 1.8rem + 3.2vw, 4.5rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+  }
+  .type-h2 {
+    font-family: var(--font-instrument), ui-serif, Georgia, serif;
+    font-size: clamp(1.875rem, 1.3rem + 2.3vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+  }
+  .type-h3-feature {
+    font-family: var(--font-instrument), ui-serif, Georgia, serif;
+    font-size: clamp(1.75rem, 1.45rem + 1.3vw, 2.35rem);
+    line-height: 1.12;
+  }
+  .type-h3 {
+    font-family: var(--font-instrument), ui-serif, Georgia, serif;
+    font-size: clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem);
+    line-height: 1.18;
+  }
+  .type-folio {
+    font-family: var(--font-instrument), ui-serif, Georgia, serif;
+    font-size: clamp(2rem, 1.7rem + 1.1vw, 2.6rem);
+    line-height: 1;
+  }
+  /* Leaf body copy — the 15px reading size for spread/ledger text */
+  .type-leaf {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+  }
+
+  /* ---- Meta roles (mono micro-typography) ---- */
+  .eyebrow {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+  }
+  /* Ceremonial openings — hero kicker, scroll cue */
+  .eyebrow-wide {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+  .meta-sm {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1.7;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .meta-xs {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 9px;
+    line-height: 1.7;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  /* Numeric readouts — tabular, sentence case */
+  .meta-num {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Keycap — keyboard affordances */
+  .kbd {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklab, var(--background) 65%, transparent);
+    padding: 0.1875rem 0.375rem;
+  }
+
+  /* ---- Layout roles ---- */
+  .shell {
+    margin-inline: auto;
+    max-width: 80rem;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .shell {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .shell {
+      padding-inline: 2rem;
+    }
+  }
+  .section-pad {
+    scroll-margin-top: 6rem;
+    padding-block: 6rem;
+  }
+  @media (min-width: 640px) {
+    .section-pad {
+      padding-block: 8rem;
+    }
+  }
+  /* The heading → content rhythm */
+  .section-flow {
+    margin-top: 3.5rem;
+  }
+  @media (min-width: 1024px) {
+    .section-flow {
+      margin-top: 4rem;
+    }
+  }
+
+  /* ---- Actions ---- */
+  /* The instrument key — the one primary action */
+  .btn-key {
+    display: inline-flex;
+    align-items: stretch;
+    height: 3rem;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transition:
+      box-shadow 0.3s ease,
+      transform 0.3s ease;
+  }
+  .btn-key:hover {
+    box-shadow:
+      0 14px 24px -6px rgb(0 0 0 / 0.14),
+      0 4px 8px -4px rgb(0 0 0 / 0.1);
+  }
+  .dark .btn-key:hover {
+    box-shadow:
+      0 14px 24px -6px color-mix(in oklab, var(--photon) 25%, transparent),
+      0 4px 8px -4px color-mix(in oklab, var(--photon) 14%, transparent);
+  }
+  .btn-key:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+  .btn-key:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 4px;
+  }
+  .btn-key-label {
+    display: flex;
+    align-items: center;
+    padding-inline: 1.5rem;
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .btn-key-glyph {
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+    border-left: 1px solid
+      color-mix(in oklab, var(--primary-foreground) 15%, transparent);
+    transition: background-color 0.3s ease;
+  }
+  .btn-key:hover .btn-key-glyph,
+  .btn-key:focus-visible .btn-key-glyph {
+    background: color-mix(in oklab, var(--primary-foreground) 10%, transparent);
+  }
+
+  /* Hairline chip — quiet secondary actions (print chips, tool buttons) */
+  .chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.375rem 0.75rem;
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    transition:
+      border-color 0.3s ease,
+      color 0.3s ease,
+      background-color 0.3s ease;
+  }
+  .chip-btn:hover {
+    border-color: color-mix(in oklab, var(--photon) 50%, transparent);
+    color: var(--foreground);
+  }
+  .chip-btn:active {
+    border-color: color-mix(in oklab, var(--photon) 30%, transparent);
+  }
+  .chip-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .chip-btn--dashed {
+    border-style: dashed;
+  }
+  .chip-btn--block {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    font-size: 11px;
+  }
+
+  /* Status pill — example/placeholder honesty markers */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.125rem 0.5rem;
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 9px;
+    line-height: 1.6;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .tag--dashed {
+    border-style: dashed;
+  }
+
+  /* ---- Plates (scientific content framing) ---- */
+  /* Strip — an equation band inside a card */
+  .plate-strip {
+    border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    padding-block: 1rem;
+  }
+  /* Box — an equation plate on an index row */
+  .plate-box {
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    padding: 0.875rem 1rem;
+    text-align: center;
+  }
+
   /* Display equations framed as instrument plates — fine plotting grid
      behind the mathematics, register-mark corner ticks in photon cyan.
      On hover the registers brighten, like an instrument waking up. */
@@ -492,6 +769,8 @@
   .bg-chart-grid,
   .bg-plot-grid,
   .equation-plate,
+  .plate-strip,
+  .plate-box,
   .grain::after,
   .glass-panel {
     background: transparent !important;

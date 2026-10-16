@@ -675,7 +675,7 @@ export function WaveSim({
             </button>
           )}
         </div>
-        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 meta-sm text-muted-foreground">
           <span>Fig. L-3 · Wave packet · Crank–Nicolson</span>
           <span className="tabular-nums">ħ = m = 1 · dt = {DT}</span>
         </figcaption>
@@ -683,7 +683,7 @@ export function WaveSim({
 
       <div className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <h4 className="meta-sm text-muted-foreground">
             Controls
           </h4>
 
@@ -818,7 +818,7 @@ export function WaveSim({
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <h4 className="meta-sm text-muted-foreground">
             Readout
           </h4>
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-xs tabular-nums">
@@ -833,7 +833,7 @@ export function WaveSim({
             <dt className="text-muted-foreground">absorbed</dt>
             <dd className="text-right" ref={(el) => { readout.current.A = el; }}>—</dd>
           </dl>
-          <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             T compares the measured packet transmission with the plane-wave
             value — a broad packet is a superposition of energies, so the two
             need not agree exactly. That gap is physics, not error.
@@ -841,7 +841,7 @@ export function WaveSim({
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <h4 className="meta-sm text-muted-foreground">
             How it works
           </h4>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">

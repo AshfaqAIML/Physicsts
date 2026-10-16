@@ -48,7 +48,7 @@ export default function Home() {
           <p className="font-serif text-2xl leading-tight text-black">
             The Physicist — Portfolio
           </p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-black/70">
+          <p className="mt-1 meta-sm text-black/70">
             Physics · Mathematics · The Universe · Printed from the site
           </p>
         </div>

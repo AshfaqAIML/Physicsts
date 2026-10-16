@@ -300,7 +300,7 @@ export function QuoteCopy({
         aria-label="Selected passage actions"
         data-print="hide"
         style={{ top: `${anchor.top}px`, left: `${anchor.left}px` }}
-        className="absolute z-30 flex -translate-x-1/2 flex-col whitespace-nowrap overflow-hidden rounded-xl border border-photon/40 bg-card/95 font-mono text-[10px] uppercase tracking-[0.16em] text-foreground shadow-lg backdrop-blur-sm transition-all duration-200 focus-within:border-photon hover:border-photon sm:flex-row sm:rounded-full"
+        className="absolute z-30 flex -translate-x-1/2 flex-col whitespace-nowrap overflow-hidden rounded-xl border border-photon/40 bg-card/95 meta-sm text-foreground shadow-lg backdrop-blur-sm transition-all duration-200 focus-within:border-photon hover:border-photon sm:flex-row sm:rounded-full"
       >
         <button
           type="button"

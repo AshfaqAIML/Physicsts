@@ -93,7 +93,7 @@ export function Lexicon() {
       >
         {/* Header — eyebrow, field-guide title, search, category chips */}
         <div className="shrink-0 border-b border-border px-6 pb-5 pt-6">
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
+          <p className="meta-sm text-photon">
             The Lexicon — {lexiconTerms.length} Terms
           </p>
           <DialogTitle className="mt-2 text-left font-serif text-2xl leading-tight text-balance sm:text-3xl">
@@ -132,10 +132,10 @@ export function Lexicon() {
                 aria-pressed={category === c}
                 onClick={() => setCategory(c)}
                 className={cn(
-                  "rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  "rounded-full border px-3 py-1 meta-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   category === c
                     ? "border-photon/60 bg-photon/10 text-foreground"
-                    : "border-border text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground"
+                    : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
                 )}
               >
                 {c}
@@ -150,7 +150,7 @@ export function Lexicon() {
             <p
               role="status"
               aria-live="polite"
-              className="py-12 text-center font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground"
+              className="py-12 text-center eyebrow text-muted-foreground"
             >
               No terms in this light cone.
             </p>
@@ -164,7 +164,7 @@ export function Lexicon() {
         </div>
 
         {/* Footer microcopy */}
-        <div className="shrink-0 border-t border-border px-6 py-3 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+        <div className="shrink-0 border-t border-border px-6 py-3 meta-xs text-muted-foreground/70">
           Definitions are standard physics — see the notebook essays for worked
           ideas.
         </div>
@@ -197,7 +197,7 @@ function TermRow({
     <article className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 py-6 sm:gap-x-8">
       <span
         aria-hidden="true"
-        className="pt-1 font-mono text-[11px] tabular-nums text-muted-foreground/60"
+        className="pt-1 meta-num text-muted-foreground/60"
       >
         {String(index + 1).padStart(2, "0")}
       </span>
@@ -207,7 +207,7 @@ function TermRow({
           <h4 className="font-serif text-xl leading-snug text-foreground transition-colors hover:text-photon sm:text-2xl">
             <Highlighted text={term.term} words={words} />
           </h4>
-          <span className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground/80">
+          <span className="rounded-full border border-border/70 px-2 py-0.5 meta-xs text-muted-foreground/80">
             {term.category}
           </span>
         </div>
@@ -220,7 +220,7 @@ function TermRow({
           <div className="mx-auto mt-4 w-fit max-w-full overflow-x-auto rounded-md border border-border/70 bg-background/60 px-4 py-2.5 text-center text-foreground/90 [&_.katex-display]:my-0.5">
             <Tex math={term.formula} display ariaLabel={term.formulaLabel ?? term.term} />
             {term.formulaLabel ? (
-              <p className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+              <p className="mt-1.5 meta-xs text-muted-foreground/70">
                 {term.formulaLabel}
               </p>
             ) : null}
@@ -228,12 +228,12 @@ function TermRow({
         ) : null}
 
         {related.length > 0 ? (
-          <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5 font-mono text-[10px] uppercase tracking-[0.16em]">
+          <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5 meta-sm">
             <span className="text-muted-foreground/60">→ See also:</span>
             {related.map((r, i) => (
               <span key={r.id} className="flex items-baseline gap-1.5">
                 {i > 0 ? (
-                  <span aria-hidden="true" className="text-muted-foreground/40">
+                  <span aria-hidden="true" className="text-muted-foreground/50">
                     ·
                   </span>
                 ) : null}

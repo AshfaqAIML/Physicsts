@@ -13,7 +13,7 @@ export function PrintButton() {
       type="button"
       onClick={() => window.print()}
       data-print="hide"
-      className="inline-flex min-w-40 items-center justify-center gap-2 rounded-md border border-border px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+      className="inline-flex min-w-40 items-center justify-center gap-2 rounded-md border border-border px-3.5 py-2 meta-sm text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
       aria-label="Print this page or save it as a PDF"
     >
       <Printer className="size-3.5" aria-hidden="true" />

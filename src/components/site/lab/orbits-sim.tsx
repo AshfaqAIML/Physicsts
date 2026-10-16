@@ -559,7 +559,7 @@ export function OrbitsSim({
             </button>
           )}
         </div>
-        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 meta-sm text-muted-foreground">
           <span>Fig. L-2 · Two-body · Velocity-Verlet</span>
           <span className="tabular-nums">GM = 1 · dt = {DT}</span>
         </figcaption>
@@ -567,7 +567,7 @@ export function OrbitsSim({
 
       <div className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <h4 className="meta-sm text-muted-foreground">
             Controls
           </h4>
 
@@ -706,7 +706,7 @@ export function OrbitsSim({
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <h4 className="meta-sm text-muted-foreground">
             Readout
           </h4>
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-xs tabular-nums">
@@ -721,7 +721,7 @@ export function OrbitsSim({
             <dt className="text-muted-foreground">ΔE drift</dt>
             <dd className="text-right text-photon" ref={readDE}>—</dd>
           </dl>
-          <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             ΔE is the honest measure of the integrator: velocity Verlet is
             symplectic, so the drift stays bounded rather than accumulating.
           </p>

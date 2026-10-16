@@ -109,9 +109,9 @@ export function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="relative scroll-mt-24 bg-chart-grid py-24 sm:py-32"
+      className="relative section-pad bg-chart-grid"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <SectionHeading
           index="07"
           eyebrow="Contact & Collaboration"
@@ -120,12 +120,12 @@ export function Contact() {
           meta="Correspondence · open"
         />
 
-        <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-16">
+        <div className="section-flow grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-16">
           {/* Channels — only what exists, honestly */}
           <Reveal>
             <div className="space-y-6">
               <div>
-                <h3 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                <h3 className="meta-sm text-muted-foreground">
                   Channels
                 </h3>
                 <ul className="mt-4 divide-y divide-border border-y border-border">
@@ -147,7 +147,7 @@ export function Contact() {
                         ) : (
                           <span className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground/70">
                             {c.hint}
-                            <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[9px] uppercase tracking-[0.12em]">
+                            <span className="tag tag--dashed">
                               to be added
                             </span>
                           </span>
@@ -163,7 +163,7 @@ export function Contact() {
               </div>
 
               <div className="rounded-lg border border-dashed border-border p-5">
-                <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                <h4 className="meta-sm text-muted-foreground">
                   Curriculum vitae
                 </h4>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -257,7 +257,7 @@ export function Contact() {
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "font-mono text-[10px] tabular-nums",
+                      "meta-num",
                       (messageValue?.length ?? 0) > 3600
                         ? "text-amber-500"
                         : "text-muted-foreground/60"
@@ -329,7 +329,7 @@ export function Contact() {
                 </p>
               </div>
 
-              <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground/70">
+              <p className="mt-4 text-xs leading-relaxed text-muted-foreground/70">
                 Handled by this site&apos;s own backend: validated, spam-checked,
                 and stored privately. No third-party trackers, no newsletter,
                 no follow-up you did not ask for.

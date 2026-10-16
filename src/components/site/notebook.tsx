@@ -185,9 +185,9 @@ export function Notebook() {
     <section
       id="notes"
       aria-labelledby="notes-heading"
-      className="relative scroll-mt-24 py-24 sm:py-32"
+      className="relative section-pad"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <SectionHeading
           index="05"
           eyebrow="Scientific Notebook"
@@ -205,14 +205,14 @@ export function Notebook() {
               className="group flex w-full flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border border-dashed border-border px-5 py-4 text-left transition-colors hover:border-photon/50 hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               aria-label={`Resume reading the essay: ${resumeNote.title}`}
             >
-              <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">
+              <span className="flex items-center gap-2 meta-sm text-muted-foreground/80">
                 <BookOpen className="size-3 text-photon/70" aria-hidden="true" />
                 Last read
               </span>
               <span className="font-serif text-base text-foreground/90 transition-colors group-hover:text-photon sm:text-lg">
                 {resumeNote.title}
               </span>
-              <span className="ml-auto hidden items-center gap-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60 transition-colors group-hover:text-photon sm:flex">
+              <span className="ml-auto hidden items-center gap-1 meta-sm text-muted-foreground/60 transition-colors group-hover:text-photon sm:flex">
                 Resume
                 <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
               </span>
@@ -235,10 +235,10 @@ export function Notebook() {
                   aria-pressed={category === c}
                   onClick={() => setCategory(c)}
                   className={cn(
-                    "rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    "rounded-full border px-3.5 py-1.5 meta-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                     category === c
                       ? "border-photon/60 bg-photon/10 text-foreground"
-                      : "border-border text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground"
+                      : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
                   )}
                 >
                   {c}
@@ -249,7 +249,7 @@ export function Notebook() {
               type="button"
               onClick={openRandomNote}
               title="Open a random readable essay — prefers the current filter"
-              className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-photon/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:ml-auto"
+              className="chip-btn chip-btn--dashed rounded-full px-3.5 py-1.5 sm:ml-auto"
             >
               <Shuffle className="size-3" aria-hidden="true" />
               Random page
@@ -280,7 +280,7 @@ export function Notebook() {
                       : "cursor-default opacity-60"
                   )}
                 >
-                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+                  <span className="meta-num text-muted-foreground/60">
                     {String(i + 1).padStart(2, "0")}
                   </span>
 
@@ -296,8 +296,8 @@ export function Notebook() {
                     <span className="mt-1.5 block max-w-2xl text-sm leading-relaxed text-muted-foreground">
                       {note.excerpt}
                     </span>
-                    <span className="mt-3 flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
-                      <span className="rounded-full border border-border/70 px-2 py-0.5">
+                    <span className="mt-3 flex flex-wrap items-center gap-3 meta-sm text-muted-foreground/70">
+                      <span className="tag">
                         {note.category}
                       </span>
                       {readable ? (
@@ -319,11 +319,11 @@ export function Notebook() {
                       "self-center",
                       readable
                         ? "text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
-                        : "text-muted-foreground/30"
+                        : "text-muted-foreground/50"
                     )}
                     aria-hidden="true"
                   >
-                    {readable ? <ArrowUpRight className="size-5" /> : <span className="font-mono text-[10px]">—</span>}
+                    {readable ? <ArrowUpRight className="size-5" /> : <span className="meta-num">—</span>}
                   </span>
                 </button>
               </Reveal>
@@ -456,7 +456,7 @@ function ReadingView({
     <div className="reading-stage grid h-[92vh] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
       {/* Table of contents */}
       <aside className="hidden flex-col border-r border-border bg-card/60 py-6 lg:flex">
-        <p className="flex items-center gap-2 px-6 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+        <p className="flex items-center gap-2 px-6 meta-sm text-muted-foreground">
           <ListTree className="size-3.5" aria-hidden="true" /> Contents
         </p>
         <nav aria-label="Table of contents" className="reading-toc mt-5 flex-1 overflow-y-auto px-3">
@@ -477,7 +477,7 @@ function ReadingView({
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span className="mr-2 font-mono text-[10px] text-photon">
+                  <span className="mr-2 meta-num text-photon">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   {s.heading.replace(/^\d+\s·\s/, "")}
@@ -486,7 +486,7 @@ function ReadingView({
             ))}
           </ol>
         </nav>
-        <p className="mt-4 border-t border-border px-6 pt-4 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+        <p className="mt-4 border-t border-border px-6 pt-4 meta-xs text-muted-foreground/70">
           {essay.readingMinutes} min read · {essay.date}
         </p>
       </aside>
@@ -510,7 +510,7 @@ function ReadingView({
             The Physicist's Notebook · an essay printed from the companion
             site · <span data-essay-print="url" />
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
+          <p className="meta-sm text-photon">
             Scientific Notebook · {note.category}
           </p>
           <DialogTitle className="mt-2 max-w-2xl font-serif text-2xl leading-tight text-balance sm:text-3xl">
@@ -520,7 +520,7 @@ function ReadingView({
             {essay.dek}
           </DialogDescription>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+            <p className="meta-xs text-muted-foreground/70">
               {essay.readingMinutes} min read · {essay.date} ·{" "}
               <span aria-hidden="true" data-essay-print="hide" className="tabular-nums">
                 <span ref={percentRef} className="text-photon">
@@ -578,7 +578,7 @@ function ReadingView({
 
           {/* References */}
           <section className="mt-16 border-t border-border pt-8" aria-labelledby="refs-h">
-            <h2 id="refs-h" className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            <h2 id="refs-h" className="meta-sm text-muted-foreground">
               References
             </h2>
             <ol className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
@@ -597,7 +597,7 @@ function ReadingView({
             <AskAssistant note={note} />
           </div>
 
-          <p className="mt-10 font-mono text-[9px] uppercase leading-relaxed tracking-[0.16em] text-muted-foreground/60">
+          <p className="mt-10 meta-xs text-muted-foreground/60">
             Example essay · placeholder content until replaced by genuine
             writing
           </p>
@@ -611,13 +611,13 @@ function ReadingView({
               className="group mt-8 flex w-full items-center justify-between gap-4 rounded-lg border border-border bg-card p-5 text-left transition-colors hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-6"
             >
               <span className="min-w-0">
-                <span className="block font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                <span className="block meta-sm text-muted-foreground">
                   Next in the notebook
                 </span>
                 <span className="mt-2 block truncate font-serif text-lg leading-snug text-foreground sm:text-xl">
                   {nextNote.title}
                 </span>
-                <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                <span className="mt-1.5 block meta-xs text-muted-foreground/70">
                   {nextNote.category} · {nextNote.essay!.readingMinutes} min
                   read
                 </span>
@@ -697,7 +697,7 @@ function CopyLinkButton({ note }: { note: Note }) {
       type="button"
       onClick={handleCopy}
       aria-label="Copy a link to this essay"
-      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 meta-sm text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       {copied ? (
         <Check className="size-3" aria-hidden="true" />

@@ -77,9 +77,9 @@ export function ResearchInterests() {
     <section
       id="research"
       aria-labelledby="research-heading"
-      className="relative scroll-mt-24 bg-chart-grid py-24 sm:py-32"
+      className="relative section-pad bg-chart-grid"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <SectionHeading
           index="02"
           eyebrow="Research Interests"
@@ -91,7 +91,7 @@ export function ResearchInterests() {
         {/* The index — a journal table of contents, not a card grid.
             Each direction is a full-width entry: folio numeral, the
             words, the equation set on its plate, and a cue. */}
-        <div className="mt-14 border-t border-border lg:mt-16">
+        <div className="section-flow border-t border-border">
           {researchAreas.map((area, i) => (
             <Reveal key={area.id} delay={0.04 * i}>
               <button
@@ -104,7 +104,7 @@ export function ResearchInterests() {
                 {/* Folio numeral */}
                 <span
                   aria-hidden="true"
-                  className="font-serif text-[2rem] leading-none text-muted-foreground/35 transition-all duration-300 group-hover:text-photon lg:text-[2.6rem]"
+                  className="type-folio text-muted-foreground/50 transition-all duration-300 group-hover:text-photon"
                 >
                   {area.index}
                 </span>
@@ -112,10 +112,10 @@ export function ResearchInterests() {
                 {/* The words */}
                 <span className="block">
                   <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <span className="font-serif text-2xl leading-tight text-foreground sm:text-[1.7rem]">
+                    <span className="type-h3 text-foreground">
                       {area.title}
                     </span>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">
+                    <span className="meta-sm text-muted-foreground/80">
                       {area.tagline}
                     </span>
                   </span>
@@ -125,13 +125,13 @@ export function ResearchInterests() {
                 </span>
 
                 {/* The equation, set on its plate */}
-                <span className="block overflow-x-auto border border-border/70 bg-plot-grid px-4 py-3.5 text-center text-foreground/85 transition-colors duration-300 group-hover:border-photon/40">
+                <span className="plate-box block overflow-x-auto text-foreground/85 transition-colors duration-300 group-hover:border-photon/40">
                   <Tex math={area.equation} ariaLabel={area.equationLabel} />
                 </span>
 
                 {/* Cue */}
                 <ArrowUpRight
-                  className="hidden size-4 text-muted-foreground/40 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon lg:block"
+                  className="hidden size-4 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon lg:block"
                   aria-hidden="true"
                 />
               </button>
@@ -140,7 +140,7 @@ export function ResearchInterests() {
         </div>
 
         <Reveal delay={0.15} className="mt-10">
-          <p className="text-center font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground/70">
+          <p className="text-center meta-sm text-muted-foreground/70">
             These are directions of study and fascination — not claimed
             specialisations.
           </p>
@@ -161,20 +161,20 @@ export function ResearchInterests() {
                   The Physicist · Research Area · printed from the companion site ·{" "}
                   <span data-area-print="url" />
                 </p>
-                <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
+                <p className="flex items-center gap-3 meta-sm text-photon">
                   <span>{openArea.index}</span>
                   <span aria-hidden="true" className="h-px w-8 bg-border" />
                   <span>Area of Interest</span>
                 </p>
-                <DialogTitle className="mt-3 font-serif text-3xl leading-tight">
+                <DialogTitle className="type-h3-feature mt-3 text-left">
                   {openArea.title}
                 </DialogTitle>
-                <DialogDescription className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em]">
+                <DialogDescription className="mt-2 eyebrow">
                   {openArea.tagline}
                 </DialogDescription>
                 {/* Desk line — honest counts plus the paper deed */}
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                  <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                  <p className="meta-xs text-muted-foreground/70">
                     {openArea.concepts.length} related concepts · {openArea.reading.length} on the shelf
                   </p>
                   <button
@@ -183,7 +183,7 @@ export function ResearchInterests() {
                     onClick={handlePrintArea}
                     aria-label="Print this research area as an archival offprint"
                     data-print="hide"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="chip-btn"
                   >
                     <Printer className="size-3" aria-hidden="true" />
                     Print
@@ -194,7 +194,7 @@ export function ResearchInterests() {
               <div className="mt-6 space-y-8">
                 <div className="equation-plate mt-2 text-center text-foreground/90">
                   <Tex display math={openArea.equation} ariaLabel={openArea.equationLabel} />
-                  <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  <p className="mt-3 meta-sm text-muted-foreground">
                     {openArea.equationLabel}
                   </p>
                 </div>
@@ -202,7 +202,7 @@ export function ResearchInterests() {
                 <p className="leading-[1.85] text-muted-foreground">{openArea.detail}</p>
 
                 <div>
-                  <h4 className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <h4 className="flex items-center gap-2 meta-sm text-muted-foreground">
                     <Tag className="size-3.5" aria-hidden="true" /> Related concepts
                   </h4>
                   <ul className="mt-3 flex flex-wrap gap-2">
@@ -221,7 +221,7 @@ export function ResearchInterests() {
                 </div>
 
                 <div>
-                  <h4 className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <h4 className="flex items-center gap-2 meta-sm text-muted-foreground">
                     <BookOpen className="size-3.5" aria-hidden="true" /> On the shelf
                   </h4>
                   <ul className="mt-3 divide-y divide-border border-y border-border">

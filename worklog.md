@@ -1816,3 +1816,83 @@ Stage Summary:
 - Next-phase candidates: almanac "on this day" deep-links; a fourth lab
   instrument; apply the feature-plate pattern to one notebook essay;
   real content replacement (name/portrait/channels/CV) when owner is ready.
+
+---
+Task ID: R12 (design-system round — main agent)
+Agent: main agent (user-directed design-system architecture)
+Task: R12 — "act as a principal UI designer and design-system architect… create a coherent, reusable design system throughout the application." Delivered as implemented tokens + a ~270-replacement refactor across every component, not a written spec. Trace 1a14422da35a4f11.
+
+Work Log:
+- AUDIT (numbers that justified the system): 6 arbitrary micro sizes
+  (8/9/9.5/10/11/15px, 156 uses), 10 distinct tracking values, 9
+  muted-foreground opacity tiers, 3 heading→content spacings (mt-12/14/16),
+  per-component button/pill/plate class strings.
+- TOKENS — new "DESIGN SYSTEM" section in globals.css @layer utilities:
+  · TYPE (fluid clamp serif): .type-display (2.6→4.5rem) .type-h2
+    (1.875→3rem) .type-h3-feature (1.75→2.35rem) .type-h3 (1.4→1.7rem)
+    .type-folio (2→2.6rem) .type-leaf (15px/1.75)
+  · META (mono): .eyebrow (11px/0.26em) .eyebrow-wide (11px/0.32em —
+    ceremonial: hero kicker + scroll cue ONLY) .meta-sm (10px/0.2em)
+    .meta-xs (9px/0.16em) .meta-num (10px tabular) .kbd (keycap)
+  · LAYOUT: .shell (max-w-7xl + responsive px) .section-pad (scroll-mt +
+    py 6/8rem) .section-flow (mt 3.5/4rem)
+  · ACTION: .btn-key (+ -label/-glyph, the ONE primary key) .chip-btn
+    (+ --dashed --block) .tag (+ --dashed status pills)
+  · PLATES: .plate-strip (card equation band) .plate-box (row equation
+    plate) — both print-neutralised.
+  Documented conventions in the CSS header comment: focus offsets
+  (2 compact / 4 surfaces), opacity tiers (/50 ghost /60 soft /70
+  standard /80 strong).
+- SWEEP: two python regex passes (~270 replacements) mapping every
+  hand-assembled mono string to role classes; px anomalies normalised
+  (8px→9px meta-xs a11y bump; 9.5px→9; 11px sans smallprint→text-xs;
+  15px→type-leaf). Keycaps unified to .kbd (4 spots). Layout strings
+  → .shell (7) .section-pad (7) .section-flow (5: about/research/
+  projects/publications/contact).
+- HAND-EDITS: hero (type-display + btn-key markup + eyebrow-wide cue);
+  section-heading (type-h2, meta-xs running-head, eyebrow at 0.26em);
+  research (folio/type-h3/plate-box/type-h3-feature dialog title);
+  projects (feature+card titles, plate-strip, status pills → .tag,
+  repo link → chip-btn); publications (feature headline); navigation
+  (eyebrow nav links, chip-btn--dashed--block sheet buttons, .kbd ⌘K);
+  about/notebook tags (placeholder pill, category chip, random-essay
+  pill → chip-btn--dashed rounded-full).
+- OPACITY TIER consolidation: /30/35/40/45→/50 (8), /55→/60, /85→/80.
+  Final inventory EXACTLY 4 tiers: /50 ×13, /60 ×14, /70 ×29, /80 ×11.
+- Deliberate exceptions (documented): companion-panel chat transcript
+  mono voice, research-dialog concept chips (sentence case), contact
+  channel values, print-only pt sizes. shadcn Button continues to own
+  toggles + form submit (theme controls unchanged, next-themes persists).
+- VERIFIED: lint 0, tsc 0 under src/, DOM audit — 7 .type-h2, 10
+  .type-h3, 2 feature, 6 folio, 23 eyebrow + 1 wide, 73 meta-sm,
+  23 meta-xs, 30 meta-num, 3 kbd, 7 shell/pad, 5 flow, 22 tags,
+  4 strips, 6 boxes; 0 overflow at 1440 AND at 375 (every section
+  probed individually); fluid floors confirmed (h1 41.6px, h2 30px at
+  375); interactions green (research row + chip dialog, project dialog,
+  L lexicon, T theme round-trip, #note- deep link open + hash clear,
+  contact happy path → toast, mobile sheet opens with chip buttons);
+  0 failed resources, console clean, dev.log clean.
+- VLM: real hero (after catching that my "hero" screenshot was actually
+  contact/footer from stale scroll — re-took at scrollTop 0) graded
+  A+/A/A-; dark research A; light-mode plates/ledger/tags "no critical
+  contrast bugs". VLM claims of misaligned ledger counters DISPROVEN by
+  DOM: all 7 "000" spans share right edge 1295px (shared flex end).
+  Standing rule holds: VLM needs DOM + scroll-position verification.
+
+Stage Summary:
+- The design system is real and enforced: one fluid type scale, three
+  meta roles + one ceremonial variant, one layout grammar, one primary
+  key + one chip + one tag, two plate types, four opacity tiers. New
+  sections/components should consume these classes and nothing else.
+- The system is discoverable: the CSS header comment is the spec;
+  role-class counts in the DOM are the audit (documented counts above).
+- Patterns for future rounds: (1) any new mono text = .eyebrow/.meta-sm/
+  .meta-xs/.meta-num — never hand-assemble size+tracking; (2) any new
+  secondary action = .chip-btn; (3) any new equation surface =
+  .plate-strip (inline) or .plate-box (row) or .equation-plate (display);
+  (4) headings = .type-* — no more sm:/lg: font-size stacking.
+- Known notes: companion-panel + concept chips keep their own mono
+  voice by design; VLM screenshot audits must set scroll position first.
+- Next-phase candidates: notebook essay "selected work" feature plate
+  using the 5/7 pattern; almanac "on this day" deep links; a fourth
+  lab instrument; real content replacement when the owner is ready.

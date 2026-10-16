@@ -30,7 +30,7 @@ export function PhysicsHistory() {
       className="border-t border-border"
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:gap-8 sm:px-6 lg:px-8">
-        <p className="flex shrink-0 items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+        <p className="flex shrink-0 items-center gap-2.5 meta-sm text-muted-foreground">
           <History className="size-3.5 text-photon" aria-hidden="true" />
           This month in physics history
         </p>
@@ -39,7 +39,7 @@ export function PhysicsHistory() {
           aria-live="polite"
           className="min-w-0 flex-1 sm:border-l sm:border-border sm:pl-8"
         >
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-photon">
+          <p className="eyebrow text-photon">
             {moment.date}
           </p>
           <p className="mt-1.5 font-serif text-base italic leading-relaxed text-muted-foreground sm:text-lg">
@@ -48,7 +48,7 @@ export function PhysicsHistory() {
         </div>
 
         <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-2" data-print="hide">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+          <p className="meta-sm text-muted-foreground/70">
             {monthName} · {String(index + 1).padStart(2, "0")}/
             {String(physicsHistory.length).padStart(2, "0")}
           </p>

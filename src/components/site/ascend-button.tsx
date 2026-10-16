@@ -55,7 +55,7 @@ export function AscendButton() {
       <ArrowUp className="size-4 transition-transform duration-300 group-hover:-translate-y-0.5" aria-hidden="true" />
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-5 whitespace-nowrap font-mono text-[8px] uppercase tracking-[0.24em] text-transparent transition-colors duration-300 group-hover:text-muted-foreground"
+        className="pointer-events-none absolute -bottom-5 whitespace-nowrap meta-xs text-transparent transition-colors duration-300 group-hover:text-muted-foreground"
       >
         Ascend
       </span>

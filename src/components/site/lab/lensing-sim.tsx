@@ -603,7 +603,7 @@ export function LensingSim({
             onKeyDown={onKeyDown}
           />
         </div>
-        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 meta-sm text-muted-foreground">
           <span>Fig. L-1 · Point-mass thin lens · Ray-shot</span>
           <span ref={readoutRef} className="tabular-nums" aria-live="off">
             b — · δθ —
@@ -613,7 +613,7 @@ export function LensingSim({
 
       <div className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <h4 className="meta-sm text-muted-foreground">
             Controls
           </h4>
 
@@ -683,7 +683,7 @@ export function LensingSim({
                       dirtyRef.current = true;
                     }}
                     className={cn(
-                      "rounded-md border px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      "rounded-md border px-3 py-2 eyebrow transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                       mode === m
                         ? "border-photon/60 bg-photon/10 text-foreground"
                         : "border-border text-muted-foreground hover:text-foreground"
@@ -719,7 +719,7 @@ export function LensingSim({
         </div>
 
         <div className="rounded-lg border border-border bg-card p-5">
-          <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <h4 className="meta-sm text-muted-foreground">
             How it works
           </h4>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">

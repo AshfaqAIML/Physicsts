@@ -29,14 +29,14 @@ export function Footer() {
             <p className="mt-4 max-w-xs font-serif text-base italic leading-relaxed text-muted-foreground">
               “{site.motto}”
             </p>
-            <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
+            <p className="mt-6 meta-sm text-muted-foreground/60">
               {site.observatoryNote}
             </p>
           </div>
 
           {/* Index */}
           <nav aria-label="Footer">
-            <h2 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            <h2 className="meta-sm text-muted-foreground">
               Index
             </h2>
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 md:grid-cols-1">
@@ -55,7 +55,7 @@ export function Footer() {
 
           {/* Colophon */}
           <div>
-            <h2 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            <h2 className="meta-sm text-muted-foreground">
               Colophon
             </h2>
             <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
@@ -67,7 +67,7 @@ export function Footer() {
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
                 href="#home"
-                className="inline-flex min-w-40 items-center justify-center gap-2 rounded-md border border-border px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                className="inline-flex min-w-40 items-center justify-center gap-2 rounded-md border border-border px-3.5 py-2 meta-sm text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 <ArrowUp className="size-3.5" aria-hidden="true" />
                 Back to orbit
@@ -83,10 +83,10 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-6 sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
+          <p className="meta-sm text-muted-foreground/70">
             © {new Date().getFullYear()} {site.name} · built with curiosity
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/50">
+          <p className="meta-sm text-muted-foreground/50">
             c² = 299 792 458 m/s · exact by definition
           </p>
         </div>

@@ -94,7 +94,7 @@ export function ShortcutsHelp() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="border-border bg-card/95 backdrop-blur-xl sm:max-w-md">
         <DialogHeader className="text-left">
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-photon">
+          <p className="meta-sm text-photon">
             Operating manual
           </p>
           <DialogTitle className="mt-2 font-serif text-2xl leading-tight">
@@ -132,7 +132,7 @@ export function ShortcutsHelp() {
           </ShortcutGroup>
         </div>
 
-        <p className="mt-2 border-t border-border pt-4 font-mono text-[9px] uppercase leading-relaxed tracking-[0.16em] text-muted-foreground/70">
+        <p className="mt-2 border-t border-border pt-4 meta-xs text-muted-foreground/70">
           Letter shortcuts stay silent while you are typing or when a
           dialogue is open — the stage is theirs.
         </p>
@@ -144,7 +144,7 @@ export function ShortcutsHelp() {
 function ShortcutGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
     <section aria-label={label}>
-      <h3 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+      <h3 className="meta-sm text-muted-foreground">
         {label}
       </h3>
       <ul className="mt-3 space-y-2.5">{children}</ul>
@@ -159,7 +159,7 @@ function ShortcutRow({ keys, note }: { keys: string[]; note: string }) {
         {keys.map((k) => (
           <kbd
             key={k}
-            className="rounded border border-border bg-background/70 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-foreground/90"
+            className="kbd text-foreground/90"
           >
             {k}
           </kbd>

@@ -14,9 +14,9 @@ export function About() {
     <section
       id="about"
       aria-labelledby="about-heading"
-      className="relative scroll-mt-24 py-24 sm:py-32"
+      className="relative section-pad"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <SectionHeading
           index="01"
           eyebrow="About"
@@ -25,7 +25,7 @@ export function About() {
           meta="Personal account · 1 plate"
         />
 
-        <div className="mt-16 grid gap-12 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-20">
+        <div className="section-flow grid gap-12 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-20">
           {/* Portrait plate */}
           <Reveal className="lg:sticky lg:top-28 lg:self-start">
             <figure className="relative m-0">
@@ -44,7 +44,7 @@ export function About() {
                   className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent"
                 />
               </div>
-              <figcaption className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <figcaption className="mt-3 flex items-center justify-between meta-sm text-muted-foreground">
                 <span>Plate I · Portrait (placeholder)</span>
                 <span>replace with your own</span>
               </figcaption>
@@ -53,7 +53,7 @@ export function About() {
             {/* Marginalia — a quiet scientific annotation */}
             <p
               aria-hidden="true"
-              className="mt-6 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-muted-foreground/60 lg:block"
+              className="mt-6 hidden meta-sm text-muted-foreground/60 lg:block"
             >
               {site.observatoryNote}
             </p>
@@ -71,7 +71,7 @@ export function About() {
 
             {/* Facts — placeholders, honestly labelled */}
             <Reveal delay={0.1} className="mt-14">
-              <h3 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+              <h3 className="meta-sm text-muted-foreground">
                 Details
               </h3>
               <dl className="mt-4 divide-y divide-border rounded-lg border border-border">
@@ -84,7 +84,7 @@ export function About() {
                     <dd className="flex items-center gap-2 text-sm text-foreground/90">
                       {fact.value}
                       {fact.placeholder && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+                        <span className="tag tag--dashed gap-1">
                           <Sparkles className="size-2.5" aria-hidden="true" />
                           placeholder
                         </span>
@@ -97,13 +97,13 @@ export function About() {
 
             {/* Driving questions */}
             <Reveal delay={0.15} className="mt-14">
-              <h3 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+              <h3 className="meta-sm text-muted-foreground">
                 The questions that keep me curious
               </h3>
               <ol className="mt-4 space-y-0 divide-y divide-border border-y border-border">
                 {profile.drivingQuestions.map((q, i) => (
                   <li key={i} className="flex items-baseline gap-5 py-4">
-                    <span className="font-mono text-[11px] tabular-nums text-photon">
+                    <span className="meta-num text-photon">
                       Q{String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="font-serif text-lg leading-snug text-foreground/90 sm:text-xl">
@@ -116,7 +116,7 @@ export function About() {
 
             {/* Approach */}
             <Reveal delay={0.2} className="mt-14">
-              <h3 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+              <h3 className="meta-sm text-muted-foreground">
                 How I work
               </h3>
               <div className="mt-4 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">

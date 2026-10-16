@@ -89,7 +89,7 @@ export function ShareExperimentButton({
       onClick={handleCopy}
       aria-label="Copy a link that replays this experiment"
       title="Copy a link that replays this experiment"
-      className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-3 py-1.5 meta-sm text-muted-foreground transition-colors hover:border-photon/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       {copied ? (
         <Check className="size-3 text-photon" aria-hidden="true" />

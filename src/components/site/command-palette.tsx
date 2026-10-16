@@ -142,7 +142,7 @@ export function CommandPalette() {
     >
       <CommandInput placeholder="Search the universe — sections, research, instruments…" />
       <CommandList className="max-h-[min(24rem,60vh)]">
-        <CommandEmpty className="py-10 text-center font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+        <CommandEmpty className="py-10 text-center eyebrow text-muted-foreground">
           Nothing found in this light cone.
         </CommandEmpty>
 
@@ -163,7 +163,7 @@ export function CommandPalette() {
                   <History className="size-4 text-muted-foreground" aria-hidden="true" />
                   <span className="flex-1">{note.title}</span>
                   <Kbd>RESUME</Kbd>
-                  <span aria-hidden="true" className="font-mono text-[10px] tabular-nums text-muted-foreground/70">
+                  <span aria-hidden="true" className="meta-num text-muted-foreground/70">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                 </CommandItem>
@@ -184,7 +184,7 @@ export function CommandPalette() {
               >
                 <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
                 <span className="flex-1">{item.label}</span>
-                <span aria-hidden="true" className="font-mono text-[10px] tabular-nums text-muted-foreground/70">
+                <span aria-hidden="true" className="meta-num text-muted-foreground/70">
                   {String(i + 1).padStart(2, "0")}
                 </span>
               </CommandItem>
@@ -213,7 +213,7 @@ export function CommandPalette() {
           <CommandItem value="lab share tour link all benches" onSelect={() => run(() => { window.dispatchEvent(new Event("phys:share-lab-tour")); })}>
             <Route className="size-4 text-muted-foreground" aria-hidden="true" />
             <span className="flex-1">Share the whole lab — copy a tour link</span>
-            <span aria-hidden="true" className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">3 benches</span>
+            <span aria-hidden="true" className="meta-sm text-muted-foreground/70">3 benches</span>
           </CommandItem>
         </CommandGroup>
 
@@ -233,7 +233,7 @@ export function CommandPalette() {
             >
               <Telescope className="size-4 text-muted-foreground" aria-hidden="true" />
               <span className="flex-1">{area.title}</span>
-              <span aria-hidden="true" className="font-mono text-[10px] tabular-nums text-muted-foreground/70">
+              <span aria-hidden="true" className="meta-num text-muted-foreground/70">
                 {area.index}
               </span>
             </CommandItem>
@@ -256,7 +256,7 @@ export function CommandPalette() {
             >
               <FolderGit2 className="size-4 text-muted-foreground" aria-hidden="true" />
               <span className="flex-1">{p.title}</span>
-              <span aria-hidden="true" className="font-mono text-[10px] tabular-nums text-muted-foreground/70">
+              <span aria-hidden="true" className="meta-num text-muted-foreground/70">
                 {String(i + 1).padStart(2, "0")}
               </span>
             </CommandItem>
@@ -357,7 +357,7 @@ export function CommandPalette() {
         </CommandGroup>
       </CommandList>
 
-      <div className="flex items-center justify-between border-t border-border px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+      <div className="flex items-center justify-between border-t border-border px-4 py-2.5 meta-sm text-muted-foreground/70">
         <span>↑↓ traverse · ↵ engage · esc close · ? manual</span>
         <span aria-hidden="true">⌘K</span>
       </div>
@@ -367,7 +367,7 @@ export function CommandPalette() {
 
 function GroupLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/80">
+    <span className="meta-sm text-muted-foreground/80">
       {children}
     </span>
   );
@@ -377,7 +377,7 @@ function Kbd({ children }: { children: ReactNode }) {
   return (
     <span
       aria-hidden="true"
-      className="rounded border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/80"
+      className="rounded border border-border bg-background/60 px-1.5 py-0.5 meta-xs text-muted-foreground/80"
     >
       {children}
     </span>

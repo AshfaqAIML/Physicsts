@@ -181,7 +181,7 @@ export function CompanionPanel({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center justify-between gap-3 rounded-lg border border-dashed border-border px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="flex w-full items-center justify-between gap-3 rounded-lg border border-dashed border-border px-4 py-3 meta-sm text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <span className="flex items-center gap-2">
           <Sparkles className="size-3.5" aria-hidden="true" />
@@ -200,14 +200,14 @@ export function CompanionPanel({
         <div id={panelId} className="mt-3 rounded-lg border border-border bg-card/60">
           {/* Header — instrument label + honesty tag */}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <p className="meta-sm text-muted-foreground">
               {headerLabel}
             </p>
-            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/70">
+            <p className="meta-xs text-muted-foreground/70">
               {HONESTY_TAG}
             </p>
           </div>
-          <p className="border-b border-border px-4 py-2.5 text-xs leading-relaxed text-muted-foreground/85">
+          <p className="border-b border-border px-4 py-2.5 text-xs leading-relaxed text-muted-foreground/80">
             {honestyNote}
           </p>
 
@@ -237,7 +237,7 @@ export function CompanionPanel({
             )}
 
             {hiddenEarlier && (
-              <p className="mb-4 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+              <p className="mb-4 meta-xs text-muted-foreground/60">
                 {HIDDEN_EARLIER}
               </p>
             )}
@@ -261,7 +261,7 @@ export function CompanionPanel({
               )}
 
               {loading && (
-                <p className="flex items-center gap-2 border-l-2 border-photon/60 pl-3.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="flex items-center gap-2 border-l-2 border-photon/60 pl-3.5 meta-sm text-muted-foreground">
                   <Loader2 className="size-3 animate-spin" aria-hidden="true" />
                   {loadingText}
                 </p>

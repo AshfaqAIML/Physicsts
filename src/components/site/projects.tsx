@@ -37,9 +37,9 @@ export function Projects() {
     <section
       id="projects"
       aria-labelledby="projects-heading"
-      className="relative scroll-mt-24 py-24 sm:py-32"
+      className="relative section-pad"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <SectionHeading
           index="03"
           eyebrow="Research & Scientific Projects"
@@ -50,7 +50,7 @@ export function Projects() {
 
         {/* FIG. 01 — the lead brief breaks the grid: words on the
             left, the mathematics set large on an instrument plate. */}
-        <Reveal className="mt-14 lg:mt-16">
+        <Reveal className="section-flow">
           <button
             type="button"
             onClick={() => setOpen(projects[0])}
@@ -60,20 +60,20 @@ export function Projects() {
           >
             <div className="flex flex-col p-6 sm:p-8 lg:col-span-5 lg:p-10">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="meta-sm text-muted-foreground">
                   {projects[0].discipline}
                 </span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-photon">
+                <span className="meta-sm text-photon">
                   Fig. 01
                 </span>
               </div>
-              <h3 className="mt-5 font-serif text-3xl leading-[1.1] text-foreground sm:text-4xl">
+              <h3 className="type-h3-feature mt-5 text-foreground">
                 {projects[0].title}
               </h3>
               <p className="mt-4 font-serif text-lg italic leading-relaxed text-muted-foreground">
                 “{projects[0].question}”
               </p>
-              <span className="mt-auto inline-flex items-center gap-2 pt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 transition-colors group-hover:text-photon">
+              <span className="mt-auto inline-flex items-center gap-2 pt-8 meta-sm text-muted-foreground/70 transition-colors group-hover:text-photon">
                 <BookMarked className="size-3.5" aria-hidden="true" />
                 Open the full brief
                 <ArrowUpRight
@@ -90,7 +90,7 @@ export function Projects() {
                 <div className="text-foreground/90 [&_.katex]:text-[1.28em]">
                   <Tex display math={projects[0].equation} ariaLabel={projects[0].equationLabel} />
                 </div>
-                <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="mt-5 meta-sm text-muted-foreground">
                   {projects[0].equationLabel}
                 </p>
               </div>
@@ -113,36 +113,41 @@ export function Projects() {
                   className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card p-6 text-left transition-all duration-300 hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:border-photon/30 before:absolute before:inset-x-0 before:top-0 before:h-px before:origin-left before:scale-x-0 before:bg-gradient-to-r before:from-transparent before:via-nebula/70 before:to-transparent before:transition-transform before:duration-500 hover:before:scale-x-100 sm:p-7"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <span className="meta-sm text-muted-foreground">
                       {p.discipline}
                     </span>
                     <span
                       className={cn(
-                        "flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em]",
+                        "flex items-center gap-2 meta-xs",
                         p.status === "example" ? "text-nebula" : "text-muted-foreground"
                       )}
                     >
-                      <span className={p.status === "example" ? "border-dashed border border-nebula/50 rounded-full px-2 py-0.5" : "border border-border rounded-full px-2 py-0.5"}>
+                      <span
+                        className={cn(
+                          "tag",
+                          p.status === "example" && "tag--dashed border-nebula/50 text-nebula"
+                        )}
+                      >
                         {projectStatusCopy[p.status].label}
                       </span>
                       <span className="text-muted-foreground/50">Fig. {String(i + 2).padStart(2, "0")}</span>
                     </span>
                   </div>
 
-                  <h3 className="mt-5 font-serif text-2xl leading-tight text-foreground">
+                  <h3 className="type-h3 mt-5 text-foreground">
                     {p.title}
                   </h3>
 
-                  <p className="mt-2.5 font-serif text-[15px] italic leading-relaxed text-muted-foreground">
+                  <p className="mt-2.5 font-serif italic type-leaf text-muted-foreground">
                     “{p.question}”
                   </p>
 
-                  <div className="my-5 overflow-x-auto border-y border-border/70 bg-plot-grid py-4 text-foreground/85">
+                  <div className="plate-strip my-5 overflow-x-auto text-foreground/85">
                     <Tex math={p.equation} ariaLabel={p.equationLabel} />
                   </div>
 
                   <div className="mt-auto flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 transition-colors group-hover:text-photon">
+                    <span className="inline-flex items-center gap-2 meta-sm text-muted-foreground/70 transition-colors group-hover:text-photon">
                       <BookMarked className="size-3.5" aria-hidden="true" />
                       Full project brief
                     </span>
@@ -158,7 +163,7 @@ export function Projects() {
         </div>
 
         <Reveal delay={0.1} className="mt-8">
-          <p className="mx-auto max-w-2xl text-center font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-muted-foreground/70">
+          <p className="mx-auto max-w-2xl text-center meta-sm text-muted-foreground/70">
             Example concepts · no fabricated results · replace with actual work
             as it is completed
           </p>
@@ -171,14 +176,14 @@ export function Projects() {
           {open && (
             <>
               <DialogHeader className="text-left">
-                <p className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="flex flex-wrap items-center gap-3 meta-sm text-muted-foreground">
                   <span>{open.discipline}</span>
                   <span aria-hidden="true" className="h-px w-6 bg-border" />
                   <span className={open.status === "example" ? "text-nebula" : undefined}>
                     {projectStatusCopy[open.status].label}
                   </span>
                 </p>
-                <DialogTitle className="mt-3 font-serif text-3xl leading-tight">
+                <DialogTitle className="type-h3-feature mt-3 text-left">
                   {open.title}
                 </DialogTitle>
                 <DialogDescription className="mt-2 font-serif text-lg italic leading-relaxed">
@@ -191,12 +196,12 @@ export function Projects() {
                 <Detail label="Theoretical background" body={open.background} />
 
                 <div>
-                  <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <h4 className="meta-sm text-muted-foreground">
                     Mathematical formulation
                   </h4>
                   <div className="equation-plate mt-3 text-center text-foreground/90">
                     <Tex display math={open.equation} ariaLabel={open.equationLabel} />
-                    <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                    <p className="mt-3 meta-sm text-muted-foreground">
                       {open.equationLabel}
                     </p>
                   </div>
@@ -207,7 +212,7 @@ export function Projects() {
                 <Detail label="Limitations" body={open.limitations} />
 
                 <div>
-                  <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <h4 className="meta-sm text-muted-foreground">
                     References & further reading
                   </h4>
                   <ul className="mt-3 list-inside space-y-1.5 text-muted-foreground">
@@ -222,13 +227,13 @@ export function Projects() {
                 {open.repository ? (
                   <a
                     href={open.repository}
-                    className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm transition-colors hover:border-photon/50 hover:bg-photon/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                    className="chip-btn px-4 py-2"
                   >
                     <Github className="size-4" aria-hidden="true" />
                     View repository
                   </a>
                 ) : (
-                  <p className="rounded-lg border border-dashed border-border p-4 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                  <p className="rounded-lg border border-dashed border-border p-4 text-center meta-sm text-muted-foreground/70">
                     Repository link — added when the code exists
                   </p>
                 )}
@@ -252,7 +257,7 @@ function Detail({
 }) {
   return (
     <div>
-      <h4 className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+      <h4 className="flex items-center gap-2 meta-sm text-muted-foreground">
         {icon}
         {label}
       </h4>

@@ -14,9 +14,9 @@ export function Publications() {
     <section
       id="publications"
       aria-labelledby="publications-heading"
-      className="relative scroll-mt-24 bg-chart-grid py-24 sm:py-32"
+      className="relative section-pad bg-chart-grid"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <SectionHeading
           index="04"
           eyebrow="Publications & Academic Contributions"
@@ -25,7 +25,7 @@ export function Publications() {
           meta="Ledger · empty by design"
         />
 
-        <Reveal delay={0.05} className="mt-14 lg:mt-16">
+        <Reveal delay={0.05} className="section-flow">
           <div className="grid overflow-hidden rounded-lg border border-border bg-card lg:grid-cols-12">
             {/* The left leaf — the philosophy of the section */}
             <div className="relative flex flex-col justify-center p-8 sm:p-10 lg:col-span-7 lg:p-12">
@@ -61,22 +61,22 @@ export function Publications() {
                 </g>
               </svg>
 
-              <p className="relative flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="relative flex items-center gap-2.5 meta-sm text-muted-foreground">
                 <span aria-hidden="true" className="relative flex size-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-photon/60" />
                   <span className="relative inline-flex size-1.5 rounded-full bg-photon" />
                 </span>
                 Status · open
               </p>
-              <h3 className="relative mt-6 font-serif text-2xl text-foreground sm:text-3xl">
+              <h3 className="type-h3-feature relative mt-6 text-foreground">
                 {publicationsEmptyState.headline}
               </h3>
               {publicationsEmptyState.body.map((p, i) => (
-                <p key={i} className="relative mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+                <p key={i} className="relative mt-4 max-w-lg type-leaf text-muted-foreground">
                   {p}
                 </p>
               ))}
-              <p className="relative mt-7 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/80">
+              <p className="relative mt-7 meta-sm text-muted-foreground/80">
                 {publicationsEmptyState.note}
               </p>
             </div>
@@ -84,10 +84,10 @@ export function Publications() {
             {/* The right leaf — the ledger of contribution types */}
             <div className="border-t border-border lg:col-span-5 lg:border-l lg:border-t-0">
               <div className="flex items-center justify-between border-b border-border bg-accent/30 px-6 py-4 lg:px-8">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="meta-sm text-muted-foreground">
                   Index of contributions
                 </span>
-                <span className="font-mono text-[10px] tabular-nums text-photon">
+                <span className="meta-num text-photon">
                   {publicationTypes.length.toString().padStart(2, "0")} classes
                 </span>
               </div>
@@ -106,14 +106,14 @@ export function Publications() {
                     />
                     <span
                       aria-label="0 entries"
-                      className="font-mono text-[10px] tabular-nums text-muted-foreground/70"
+                      className="meta-num text-muted-foreground/70"
                     >
                       000
                     </span>
                   </li>
                 ))}
               </ul>
-              <p className="border-t border-border bg-accent/20 px-6 py-3.5 font-mono text-[9.5px] uppercase leading-relaxed tracking-[0.16em] text-muted-foreground/70 lg:px-8">
+              <p className="border-t border-border bg-accent/20 px-6 py-3.5 meta-xs text-muted-foreground/70 lg:px-8">
                 Counts move when verified work exists — never before
               </p>
             </div>

@@ -81,7 +81,7 @@ export function Navigation() {
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-serif text-lg tracking-tight">{site.wordmark}</span>
-            <span className="mt-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+            <span className="mt-1 meta-xs text-muted-foreground">
               Physics · Mathematics
             </span>
           </span>
@@ -95,7 +95,7 @@ export function Navigation() {
                 href={item.href}
                 aria-current={active === item.href ? "true" : undefined}
                 className={cn(
-                  "relative rounded-sm px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring",
+                  "relative rounded-sm px-3 py-2 eyebrow transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring",
                   active === item.href
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -118,14 +118,14 @@ export function Navigation() {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event("phys:open-palette"))}
-            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             aria-label="Open command palette (search the whole page)"
             aria-keyshortcuts="Meta+K Control+K"
           >
             <Search className="size-4" aria-hidden="true" />
             <span
               aria-hidden="true"
-              className="hidden rounded border border-border bg-background/50 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] sm:inline-block"
+              className="hidden kbd sm:inline-block"
             >
               ⌘K
             </span>
@@ -134,7 +134,7 @@ export function Navigation() {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event("phys:open-lexicon"))}
-            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="inline-flex h-9 items-center gap-2 rounded-md px-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             aria-label="Open the physics lexicon"
             aria-keyshortcuts="L"
           >
@@ -161,7 +161,7 @@ export function Navigation() {
                 <SheetTitle className="font-serif text-lg">
                   {site.wordmark}
                 </SheetTitle>
-                <SheetDescription className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                <SheetDescription className="eyebrow text-muted-foreground">
                   {site.observatoryNote}
                 </SheetDescription>
               </SheetHeader>
@@ -179,7 +179,7 @@ export function Navigation() {
                             : "text-muted-foreground hover:text-foreground"
                         )}
                       >
-                        <span className="font-mono text-[10px] text-photon">
+                        <span className="meta-num text-photon">
                           {String(i + 1).padStart(2, "0")}
                         </span>
                         <span className="font-serif text-xl">{item.label}</span>
@@ -194,7 +194,7 @@ export function Navigation() {
                   setOpen(false);
                   window.dispatchEvent(new Event("phys:open-palette"));
                 }}
-                className="mt-6 flex w-full items-center justify-between rounded-md border border-dashed border-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="chip-btn chip-btn--dashed chip-btn--block mt-6"
               >
                 <span className="flex items-center gap-2">
                   <Search className="size-3.5" aria-hidden="true" />
@@ -208,7 +208,7 @@ export function Navigation() {
                   setOpen(false);
                   window.dispatchEvent(new Event("phys:open-lexicon"));
                 }}
-                className="mt-2 flex w-full items-center justify-between rounded-md border border-dashed border-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="chip-btn chip-btn--dashed chip-btn--block mt-2"
               >
                 <span className="flex items-center gap-2">
                   <BookMarked className="size-3.5" aria-hidden="true" />

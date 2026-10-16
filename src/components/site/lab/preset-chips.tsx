@@ -34,7 +34,7 @@ export function PresetChips<P extends Preset>({
 }) {
   return (
     <div className="space-y-2.5">
-      <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+      <span className="block meta-sm text-muted-foreground">
         Experiments
       </span>
       <div role="group" aria-label={ariaLabel} className="flex flex-wrap gap-2">
@@ -48,7 +48,7 @@ export function PresetChips<P extends Preset>({
               aria-pressed={active}
               onClick={() => onSelect(preset)}
               className={cn(
-                "rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                "rounded-full border px-3 py-1.5 meta-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 active
                   ? "border-photon/60 bg-photon/10 text-foreground"
                   : "border-border text-muted-foreground hover:border-photon/50 hover:text-foreground"

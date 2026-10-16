@@ -28,7 +28,7 @@ export function SectionHeading({
     <Reveal className={cn("max-w-3xl", align === "center" && "mx-auto text-center", className)}>
       <div
         className={cn(
-          "flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground",
+          "flex items-center gap-3 eyebrow text-muted-foreground",
           align === "center" && "justify-center"
         )}
       >
@@ -41,13 +41,13 @@ export function SectionHeading({
               aria-hidden="true"
               className="hidden h-px max-w-24 flex-1 bg-gradient-to-r from-border to-transparent lg:block"
             />
-            <span className="hidden text-[9.5px] tracking-[0.22em] text-muted-foreground/55 lg:block">
+            <span className="hidden meta-xs text-muted-foreground/60 lg:block">
               {meta}
             </span>
           </>
         ) : null}
       </div>
-      <h2 className="mt-5 font-serif text-3xl leading-[1.08] tracking-tight text-balance sm:text-4xl md:text-5xl">
+      <h2 className="type-h2 mt-5 text-balance text-foreground">
         {title}
       </h2>
       {lede ? (

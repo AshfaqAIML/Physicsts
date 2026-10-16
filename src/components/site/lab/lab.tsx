@@ -225,9 +225,9 @@ export function PhysicsLab() {
     <section
       id="lab"
       aria-labelledby="lab-heading"
-      className="relative scroll-mt-24 py-24 sm:py-32"
+      className="relative section-pad"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <SectionHeading
           index="06"
           eyebrow="Interactive Laboratory"
@@ -253,21 +253,21 @@ export function PhysicsLab() {
                 <TabsList className="h-auto w-max gap-0 bg-transparent p-0 sm:w-auto">
                   <TabsTrigger
                     value="lensing"
-                    className="rounded-l-md rounded-r-none border border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
+                    className="rounded-l-md rounded-r-none border border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
                   >
                     Gravitational Lensing
                     <TourDot pending={tourPending.includes("lensing")} />
                   </TabsTrigger>
                   <TabsTrigger
                     value="orbits"
-                    className="rounded-none border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
+                    className="rounded-none border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
                   >
                     Orbital Mechanics
                     <TourDot pending={tourPending.includes("orbits")} />
                   </TabsTrigger>
                   <TabsTrigger
                     value="wave"
-                    className="rounded-l-none rounded-r-md border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none font-mono text-[11px] uppercase tracking-[0.16em] sm:px-6"
+                    className="rounded-l-none rounded-r-md border border-l-0 border-border data-[state=active]:border-photon/50 data-[state=active]:bg-photon/10 data-[state=active]:shadow-none eyebrow sm:px-6"
                   >
                     Wave Packet
                     <TourDot pending={tourPending.includes("wave")} />
@@ -283,7 +283,7 @@ export function PhysicsLab() {
               <LensingSim onReport={reportLensing} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                  <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <h4 className="meta-sm text-muted-foreground">
                     Mathematics
                   </h4>
                   <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
@@ -321,7 +321,7 @@ export function PhysicsLab() {
 
                 <div className="flex flex-col gap-6">
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                    <h4 className="meta-sm text-muted-foreground">
                       What to try
                     </h4>
                     <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
@@ -340,7 +340,7 @@ export function PhysicsLab() {
                     </ul>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                    <h4 className="meta-sm text-muted-foreground">
                       Assumptions
                     </h4>
                     <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
@@ -358,7 +358,7 @@ export function PhysicsLab() {
               <OrbitsSim onReport={reportOrbits} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                  <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <h4 className="meta-sm text-muted-foreground">
                     Mathematics
                   </h4>
                   <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
@@ -395,7 +395,7 @@ export function PhysicsLab() {
 
                 <div className="flex flex-col gap-6">
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                    <h4 className="meta-sm text-muted-foreground">
                       What to try
                     </h4>
                     <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
@@ -414,7 +414,7 @@ export function PhysicsLab() {
                     </ul>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                    <h4 className="meta-sm text-muted-foreground">
                       Assumptions
                     </h4>
                     <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
@@ -431,7 +431,7 @@ export function PhysicsLab() {
               <WaveSim onReport={reportWave} />
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                  <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  <h4 className="meta-sm text-muted-foreground">
                     Mathematics
                   </h4>
                   <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
@@ -469,7 +469,7 @@ export function PhysicsLab() {
 
                 <div className="flex flex-col gap-6">
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                    <h4 className="meta-sm text-muted-foreground">
                       What to try
                     </h4>
                     <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
@@ -491,7 +491,7 @@ export function PhysicsLab() {
                     </ul>
                   </div>
                   <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
-                    <h4 className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                    <h4 className="meta-sm text-muted-foreground">
                       Assumptions
                     </h4>
                     <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">

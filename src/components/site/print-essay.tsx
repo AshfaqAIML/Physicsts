@@ -59,7 +59,7 @@ export function PrintEssayButton({ note }: { note: Note }) {
       onClick={handlePrint}
       aria-label="Print this essay as an archival offprint"
       data-print="hide"
-      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="chip-btn"
     >
       <Printer className="size-3" aria-hidden="true" />
       Print

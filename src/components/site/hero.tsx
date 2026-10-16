@@ -54,7 +54,7 @@ export function Hero() {
             initial={reduce ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.15, ease }}
-            className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.32em] text-muted-foreground"
+            className="flex items-center gap-3 eyebrow-wide text-muted-foreground"
           >
             <span aria-hidden="true" className="inline-block h-px w-10 bg-photon/70" />
             Physics · Mathematics · The Universe
@@ -65,7 +65,7 @@ export function Hero() {
             initial={reduce ? false : { opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.1, delay: 0.3, ease }}
-            className="mt-7 font-serif text-[2.6rem] leading-[1.04] tracking-tight text-balance sm:text-6xl lg:text-7xl"
+            className="type-display mt-7 text-balance text-foreground"
           >
             The Universe Is a{" "}
             <em className="text-glow-photon not-italic text-photon">Question</em>{" "}
@@ -90,25 +90,17 @@ export function Hero() {
             data-print="hide"
             className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-4"
           >
-            {/* The instrument button — a labelled key, not a pill */}
-            <a
-              href="#projects"
-              className="group inline-flex h-12 items-stretch overflow-hidden rounded-sm bg-primary text-primary-foreground shadow-lg transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:translate-y-0 active:shadow-md dark:hover:shadow-photon/25"
-            >
-              <span className="flex items-center px-6 font-mono text-[11px] font-medium uppercase tracking-[0.18em]">
-                Explore the work
-              </span>
-              <span
-                aria-hidden="true"
-                className="flex items-center border-l border-primary-foreground/15 px-4 transition-colors duration-300 group-hover:bg-primary-foreground/10"
-              >
+            {/* The instrument button — the system's one primary key */}
+            <a href="#projects" className="btn-key group">
+              <span className="btn-key-label">Explore the work</span>
+              <span className="btn-key-glyph" aria-hidden="true">
                 <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
               </span>
             </a>
             {/* The quiet alternative — an editorial link, not a button */}
             <a
               href="#about"
-              className="group inline-flex h-12 items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              className="group inline-flex h-12 items-center gap-2 eyebrow text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
             >
               <span className="link-quiet pb-0.5">About the physicist</span>
               <ArrowDown
@@ -133,7 +125,7 @@ export function Hero() {
                   ariaLabel="Einstein's field equations: G mu nu plus Lambda g mu nu equals 8 pi G over c to the fourth, times T mu nu"
                 />
               </div>
-              <figcaption className="mt-3 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80">
+              <figcaption className="mt-3 meta-sm text-muted-foreground/80">
                 Einstein field equations · 1915
               </figcaption>
             </div>
@@ -153,7 +145,7 @@ export function Hero() {
       >
         <span className="size-1.5 rounded-full bg-photon/80" />
         <span className="h-28 w-px bg-gradient-to-b from-photon/50 to-transparent" />
-        <span className="writing-vertical font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground/60">
+        <span className="writing-vertical meta-xs text-muted-foreground/60">
           Fig. 00 · Gravitational lensing — computed live
         </span>
       </motion.div>
@@ -165,7 +157,7 @@ export function Hero() {
         animate={{ opacity: 1 }}
         transition={{ duration: 1.2, delay: 1.6 }}
         data-print="hide"
-        className="group absolute inset-x-0 bottom-7 z-10 mx-auto flex w-fit flex-col items-center gap-3 rounded-sm pb-1 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+        className="group absolute inset-x-0 bottom-7 z-10 mx-auto flex w-fit flex-col items-center gap-3 rounded-sm pb-1 eyebrow text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
         aria-label="Scroll down to the About section"
       >
         <span>Descend into the Universe</span>

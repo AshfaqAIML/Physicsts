@@ -97,21 +97,21 @@ export function KeyboardHint() {
           : "pointer-events-none translate-y-3 opacity-0"
       )}
     >
-      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="meta-sm text-muted-foreground">
         This page has instruments
       </p>
-      <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-foreground/85">
+      <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-foreground/85">
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded border border-border bg-background/70 px-1.5 py-0.5 font-mono text-[10px] tracking-[0.08em]">
+          <kbd className="kbd">
             ⌘K
           </kbd>
           <span className="text-muted-foreground">the console</span>
         </span>
-        <span aria-hidden="true" className="text-muted-foreground/40">
+        <span aria-hidden="true" className="text-muted-foreground/50">
           ·
         </span>
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded border border-border bg-background/70 px-1.5 py-0.5 font-mono text-[10px] tracking-[0.08em]">
+          <kbd className="kbd">
             ?
           </kbd>
           <span className="text-muted-foreground">the manual</span>

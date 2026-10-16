@@ -7,7 +7,7 @@ import { ArrowLeft, Orbit } from "lucide-react";
 export default function NotFound() {
   return (
     <div className="bg-chart-grid flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <p className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.32em] text-muted-foreground">
+      <p className="flex items-center gap-3 eyebrow-wide text-muted-foreground">
         <span aria-hidden="true" className="inline-block h-px w-10 bg-photon/70" />
         HTTP 404 · Outside the Light Cone
       </p>
@@ -33,7 +33,7 @@ export default function NotFound() {
         </Link>
       </div>
 
-      <p className="mt-14 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground/60">
+      <p className="mt-14 flex items-center gap-2 eyebrow text-muted-foreground/60">
         <Orbit className="size-3.5" aria-hidden="true" />
         The Physicist · single-world line
       </p>

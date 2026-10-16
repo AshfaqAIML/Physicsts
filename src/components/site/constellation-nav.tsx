@@ -47,7 +47,7 @@ export function ConstellationNav() {
                 className="flex items-center gap-3 rounded-sm py-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 <span
-                  className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground opacity-0 transition-opacity duration-300 group-hover:opacity-100 [.group:focus-within_&]:opacity-100"
+                  className="meta-xs text-muted-foreground opacity-0 transition-opacity duration-300 group-hover:opacity-100 [.group:focus-within_&]:opacity-100"
                   style={{ opacity: isActive ? 1 : undefined }}
                 >
                   {item.label}
@@ -58,7 +58,7 @@ export function ConstellationNav() {
                     "block rounded-full transition-all duration-500",
                     isActive
                       ? "size-[7px] bg-photon shadow-[0_0_10px_2px_var(--glow-a)]"
-                      : "size-[5px] bg-muted-foreground/40 hover:bg-muted-foreground/80"
+                      : "size-[5px] bg-muted-foreground/50 hover:bg-muted-foreground/80"
                   )}
                 />
               </a>
