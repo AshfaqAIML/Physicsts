@@ -5,7 +5,7 @@ import { ChevronDown, Loader2, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Prose } from "@/components/site/tex";
+import { AssistantProse } from "@/components/site/assistant-prose";
 import { cn } from "@/lib/utils";
 
 /**
@@ -334,7 +334,8 @@ export function CompanionPanel({
 /**
  * Assistant answers arrive as plain text with $…$ math. Split on blank
  * lines so the model's paragraphing survives, keep single line breaks,
- * and let <Prose> typeset any LaTeX it finds.
+ * and let <AssistantProse> typeset any LaTeX it finds — KaTeX loading
+ * lazily, in its own chunk, only when an answer needs it.
  */
 function AssistantMessage({ text }: { text: string }) {
   const paragraphs = text.split(/\n{2,}/).filter((p) => p.trim().length > 0);
@@ -342,7 +343,7 @@ function AssistantMessage({ text }: { text: string }) {
     <span className="block space-y-3">
       {paragraphs.map((paragraph, i) => (
         <span key={i} className="block whitespace-pre-wrap">
-          <Prose text={paragraph} />
+          <AssistantProse text={paragraph} />
         </span>
       ))}
     </span>

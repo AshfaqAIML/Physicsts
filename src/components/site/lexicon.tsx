@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Search } from "lucide-react";
 import {
   Dialog,
@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tex } from "@/components/site/tex";
 import {
   lexiconCategories,
   lexiconTerms,
@@ -27,7 +26,7 @@ type CategoryFilter = LexiconTerm["category"] | "All";
 
 const categoryFilters: CategoryFilter[] = ["All", ...lexiconCategories];
 
-export function Lexicon() {
+export function Lexicon({ formulas }: { formulas: Record<string, ReactNode> }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("All");
@@ -157,7 +156,7 @@ export function Lexicon() {
           ) : (
             <div className="divide-y divide-border border-y border-border">
               {filtered.map((t, i) => (
-                <TermRow key={t.id} term={t} index={i} onJump={jumpTo} words={highlightWords} />
+                <TermRow key={t.id} term={t} index={i} onJump={jumpTo} words={highlightWords} formulas={formulas} />
               ))}
             </div>
           )}
@@ -182,12 +181,15 @@ function TermRow({
   index,
   onJump,
   words,
+  formulas,
 }: {
   term: LexiconTerm;
   index: number;
   onJump: (id: string) => void;
   /** Search words to glow within the term and definition. */
   words: string[];
+  /** Server-rendered mathematics, keyed by term id. */
+  formulas: Record<string, ReactNode>;
 }) {
   const related = (term.seeAlso ?? [])
     .map((id) => lexiconTerms.find((t) => t.id === id))
@@ -218,7 +220,7 @@ function TermRow({
 
         {term.formula ? (
           <div className="mx-auto mt-4 w-fit max-w-full overflow-x-auto rounded-md border border-border/70 bg-background/60 px-4 py-2.5 text-center text-foreground/90 [&_.katex-display]:my-0.5">
-            <Tex math={term.formula} display ariaLabel={term.formulaLabel ?? term.term} />
+            {formulas[term.id]}
             {term.formulaLabel ? (
               <p className="mt-1.5 meta-xs text-muted-foreground">
                 {term.formulaLabel}

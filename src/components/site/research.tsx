@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowUpRight, BookOpen, CircleDashed, Landmark, Printer, Tag } from "lucide-react";
 import {
   Dialog,
@@ -12,15 +12,24 @@ import {
 import { ResearchAsk } from "@/components/site/research-ask";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
-import { Tex } from "@/components/site/tex";
 import { researchAreas, type ResearchArea } from "@/content/research";
 import { cn } from "@/lib/utils";
 
 /**
  * RESEARCH INTERESTS — a map of curiosity, not a claim of expertise.
  * Each area opens into a detail view: introduction, concepts, reading.
+ *
+ * All mathematics arrives pre-rendered from the server as React nodes
+ * (`equations` for the index plates, `plates` for the detail dialog) so
+ * KaTeX never enters the client bundle.
  */
-export function ResearchInterests() {
+export function ResearchInterests({
+  equations,
+  plates,
+}: {
+  equations: Record<string, ReactNode>;
+  plates: Record<string, ReactNode>;
+}) {
   const [openArea, setOpenArea] = useState<ResearchArea | null>(null);
   // If a print dialogue outlives our patience, still clean up the mode.
   const printTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -127,7 +136,7 @@ export function ResearchInterests() {
 
                 {/* The equation, set on its plate */}
                 <span className="plate-box block overflow-x-auto text-foreground/85 transition-colors duration-300 group-hover:border-photon/40">
-                  <Tex math={area.equation} ariaLabel={area.equationLabel} />
+                  {equations[area.id]}
                 </span>
 
                 {/* Cue */}
@@ -194,7 +203,7 @@ export function ResearchInterests() {
 
               <div className="mt-6 space-y-8">
                 <div className="equation-plate mt-2 text-center text-foreground/90">
-                  <Tex display math={openArea.equation} ariaLabel={openArea.equationLabel} />
+                  {plates[openArea.id]}
                   <p className="mt-3 meta-sm text-muted-foreground">
                     {openArea.equationLabel}
                   </p>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import ZAI from "z-ai-web-dev-sdk";
 import { researchAreas, type ResearchArea } from "@/content/research";
+import { createRateLimiter } from "@/lib/rate-limit";
 
 /**
  * POST /api/ask-research
@@ -42,22 +43,11 @@ const askResearchSchema = z.object({
     .default([]),
 });
 
-// ---- naive in-memory rate limit: 12 questions / 10 minutes / IP ----
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_PER_WINDOW = 12;
-const hits = new Map<string, number[]>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  if (recent.length >= MAX_PER_WINDOW) {
-    hits.set(ip, recent);
-    return true;
-  }
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
-}
+// ---- in-memory rate limit: 12 questions / 10 minutes / IP (swept) ----
+const rateLimited = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 12,
+});
 
 /* ------------------------------------------------------------------ */
 /* Area text — grounded, plain, capped                                 */

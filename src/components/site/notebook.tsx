@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, ArrowUpRight, BookOpen, Check, Clock, Link2, ListTree, NotebookPen, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,13 +15,17 @@ import { PrintEssayButton } from "@/components/site/print-essay";
 import { QuoteCopy } from "@/components/site/quote-copy";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
-import { Prose } from "@/components/site/tex";
 import { noteCategories, notes, type Note, type NoteCategory } from "@/content/notes";
 import { cn } from "@/lib/utils";
 
 /**
  * SCIENTIFIC NOTEBOOK — a premium digital journal. One full example
  * essay; the rest are honestly-marked planned topics.
+ *
+ * Essay content (sections, mathematics, references) arrives pre-rendered
+ * from the server via `essayBodies`, keyed by note id — KaTeX stays out
+ * of the client bundle; the reading view keeps only its interactive
+ * furniture (progress, contents, quote chip, companion, hand-off).
  */
 
 /* ------------------------------------------------------------------ */
@@ -60,7 +64,7 @@ function readableNoteFromHash(hash: string): Note | null {
   return note?.essay ? note : null;
 }
 
-export function Notebook() {
+export function Notebook({ essayBodies }: { essayBodies: Record<string, ReactNode> }) {
   const [category, setCategory] = useState<NoteCategory | "All">("All");
   const [open, setOpen] = useState<Note | null>(null);
   /**
@@ -364,6 +368,7 @@ export function Notebook() {
           {open?.essay && (
             <ReadingView
               note={open}
+              body={essayBodies[open.id]}
               nextNote={nextNoteOf(open)}
               onOpenNext={openNote}
               onContentsNavigate={(hash) => {
@@ -383,11 +388,14 @@ export function Notebook() {
 
 function ReadingView({
   note,
+  body,
   nextNote,
   onOpenNext,
   onContentsNavigate,
 }: {
   note: Note;
+  /** The essay's server-rendered sections, references, further reading. */
+  body: ReactNode;
   /** The essay to offer when this one ends, if any. */
   nextNote: Note | null;
   /** Opens another essay the way a ledger row does. */
@@ -548,90 +556,9 @@ function ReadingView({
         />
 
         <div className="reading-measure px-6 py-10 sm:px-10">
-          {essay.sections.map((s, i) => (
-            <section
-              key={s.id}
-              id={s.id}
-              className={cn("scroll-mt-24", i > 0 && "mt-12", i === 0 && "first:mt-0")}
-              aria-labelledby={`${s.id}-h`}
-            >
-              <h2
-                id={`${s.id}-h`}
-                className="font-serif text-xl leading-snug text-foreground sm:text-2xl"
-              >
-                {s.heading}
-              </h2>
-              <div className="mt-5 space-y-5">
-                {s.paragraphs.map((p, j) => (
-                  <p
-                    key={j}
-                    className={cn(
-                      "text-[1.05rem] leading-[1.85] text-muted-foreground",
-                      i === 0 && j === 0 && "drop-cap text-foreground/90"
-                    )}
-                  >
-                    <Prose text={p} />
-                  </p>
-                ))}
-              </div>
-            </section>
-          ))}
-
-          {/* References — linked only where the record was verified */}
-          <section className="mt-16 border-t border-border pt-8" aria-labelledby="refs-h">
-            <h2 id="refs-h" className="meta-sm text-muted-foreground">
-              References
-            </h2>
-            <ol className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
-              {essay.references.map((r, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="font-mono text-xs text-photon">[{i + 1}]</span>
-                  {r.url ? (
-                    <a
-                      href={r.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link-quiet inline-flex items-baseline gap-1 rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {r.text}
-                      <ArrowUpRight className="size-3 shrink-0 self-center text-muted-foreground/50" aria-hidden="true" />
-                    </a>
-                  ) : (
-                    <span>{r.text}</span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          {/* Further reading — accessible next steps, all links verified */}
-          {essay.furtherReading && essay.furtherReading.length > 0 && (
-            <section className="mt-10" aria-labelledby="further-h">
-              <h2 id="further-h" className="meta-sm text-muted-foreground">
-                Further reading
-              </h2>
-              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
-                {essay.furtherReading.map((r) => (
-                  <li key={r.text} className="flex gap-3">
-                    <span aria-hidden="true" className="font-mono text-xs text-nebula">→</span>
-                    {r.url ? (
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link-quiet inline-flex items-baseline gap-1 rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                      >
-                        {r.text}
-                        <ArrowUpRight className="size-3 shrink-0 self-center text-muted-foreground/50" aria-hidden="true" />
-                      </a>
-                    ) : (
-                      <span>{r.text}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          {/* Sections, mathematics, references, and further reading —
+              server-rendered (see essay-body.tsx) */}
+          {body}
 
           {/* AI study companion — grounded in this essay's actual text
               (screen companion; the offprint stands on its own) */}

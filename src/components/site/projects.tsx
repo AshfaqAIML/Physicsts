@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ArrowUpRight, BookMarked, FlaskConical, Github, ListChecks } from "lucide-react";
 import {
   Dialog,
@@ -11,15 +11,24 @@ import {
 } from "@/components/ui/dialog";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
-import { Tex } from "@/components/site/tex";
 import { projectStatusCopy, projects, type Project } from "@/content/projects";
 import { cn } from "@/lib/utils";
 
 /**
  * PROJECTS — a research-journal gallery. The five entries are
  * example concepts, clearly marked; the structure is the product.
+ *
+ * All mathematics arrives pre-rendered from the server as React nodes
+ * (`equations` for the card strips, `plates` for display plates) so
+ * KaTeX never enters the client bundle.
  */
-export function Projects() {
+export function Projects({
+  equations,
+  plates,
+}: {
+  equations: Record<string, ReactNode>;
+  plates: Record<string, ReactNode>;
+}) {
   const [open, setOpen] = useState<Project | null>(null);
 
   // External openers (command palette)
@@ -89,7 +98,7 @@ export function Projects() {
               <span aria-hidden="true" className="absolute bottom-3 right-3 size-3 border-b border-r border-photon/40 transition-colors duration-300 group-hover:border-photon/80" />
               <div className="text-center">
                 <div className="text-foreground/90 [&_.katex]:text-[1.28em]">
-                  <Tex display math={projects[0].equation} ariaLabel={projects[0].equationLabel} />
+                  {plates[projects[0].id]}
                 </div>
                 <p className="mt-5 meta-sm text-muted-foreground">
                   {projects[0].equationLabel}
@@ -144,7 +153,7 @@ export function Projects() {
                   </p>
 
                   <div className="plate-strip my-5 overflow-x-auto text-foreground/85">
-                    <Tex math={p.equation} ariaLabel={p.equationLabel} />
+                    {equations[p.id]}
                   </div>
 
                   <div className="mt-auto flex items-center justify-between">
@@ -201,7 +210,7 @@ export function Projects() {
                     Mathematical formulation
                   </h4>
                   <div className="equation-plate mt-3 text-center text-foreground/90">
-                    <Tex display math={open.equation} ariaLabel={open.equationLabel} />
+                    {plates[open.id]}
                     <p className="mt-3 meta-sm text-muted-foreground">
                       {open.equationLabel}
                     </p>

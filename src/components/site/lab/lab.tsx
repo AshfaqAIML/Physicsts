@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
-import { Tex } from "@/components/site/tex";
 import {
   EXPERIMENT_EVENT,
   isExperimentHash,
@@ -14,10 +14,15 @@ import {
   parseLabTourHash,
   type ExperimentSpec,
 } from "./experiment-link";
-import { LensingSim } from "./lensing-sim";
-import { OrbitsSim } from "./orbits-sim";
 import { ShareLabTourButton, type ReportedBench } from "./share-lab-tour";
-import { WaveSim } from "./wave-sim";
+
+// The three instruments are heavy interactive code (canvas, integrators,
+// control bands). They are code-split and mounted only when the visitor
+// approaches the laboratory — the mathematics around them is already
+// server-rendered, so nothing is lost to no-JS readers or crawlers.
+const LensingSim = dynamic(() => import("./lensing-sim").then((m) => ({ default: m.LensingSim })), { ssr: false });
+const OrbitsSim = dynamic(() => import("./orbits-sim").then((m) => ({ default: m.OrbitsSim })), { ssr: false });
+const WaveSim = dynamic(() => import("./wave-sim").then((m) => ({ default: m.WaveSim })), { ssr: false });
 
 export type LabTab = "lensing" | "orbits" | "wave";
 
@@ -28,9 +33,21 @@ export type LabTab = "lensing" | "orbits" | "wave";
  * equations and stated assumptions. Every bench state is shareable:
  * #experiment=<instrument>?<params> restores it from a link, and
  * #lab-tour=<seg>|<seg>|<seg> restores the whole room at once.
+ *
+ * The instruments mount lazily (BenchGate below) and the mathematics
+ * arrives pre-rendered from the server via the `math` prop — the lab
+ * keeps its interactivity without paying for it at page load.
  */
-export function PhysicsLab() {
+export function PhysicsLab({ math }: { math: Record<LabTab, ReactNode> }) {
   const [tab, setTab] = useState<LabTab>("lensing");
+  // Which instruments have woken up (mounted and listening). A shared
+  // link that targets a still-sleeping bench scrolls it into the wake
+  // margin first, then delivers once the instrument reports ready.
+  const [benchReady, setBenchReady] = useState<Record<LabTab, boolean>>({
+    lensing: false,
+    orbits: false,
+    wave: false,
+  });
   // Bumped on every parsed #experiment= or #lab-tour= so the delivery
   // effect re-runs even when the link targets the already-active bench.
   const [restoreTick, setRestoreTick] = useState(0);
@@ -52,6 +69,10 @@ export function PhysicsLab() {
   // shareable state settles — one map feeds the whole-lab tour link, so
   // it captures benches the visitor has already left.
   const benchStatesRef = useRef<Partial<Record<LabTab, ReportedBench>>>({});
+
+  const markBenchReady = useCallback((bench: LabTab) => {
+    setBenchReady((prev) => (prev[bench] ? prev : { ...prev, [bench]: true }));
+  }, []);
 
   const reportBench = useCallback(
     (
@@ -159,6 +180,19 @@ export function PhysicsLab() {
       fromTour = true;
     }
     if (!deliver) return;
+    // The instrument is still sleeping (lazy bench mount). Bring the
+    // laboratory into the wake margin so the bench mounts, then let the
+    // readiness flip re-run this effect and deliver to a listener that
+    // actually exists.
+    if (!benchReady[tab]) {
+      const calm =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+        window.localStorage.getItem("phys:motion-reduced") === "1";
+      document
+        .getElementById("lab")
+        ?.scrollIntoView({ behavior: calm ? "auto" : "smooth" });
+      return;
+    }
     const id = window.setTimeout(() => {
       // Claim the spec only now that the delivery is actually firing.
       if (!fromTour) {
@@ -208,7 +242,7 @@ export function PhysicsLab() {
       }
     }, 80);
     return () => window.clearTimeout(id);
-  }, [tab, restoreTick]);
+  }, [tab, restoreTick, benchReady]);
 
   const switchTab = useCallback((v: string) => {
     if (v === "lensing" || v === "orbits" || v === "wave") {
@@ -281,43 +315,15 @@ export function PhysicsLab() {
             </div>
 
             <TabsContent value="lensing" className="mt-0">
-              <LensingSim onReport={reportLensing} />
+              <BenchGate bench="lensing" onReady={markBenchReady}>
+                <LensingSim onReport={reportLensing} />
+              </BenchGate>
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
                   <h3 className="meta-sm text-muted-foreground">
                     Mathematics
                   </h3>
-                  <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
-                    <p>
-                      A point mass deflects a light ray by an angle inversely
-                      proportional to its impact parameter. The lens equation
-                      maps where an image appears to where its light began:
-                    </p>
-                    <div className="overflow-x-auto py-1 text-foreground">
-                      <Tex
-                        display
-                        math="\boldsymbol{\beta} = \boldsymbol{\theta} - \frac{\theta_E^{2}}{|\boldsymbol{\theta}|^{2}}\,\boldsymbol{\theta}"
-                        ariaLabel="beta equals theta minus theta-E squared over theta squared times theta"
-                      />
-                    </div>
-                    <p>
-                      The characteristic scale — the Einstein radius — is set
-                      by the mass and the geometry of the source, lens, and
-                      observer:
-                    </p>
-                    <div className="overflow-x-auto py-1 text-foreground">
-                      <Tex
-                        display
-                        math="\theta_E = \sqrt{\frac{4GM}{c^{2}}\;\frac{D_{LS}}{D_{L}\,D_{S}}}"
-                        ariaLabel="theta-E equals the square root of four G M over c squared times D-L-S over D-L D-S"
-                      />
-                    </div>
-                    <p>
-                      When source, lens, and observer align, the image becomes
-                      a ring of this radius — the signature the simulation
-                      reproduces by construction.
-                    </p>
-                  </div>
+                  {math.lensing}
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -356,57 +362,15 @@ export function PhysicsLab() {
             </TabsContent>
 
             <TabsContent value="orbits" className="mt-0">
-              <OrbitsSim onReport={reportOrbits} />
+              <BenchGate bench="orbits" onReady={markBenchReady}>
+                <OrbitsSim onReport={reportOrbits} />
+              </BenchGate>
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
                   <h3 className="meta-sm text-muted-foreground">
                     Mathematics
                   </h3>
-                  <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
-                    <p>
-                      The two-body problem reduces, in the relative
-                      coordinate, to a single inverse-square law:
-                    </p>
-                    <div className="overflow-x-auto py-1 text-foreground">
-                      <Tex
-                        display
-                        math="\ddot{\mathbf{r}} = -\,\frac{GM}{r^{3}}\,\mathbf{r}"
-                        ariaLabel="r double dot equals minus G M over r cubed times r"
-                      />
-                    </div>
-                    <p>
-                      Conservation of energy and angular momentum closes
-                      the problem. The orbit is a conic section with the
-                      primary at its focus:
-                    </p>
-                    <div className="overflow-x-auto py-1 text-foreground">
-                      <Tex
-                        display
-                        math="r(\theta) = \frac{p}{1 + e\cos(\theta - \theta_P)}\,,\quad p = \frac{h^{2}}{GM}"
-                        ariaLabel="r of theta equals p over one plus e cosine of theta minus theta P, with p equals h squared over G M"
-                      />
-                    </div>
-                    <p>
-                      The vis-viva equation fixes the speed at any radius
-                      along the conic, and the period closes Kepler’s
-                      triad — in the simulation’s physical scaling (total
-                      mass 1 M☉, distances in AU) it reads T[yr] = a[AU]³ᐟ²:
-                    </p>
-                    <div className="overflow-x-auto py-1 text-foreground">
-                      <Tex
-                        display
-                        math="v^{2} = GM\left(\frac{2}{r} - \frac{1}{a}\right)\,,\quad T = 2\pi\sqrt{\frac{a^{3}}{GM}}"
-                        ariaLabel="v squared equals G M times two over r minus one over a, and T equals two pi times the square root of a cubed over G M"
-                      />
-                    </div>
-                    <p>
-                      The dashed curve is the exact conic from the launch
-                      conditions; the glowing trail is the numerical
-                      integration. Their agreement is the demonstration —
-                      and the ΔE readout quantifies whatever disagreement
-                      remains.
-                    </p>
-                  </div>
+                  {math.orbits}
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -459,43 +423,15 @@ export function PhysicsLab() {
               </div>
             </TabsContent>
             <TabsContent value="wave" className="mt-0">
-              <WaveSim onReport={reportWave} />
+              <BenchGate bench="wave" onReady={markBenchReady}>
+                <WaveSim onReport={reportWave} />
+              </BenchGate>
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
                   <h3 className="meta-sm text-muted-foreground">
                     Mathematics
                   </h3>
-                  <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
-                    <p>
-                      Everything here follows from one equation — the
-                      time-dependent Schrödinger equation, here in natural
-                      units where ħ = m = 1:
-                    </p>
-                    <div className="overflow-x-auto py-1 text-foreground">
-                      <Tex
-                        display
-                        math="i\,\frac{\partial \psi}{\partial t} = -\frac{1}{2}\frac{\partial^{2}\psi}{\partial x^{2}} + V(x)\,\psi"
-                        ariaLabel="i times the partial derivative of psi with respect to t equals minus one half the second partial of psi with respect to x squared plus V of x times psi"
-                      />
-                    </div>
-                    <p>
-                      For a rectangular barrier, plane waves transmit with
-                      the probability given by the tunneling coefficient —
-                      exponentially small, but never zero:
-                    </p>
-                    <div className="overflow-x-auto py-1 text-foreground">
-                      <Tex
-                        display
-                        math="T = \frac{1}{1 + \dfrac{V_{0}^{2}\sinh^{2}(\kappa w)}{4E\,(V_{0}-E)}}\,,\quad \kappa = \sqrt{2(V_{0}-E)}"
-                        ariaLabel="T equals one over one plus V-zero squared times sinh squared of kappa w, over four E times V-zero minus E, with kappa equals the square root of two times V-zero minus E"
-                      />
-                    </div>
-                    <p>
-                      The simulation advances ψ by the Crank–Nicolson method
-                      — implicit and unitary — so the R and T readouts are
-                      measured from the wavefunction, not assumed.
-                    </p>
-                  </div>
+                  {math.wave}
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -561,5 +497,70 @@ function TourDot({ pending }: { pending: boolean }) {
         — a shared setup from the tour link is waiting on this bench
       </span>
     </>
+  );
+}
+
+/**
+ * BENCH GATE — the laboratory's lazy threshold. Each instrument is heavy
+ * interactive code; this gate keeps it out of the page entirely until the
+ * visitor comes within the wake margin (~1.5 screens), then mounts it
+ * once and for all. The placeholder reserves comparable vertical space
+ * so the section's rhythm holds while the bench sleeps, and the whole
+ * laboratory is still printed, searched, and screen-read through its
+ * server-rendered mathematics and prose. `onReady` fires after the
+ * instrument's own effects have attached — the signal the shared-link
+ * delivery above waits for.
+ */
+function BenchGate({
+  bench,
+  onReady,
+  children,
+}: {
+  bench: LabTab;
+  onReady: (bench: LabTab) => void;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (visible) return;
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) setVisible(true);
+      },
+      { rootMargin: "1200px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    // Children's effects run before this parent effect, so the instrument
+    // is mounted and listening; the settle matches the delivery timeout.
+    // Cleanup-managed, so the signal fires exactly once even under
+    // double-invoked dev effects.
+    const id = window.setTimeout(() => onReady(bench), 140);
+    return () => window.clearTimeout(id);
+  }, [visible, bench, onReady]);
+
+  return (
+    <div ref={ref}>
+      {visible ? (
+        children
+      ) : (
+        <div
+          aria-hidden="true"
+          className="flex min-h-[380px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-card/30 sm:min-h-[460px]"
+        >
+          <span className="meta-sm text-muted-foreground/50">
+            Instrument sleeping — it wakes as you approach.
+          </span>
+        </div>
+      )}
+    </div>
   );
 }

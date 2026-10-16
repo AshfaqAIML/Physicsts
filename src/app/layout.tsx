@@ -31,6 +31,10 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  // Canonical origin for every generated URL (og:image, sitemap, robots).
+  alternates: {
+    canonical: "/",
+  },
   title: {
     default: "The Physicist — Exploring the Universe, One Fundamental Question at a Time",
     template: "%s — The Physicist",

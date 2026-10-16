@@ -134,15 +134,70 @@ keyboard.
 - No horizontal overflow at any viewport; mobile-first responsive
 - Honest empty states; no dead links; no fake functionality
 
+## Performance & production readiness
+
+- **KaTeX runs on the server.** All static equations (hero, research,
+  projects, lexicon, notebook essays, lab panels) are typeset during
+  SSR and passed to client components as ready-made nodes — the library
+  never enters the browser bundle. The AI companions' runtime-generated
+  answers are the one exception: they typeset via a lazily-loaded
+  KaTeX chunk fetched only when an answer actually contains math.
+- **The laboratory mounts on approach.** The three instruments are
+  code-split behind a viewport gate (`BenchGate`) and wake within ~1.5
+  screens of scrolling; shared links that target a sleeping bench
+  scroll it awake, then deliver their state.
+- **Above-the-fold visuals are eager** (the hero canvas and star field
+  mount immediately); **below-fold imagery is lazy** (portrait ships
+  AVIF/WebP through `next/image` with a blur LQIP and explicit
+  dimensions — no layout shift).
+- Canvas simulations pause off-screen, on hidden tabs, and under
+  `prefers-reduced-motion`; animation is compositor-only
+  (transform/opacity).
+- Security headers (`X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, and a `frame-ancestors`/
+  `base-uri`/`object-src` CSP) are set in `next.config.ts`.
+- API routes validate every input server-side (zod), rate-limit per IP
+  with swept in-memory windows, keep secrets server-side, and never
+  leak internals in error responses. The contact form adds a honeypot.
+- Type errors fail the build (`typescript.ignoreBuildErrors` removed);
+  `reactStrictMode` is on.
+
 ## Deployment
 
 Any Node/Bun host or platform with Next.js support (Vercel, Netlify,
 self-hosted):
 
-1. Set `NEXT_PUBLIC_SITE_URL` to the deployed origin.
+1. Copy `.env.example` to `.env` and set:
+   - `NEXT_PUBLIC_SITE_URL` — the production origin (no trailing
+     slash). It drives the canonical link, Open Graph URLs, sitemap,
+     and robots.txt. Set it **before** building.
+   - `DATABASE_URL` — SQLite path for the contact form
+     (default: `file:/home/z/my-project/db/custom.db`).
+   No secrets are required by the client bundle; `NEXT_PUBLIC_*`
+   variables are public by design.
 2. Provision the SQLite database (`bun run db:push`) — or point
    `DATABASE_URL` at your database if you swap providers.
-3. `bun run build && bun start`.
+3. `bun run build && bun start`. The build type-checks the whole app
+   and emits a standalone server (`output: "standalone"` in
+   `next.config.ts`) — behind any reverse proxy, forward to it and pass
+   `x-forwarded-for` so the API rate limits see real client IPs.
+4. After deploying, verify:
+   - `curl -I https://your-domain/` → 200 + security headers present;
+   - `/robots.txt` and `/sitemap.xml` resolve with your origin;
+   - `og.jpg` preview renders in a social-share debugger;
+   - the contact form round-trips (check the `ContactMessage` table).
+
+**Known deployment limitations** (honest, not blockers):
+
+- Rate limiting and the KaTeX-answer chunk are per-process / client
+  side; a multi-instance deployment would need a shared store for
+  limits (the API surface is one function in `src/lib/rate-limit.ts`).
+- A full script-src CSP requires a nonce strategy through the Next.js
+  document; the current CSP pins `frame-ancestors`, `base-uri`, and
+  `object-src` only. Add the rest behind real-page testing on your
+  host.
+- `NEXT_PUBLIC_SITE_URL` defaults to `https://example.com` when unset
+  — metadata URLs would point there until configured.
 
 ## Regenerating the imagery
 

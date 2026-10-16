@@ -1,12 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { BlackHoleCanvas } from "@/components/site/black-hole";
 import { useMotionPreference } from "@/components/site/providers";
 import { DUR, EASE, EASE_MASK, STAGGER } from "@/lib/motion-tokens";
-import { Tex } from "@/components/site/tex";
 
 /** The display statement, split at its rhetorical seam: the
     emphasised word opens the second line. */
@@ -29,7 +28,7 @@ const HERO_LINES = [
  * scene and the content part at different rates — a parallax with
  * actual depth — and the whole statement lifts away.
  */
-export function Hero() {
+export function Hero({ equation }: { equation: ReactNode }) {
   const ref = useRef<HTMLElement | null>(null);
   const { reduced } = useMotionPreference();
 
@@ -171,13 +170,7 @@ export function Hero() {
                 transition={{ duration: 1.1, delay: 1.05, ease: EASE }}
                 className="absolute left-0 top-0 h-full w-[2px] origin-top bg-photon/40"
               />
-              <div className="text-[1.05em]">
-                <Tex
-                  display
-                  math="G_{\mu\nu} + \Lambda g_{\mu\nu} = \frac{8\pi G}{c^{4}}\, T_{\mu\nu}"
-                  ariaLabel="Einstein's field equations: G mu nu plus Lambda g mu nu equals 8 pi G over c to the fourth, times T mu nu"
-                />
-              </div>
+              <div className="text-[1.05em]">{equation}</div>
               <figcaption className="mt-3 meta-sm text-muted-foreground">
                 Einstein field equations · 1915 — geometry on the left,
                 matter and energy on the right

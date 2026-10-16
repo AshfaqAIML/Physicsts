@@ -5,6 +5,10 @@ import { profile } from "@/content/profile";
 import { site } from "@/content/site";
 import { Sparkles } from "lucide-react";
 
+/** 12-px LQIP — generated from public/portrait.jpg (see README). */
+const PORTRAIT_BLUR =
+  "data:image/jpeg;base64,/9j/2wBDABcXFxcYFxocHBokJiImJDUwLCwwNVA5PTk9OVB5S1hLS1hLeWuBaWJpgWvAl4WFl8DeurC63v/w8P//////////2wBDARcXFxcYFxocHBokJiImJDUwLCwwNVA5PTk9OVB5S1hLS1hLeWuBaWJpgWvAl4WFl8DeurC63v/w8P//////////wgARCAAQAAwDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAQMEBf/EABQBAQAAAAAAAAAAAAAAAAAAAAH/2gAMAwEAAhADEAAAAMaZgT//xAAbEAEBAQACAwAAAAAAAAAAAAACAQADERIxYf/aAAgBAQABPwDgFsXw5npXDnJ9W5Mq2+U3/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwB//9k=";
+
 /**
  * ABOUT — an editorial spread: portrait plate on the left, the
  * person in words on the right, annotations in the margins.
@@ -38,6 +42,8 @@ export function About() {
                   height={950}
                   className="h-auto w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.21,0.47,0.32,0.98)] group-hover:scale-[1.02]"
                   sizes="(min-width: 1024px) 380px, (min-width: 640px) 60vw, 100vw"
+                  placeholder="blur"
+                  blurDataURL={PORTRAIT_BLUR}
                   priority={false}
                 />
                 <div

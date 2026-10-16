@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { createRateLimiter } from "@/lib/rate-limit";
 
 /**
  * POST /api/contact
@@ -31,22 +32,11 @@ const contactSchema = z.object({
   company: z.string().max(0).optional().or(z.literal("")), // honeypot
 });
 
-// ---- naive in-memory rate limit: 5 messages / 10 minutes / IP ----
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_PER_WINDOW = 5;
-const hits = new Map<string, number[]>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  if (recent.length >= MAX_PER_WINDOW) {
-    hits.set(ip, recent);
-    return true;
-  }
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
-}
+// ---- in-memory rate limit: 5 messages / 10 minutes / IP (swept) ----
+const rateLimited = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+});
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -55,7 +45,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json(
       { ok: false, error: "Malformed request body." },
-      { status: 400 }
+      { status: 400, headers: { "Cache-Control": "no-store" } }
     );
   }
 
@@ -68,7 +58,7 @@ export async function POST(request: Request) {
         error: "Validation failed.",
         fields: flat.fieldErrors as Record<string, string[] | undefined>,
       },
-      { status: 400 }
+      { status: 400, headers: { "Cache-Control": "no-store" } }
     );
   }
 
@@ -85,7 +75,7 @@ export async function POST(request: Request) {
   if (rateLimited(ip)) {
     return NextResponse.json(
       { ok: false, error: "Too many messages — please try again a little later." },
-      { status: 429 }
+      { status: 429, headers: { "Cache-Control": "no-store" } }
     );
   }
 
@@ -93,16 +83,18 @@ export async function POST(request: Request) {
     await db.contactMessage.create({
       data: { name, email, subject, message },
     });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(
+      { ok: true },
+      { headers: { "Cache-Control": "no-store" } }
+    );
   } catch (error) {
     console.error("[contact] failed to persist message:", error);
     return NextResponse.json(
       {
         ok: false,
-        error:
-          "The message could not be delivered. Please try again shortly.",
+        error: "The message could not be delivered. Please try again shortly.",
       },
-      { status: 500 }
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
