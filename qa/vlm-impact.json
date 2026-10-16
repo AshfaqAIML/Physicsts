@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) **Yes**, there is a centered banner/box with the text **\"SURFACE IMPACT\"**.\n2) **Yes**, it includes a secondary line that reads **\"the point-mass model ends here — R to reset\"**.\n3) **Yes**, orbit trails are visible. Specifically, a **dashed line** shows the \"plunge path\" (or conic section) leading directly into the central body where the impact occurred.\n4) **No**, there are no obvious rendering glitches; the simulation appears to have reached its intended terminal state (impact) as designed by the interface.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1792147740,
+  "id": "20261016184818b3a52ab517964472",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20261016184818b3a52ab517964472",
+  "usage": {
+    "completion_tokens": 126,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1746,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1872
+  }
+}

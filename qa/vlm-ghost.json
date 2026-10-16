@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here are the answers to your questions:\n\n1. **Is there a solid cyan arrow drawn from a glowing body?**\n   **Yes.** There is a solid cyan arrow originating from the glowing cyan body (the planet) and pointing upwards and to the right.\n\n2. **Is there a small text label near the arrow tip showing a velocity readout like 'v0 ... km/s'?**\n   **Yes.** There is a text label near the tip of the arrow that reads \"**v = 26.1 km/s**\".\n\n3. **Is there a dashed cyan ghost curve (an elliptical orbit preview)?**\n   **Yes.** A dashed line (appearing as a light-colored or white dashed curve in this specific view) traces an elliptical path around the central white body, starting from the position of the cyan body.\n\n4. **Is there a dashed circle around the body suggesting it is grabbable?**\n   **Yes.** There is a thin, solid (or very finely dashed) circle surrounding the central glowing white body.\n\n5. **Is there a scale bar bottom-left with an AU label?**\n   **Yes.** In the bottom-left corner of the canvas, there is a horizontal scale bar labeled \"**0.5 AU**\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1792147508,
+  "id": "202610161845058f62c0b1eca44031",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202610161845058f62c0b1eca44031",
+  "usage": {
+    "completion_tokens": 265,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1790,
+    "prompt_tokens_details": {
+      "cached_tokens": 3
+    },
+    "total_tokens": 2055
+  }
+}

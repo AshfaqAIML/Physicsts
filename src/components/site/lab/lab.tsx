@@ -374,21 +374,36 @@ export function PhysicsLab() {
                       />
                     </div>
                     <p>
-                      Conservation of energy and angular momentum closes the
-                      problem — the vis-viva equation fixes the speed at any
-                      radius along the conic:
+                      Conservation of energy and angular momentum closes
+                      the problem. The orbit is a conic section with the
+                      primary at its focus:
                     </p>
                     <div className="overflow-x-auto py-1 text-foreground">
                       <Tex
                         display
-                        math="v^{2} = GM\left(\frac{2}{r} - \frac{1}{a}\right)"
-                        ariaLabel="v squared equals G M times two over r minus one over a"
+                        math="r(\theta) = \frac{p}{1 + e\cos(\theta - \theta_P)}\,,\quad p = \frac{h^{2}}{GM}"
+                        ariaLabel="r of theta equals p over one plus e cosine of theta minus theta P, with p equals h squared over G M"
                       />
                     </div>
                     <p>
-                      The dashed curve is this exact solution; the glowing
-                      trail is the numerical integration. Their agreement is
-                      the demonstration.
+                      The vis-viva equation fixes the speed at any radius
+                      along the conic, and the period closes Kepler’s
+                      triad — in the simulation’s physical scaling (total
+                      mass 1 M☉, distances in AU) it reads T[yr] = a[AU]³ᐟ²:
+                    </p>
+                    <div className="overflow-x-auto py-1 text-foreground">
+                      <Tex
+                        display
+                        math="v^{2} = GM\left(\frac{2}{r} - \frac{1}{a}\right)\,,\quad T = 2\pi\sqrt{\frac{a^{3}}{GM}}"
+                        ariaLabel="v squared equals G M times two over r minus one over a, and T equals two pi times the square root of a cubed over G M"
+                      />
+                    </div>
+                    <p>
+                      The dashed curve is the exact conic from the launch
+                      conditions; the glowing trail is the numerical
+                      integration. Their agreement is the demonstration —
+                      and the ΔE readout quantifies whatever disagreement
+                      remains.
                     </p>
                   </div>
                 </div>
@@ -401,15 +416,23 @@ export function PhysicsLab() {
                     <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
                       <li className="flex gap-3">
                         <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
-                        Launch below circular speed (f &lt; 1) and the start becomes apoapsis; above it, periapsis.
+                        Launch below circular speed (f &lt; 1) and the start becomes apoapsis; above it, periapsis. Past f = √2 ≈ 1.41 the conic opens into a hyperbola and the period readout gives way to v∞.
                       </li>
                       <li className="flex gap-3">
                         <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
-                        Watch the ΔE readout: it is the integrator's honesty, not noise.
+                        Keep f = 1 and raise the launch radius: still a perfect circle, but the period grows as r₀³ᐟ² — Kepler’s third law, live in the readout.
                       </li>
                       <li className="flex gap-3">
                         <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
-                        Raise the mass ratio and the “fixed” star begins to wobble — how we find exoplanets.
+                        Drag the planet off-tangent and release — most real orbits are eccentric, and the photon ghost shows the conic you are building before you commit.
+                      </li>
+                      <li className="flex gap-3">
+                        <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
+                        Watch the ΔE readout: it is the integrator’s honesty, not noise. Near periapsis the step sub-divides — the tightest arcs are where a fixed step is most stressed.
+                      </li>
+                      <li className="flex gap-3">
+                        <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-photon" />
+                        Raise the mass ratio and the “fixed” star begins to wobble about the barycentre — how we find exoplanets.
                       </li>
                     </ul>
                   </div>
@@ -418,10 +441,17 @@ export function PhysicsLab() {
                       Assumptions
                     </h4>
                     <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
-                      Newtonian gravity only — no relativistic precession, drag,
-                      or third bodies. Fixed-step velocity Verlet (symplectic;
-                      energy drift bounded, not zero). An honest educational
-                      model — not a complete theory.
+                      Newtonian point-mass gravity only — no relativistic
+                      precession (Mercury’s famous 43″ per century is absent
+                      by construction), no tides, no drag, no third bodies.
+                      The mass-ratio slider is deliberately exaggerated:
+                      real star–planet ratios run 10³–10⁶× smaller — shown
+                      large so the barycentre wobble is visible at all.
+                      Integration is fixed-step velocity Verlet with adaptive
+                      sub-stepping near periapsis — symplectic in form, so
+                      energy drift stays bounded (watch ΔE), not zero. An
+                      honest educational model — not a complete theory, not
+                      mission-grade ephemeris.
                     </p>
                   </div>
                 </div>

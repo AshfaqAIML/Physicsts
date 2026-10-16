@@ -1896,3 +1896,109 @@ Stage Summary:
 - Next-phase candidates: notebook essay "selected work" feature plate
   using the 5/7 pattern; almanac "on this day" deep links; a fourth
   lab instrument; real content replacement when the owner is ready.
+
+---
+Task ID: R13 (interactive physics laboratory — orbital mechanics v2)
+Agent: main agent (user-directed: computational physicist / scientific visualisation engineer)
+Task: "Implement one polished, genuinely functional interactive physics laboratory" — the two-body orbital-mechanics simulator, chosen over lensing (already strong) as the definitive instrument. Trace 1a144361ee9cd015.
+
+Work Log:
+- AUDIT of the existing orbits bench against the brief: no orbital-radius
+  parameter, launch speed applied only on reset (no immediate response),
+  natural units only (no physical units), no conic classification, no
+  canvas interaction, assumptions thin. Lensing bench already excellent —
+  orbits was the right upgrade target.
+- PHYSICS UPGRADE (orbits-sim.tsx, full rewrite ~1340 lines):
+  · Generalised launch: r₀ ∈ [0.4, 1.6] AU slider + tangential speed
+    f ∈ [0.55, 1.45]; derived ε = (f²−2)/(2r₀), e = |1−f²|, a = r₀/(2−f²).
+  · Eccentricity VECTOR e = (v×h)/GM − r̂ now fixes conic orientation, so
+    arbitrary-direction drag launches use the same closed-form machinery;
+    analytic overlay stays the LAUNCH conic (drift stays visible).
+  · Physical units layer: M = 1 M☉ total, lengths in AU ⇒ τ = yr/2π ≈
+    58.13 d, v in √(GM☉/AU) = 29.78 km/s; Kepler III reads T[yr] = a[AU]³ᐟ²
+    exactly. Every readout now carries units (AU, km/s, yr, d).
+  · Integrator: velocity Verlet, fixed dt = 2×10⁻³ τ, with adaptive
+    sub-stepping near periapsis (n = ceil(0.3/r), cap 12) and a r < 0.03
+    impact halt with canvas banner + reactive state.
+  · Frame-rate-independent stepping (accumulator over real elapsed time,
+    lag-clamped) — 60 Hz and 144 Hz advance identically.
+- INTERACTION UPGRADE:
+  · Drag-to-launch: pointerdown within 30 px of the secondary (mouse or
+    touch; canvas touch-action: pan-y keeps vertical swipes scrolling),
+    photon-dashed ghost conic + arrow + live v₀ km/s label while aiming,
+    release relaunches; speed clamped to slider range so sliders/state can
+    never disagree; sliders snap to equivalent tangential config.
+  · Slider ghosts: launch-radius/launch-speed show the predicted conic
+    live while sliding, auto-relaunch on onValueCommit (pointer release or
+    keyup); mass ratio + toggles stay live.
+  · Play/Pause overlay reduced to a compact floating key (was full-canvas
+    dim) so paused canvas stays draggable; grab ring + "drag to launch"
+    hint when paused.
+- READOUT PANEL v2 (meta-num, units everywhere): classification tag
+  (circle/ellipse/radial fall/parabola/hyperbola/impact, aria-live), e,
+  a, apses r_p→r_a, r, v (km/s), T or "unbound", v∞ for unbound, elapsed
+  t, ε, ΔE; plain-language gloss line that changes with regime; units
+  footnote deriving the scaling. Classification + gloss mutate only on
+  change (aria-live safe).
+- VISUALS: AU rings (0.5/1/1.5/2/3) with "1 AU" label, scale bar (auto
+  AU value), apse P/A ticks, velocity arrow (relative v), impact banner.
+  Drag hint moved to lower-right diagonal after VLM caught a real
+  collision with the "1 AU" ring label (canvas text — DOM-invisible).
+- LAB.TSX panels upgraded: Mathematics now EoM + conic r(θ) + vis-viva/
+  Kepler III with units sentence; "What to try" 5 experiments incl. drag,
+  Kepler III, v∞; Assumptions strengthened (Mercury 43″ absent by
+  construction, mass-ratio slider exaggerated 10³–10⁶× vs real star–planet
+  ratios, sub-stepping note, "not mission-grade ephemeris").
+- BUGS FIXED DURING BUILD: template-literal paren imbalance (parse error);
+  setPointerCapture wrapped in try/catch (synthetic/vanished pointers);
+  useCallback-stabilised conicPath/dragVelocity/secondaryScreen (would
+  have re-run the lifecycle effect every render); impacted state made
+  reactive for the overlay.
+- VERIFIED (agent-browser, desktop 1440×900 + mobile 375×812):
+  · Presets vs closed form, all exact: circle (e=0, T=1 yr, v=29.8 km/s),
+    ellipse (e=0.437, T=0.58 yr), comet (e=0.640, apses 0.35→1.60 AU,
+    T=0.96 yr), Kepler III (T=2.02 yr = 1.6³ᐟ²), escape (e=1.103, ε=+0.051,
+    v∞=9.5 km/s, hyperbola tag), binary (relative orbit invariant).
+  · Sliders: keyboard arrows change values, commit relaunches (T=a³ᐟ²
+    held), 4 sliders + 6 presets + share present.
+  · Drag-to-launch: cursor grabbing, ghost + arrow + "v₀ 26.1 km/s" label
+    (VLM-confirmed; matches hand calc 0.882×29.78=26.2), released into
+    e=0.824 custom orbit (hand-calc 0.833 ✓).
+  · ΔE honesty: −0.513 % after 3.35 yr (≈8 orbits) of a 0.04→1.07 AU
+    plunge ellipse — bounded symplectic drift under extreme stress.
+  · Impact edge case: near-zero drag → radial plunge lasting t=0.18 yr
+    vs analytic free-fall π/(2√2)≈0.177 yr, banner + gloss + halted loop;
+    R recovers.
+  · Keyboard Space/R on canvas (global R shortcut already lab-guarded);
+  theme round-trip re-paints canvas (pixel-verified), sim state survives;
+  share link #experiment=orbits?m&f&r&a&t restores + survives reload;
+  tour link with new r param restores + tour dot on pending benches;
+  reduced-motion (phys:motion-reduced=1) auto-pauses, restore does not
+  auto-play; IntersectionObserver halts off-screen stepping (caught by
+  my own test forgetting to scroll — feature working as designed).
+  · Mobile: 1-column stack, canvas 341×378, pan-y, 0 overflow at 375;
+  full-page sweep 0 overflow; console + dev.log clean; lint 0; tsc 0
+  under src/. VLM: default A (one clipped-text claim DISPROVEN by DOM
+  scrollWidth==clientWidth), light-mode pass, drag-ghost pass, impact
+  banner pass.
+
+Stage Summary:
+- The orbital-mechanics bench is now the portfolio's flagship instrument:
+  full two-body Kepler problem with physical units, drag-to-launch with
+  live ghost prediction, six verified presets, adaptive-substep symplectic
+  integration with honest ΔE, impact/radial/escape edge handling, and a
+  readout panel that teaches (classification + gloss + units derivation).
+- Every quantity the UI shows was verified against closed-form orbital
+  mechanics during QA (e, a, T, v, v∞, free-fall time — six independent
+  checks, all exact to displayed precision).
+- Patterns for future rounds: conicFrom(r, v) is the single source of
+  osculating truth (readouts AND overlays derive from it); canvas text
+  collisions are VLM-only-detectable (DOM blind) — keep hint labels on
+  fixed diagonals; the accumulator stepping pattern fixes frame-rate
+  dependence for any future instrument.
+- Known notes: ΔE ≈ −0.5 % on extreme plunge orbits is honest and bounded
+  (sub-stepping already at cap); slider min f=0.55 means sub-circular
+  tangential launches below 0.55 are drag-only (by design, documented).
+- Next-phase candidates: osculating-elements graph (a, e vs t) under the
+  readout; recorded "annotated tours" of preset experiments; apply the
+  units-layer pattern to lensing (θ_E in arcsec) and wave (Å scale).

@@ -1,0 +1,733 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+     4→import { Pause, Play, RotateCcw } from "lucide-react";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Label } from "@/components/ui/label";
+     7→import { Slider } from "@/components/ui/slider";
+     8→import { Switch } from "@/components/ui/switch";
+     9→import {
+    10→  getMotionReduced as getReduceMotion,
+    11→  subscribeMotion as subscribeReduceMotion,
+    12→} from "@/lib/motion-preference";
+    13→import { PresetChips, presetParamEq, type Preset } from "./preset-chips";
+    14→import {
+    15→  EXPERIMENT_EVENT,
+    16→  restoreFlag,
+    17→  restoreNumber,
+    18→  type BenchReporter,
+    19→  type ExperimentSpec,
+    20→} from "./experiment-link";
+    21→import { ShareExperimentButton } from "./share-experiment";
+    22→
+    23→/**
+    24→ * ORBITAL MECHANICS — the Newtonian two-body problem, live.
+    25→ *
+    26→ * The relative coordinate obeys r̈ = −GM·r/|r|³ (units: G = 1, M = 1,
+    27→ * launch radius r₀ = 1). Integrated with velocity Verlet at fixed
+    28→ * dt — a symplectic scheme, so energy drift stays bounded. The dashed
+    29→ * overlay is the exact analytic conic r(θ) = p/(1 + e·cosθ) computed
+    30→ * from the launch conditions; agreement between the two is the point.
+    31→ *
+    32→ * Approximations: Newtonian gravity only — no relativistic precession,
+    33→ * drag, or third bodies. Fixed-step integration.
+    34→ */
+    35→
+    36→const DT = 0.002;
+    37→
+    38→/* ---------- one-tap experiments ----------
+    39→ *
+    40→ * Launch at r₀ = 1 with tangential speed f·v_circ (v_circ = 1, GM = 1):
+    41→ *   ε = f²/2 − 1,  h = f,  e = √(1 + 2εh²),  a = −1/(2ε) if bound.
+    42→ * · circle:  f = 1.00 → ε = −0.500, e = 0.000, T = 2π
+    43→ * · ellipse: f = 0.75 → ε = −0.719, e = 0.438 (launch at apoapsis), T ≈ 3.65
+    44→ * · escape:  f = 1.45 → ε = +0.051, e = 1.103 — just past f = √2 ≈ 1.414,
+    45→ *   the conic opens into a hyperbola and the body never returns
+    46→ * · binary:  m₂/m₁ = 0.5 at f = 1 — both bodies orbit the barycentre at
+    47→ *   1/3 and 2/3 of the separation: the exoplanet wobble, at full tilt
+    48→ */
+    49→
+    50→type OrbitsPreset = Preset & {
+    51→  massRatio: number;
+    52→  launchF: number;
+    53→  showAnalytic: boolean;
+    54→  showTrails: boolean;
+    55→};
+    56→
+    57→const ORBITS_PRESETS: readonly OrbitsPreset[] = [
+    58→  {
+    59→    id: "circle",
+    60→    label: "Perfect circle",
+    61→    title: "f = 1.00 · m₂/m₁ = 0.20 — exactly circular: ε = −0.50, e = 0, period T = 2π",
+    62→    massRatio: 0.2,
+    63→    launchF: 1.0,
+    64→    showAnalytic: true,
+    65→    showTrails: true,
+    66→  },
+    67→  {
+    68→    id: "ellipse",
+    69→    label: "Elliptical orbit",
+    70→    title: "f = 0.75 · m₂/m₁ = 0.20 — bound ellipse: ε = −0.72, e = 0.44, launch at apoapsis, T ≈ 3.6",
+    71→    massRatio: 0.2,
+    72→    launchF: 0.75,
+    73→    showAnalytic: true,
+    74→    showTrails: true,
+    75→  },
+    76→  {
+    77→    id: "escape",
+    78→    label: "Close escape",
+    79→    title: "f = 1.45 · m₂/m₁ = 0.20 — just past escape speed √2 ≈ 1.414: ε = +0.05, e = 1.10, unbound",
+    80→    massRatio: 0.2,
+    81→    launchF: 1.45,
+    82→    showAnalytic: false,
+    83→    showTrails: true,
+    84→  },
+    85→  {
+    86→    id: "binary",
+    87→    label: "Binary dance",
+    88→    title: "m₂/m₁ = 0.50 (maximum) · f = 1.00 — both bodies waltz around the barycentre at ⅓ and ⅔ of the separation",
+    89→    massRatio: 0.5,
+    90→    launchF: 1.0,
+    91→    showAnalytic: true,
+    92→    showTrails: true,
+    93→  },
+    94→];
+    95→
+    96→type Vec = { x: number; y: number };
+    97→
+    98→function cssVar(name: string): string {
+    99→  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+   100→}
+   101→
+   102→function hexToRgb(hex: string): [number, number, number] {
+   103→  const m = hex.replace("#", "");
+   104→  const v = m.length === 3 ? m.split("").map((c) => c + c).join("") : m;
+   105→  const n = parseInt(v, 16);
+   106→  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+   107→}
+   108→
+   109→function rgba(rgb: [number, number, number], a: number): string {
+   110→  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+   111→}
+   112→
+   113→const getServerReduceMotion = () => false;
+   114→
+   115→export function OrbitsSim({
+   116→  onReport,
+   117→}: {
+   118→  /** Reports the bench's shareable state upward for whole-lab tour links. */
+   119→  onReport?: BenchReporter;
+   120→}) {
+   121→  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+   122→
+   123→  // null = automatic: paused when the visitor prefers reduced motion
+   124→  const [playingOverride, setPlayingOverride] = useState<boolean | null>(null);
+   125→  const reduceMotion = useSyncExternalStore(
+   126→    subscribeReduceMotion,
+   127→    getReduceMotion,
+   128→    getServerReduceMotion
+   129→  );
+   130→  const playing = playingOverride ?? !reduceMotion;
+   131→  const [massRatio, setMassRatio] = useState(0.18);
+   132→  const [launchF, setLaunchF] = useState(1.0);
+   133→  const [speed, setSpeed] = useState(8);
+   134→  const [showAnalytic, setShowAnalytic] = useState(true);
+   135→  const [showTrails, setShowTrails] = useState(true);
+   136→
+   137→  // Simulation state (ref-held; the loop never re-renders React)
+   138→  const rRef = useRef<Vec>({ x: 1, y: 0 });
+   139→  const vRef = useRef<Vec>({ x: 0, y: 1 });
+   140→  const e0Ref = useRef(0); // initial specific energy
+   141→  const orbitRef = useRef({ h: 1, e: 0, a: 1, bound: true, thetaP: Math.PI });
+   142→  const scaleRef = useRef(1); // px per sim unit
+   143→  const ratioRef = useRef(massRatio);
+   144→  const speedRef = useRef(speed);
+   145→  const analyticRef = useRef(showAnalytic);
+   146→  const trailsRef = useRef(showTrails);
+   147→  const playingRef = useRef(playing);
+   148→  const visibleRef = useRef(true);
+   149→  const rafRef = useRef(0);
+   150→  const sizeRef = useRef({ w: 0, h: 0, dpr: 1 });
+   151→
+   152→  const readE = useRef<HTMLSpanElement | null>(null);
+   153→  const readA = useRef<HTMLSpanElement | null>(null);
+   154→  const readEps = useRef<HTMLSpanElement | null>(null);
+   155→  const readT = useRef<HTMLSpanElement | null>(null);
+   156→  const readDE = useRef<HTMLSpanElement | null>(null);
+   157→
+   158→  /* ---------- initial conditions & analytic conic ---------- */
+   159→
+   160→  const resetSim = useCallback((f: number, keepLensPosition = false) => {
+   161→    const { w, h } = sizeRef.current;
+   162→    rRef.current = { x: 1, y: 0 };
+   163→    vRef.current = { x: 0, y: f }; // tangential launch; v_circ = 1 at r = 1
+   164→
+   165→    const eps = (f * f) / 2 - 1;
+   166→    const hAng = f;
+   167→    const e = Math.sqrt(Math.max(0, 1 + 2 * eps * hAng * hAng));
+   168→    const bound = eps < 0;
+   169→    const a = bound ? -1 / (2 * eps) : Infinity;
+   170→    const thetaP = f >= 1 ? 0 : Math.PI; // periapsis direction
+   171→
+   172→    e0Ref.current = eps;
+   173→    orbitRef.current = { h: hAng, e, a, bound, thetaP };
+   174→
+   175→    // Fit the view to the whole conic
+   176→    const rMax = bound ? a * (1 + e) : 1.6;
+   177→    const minDim = Math.min(w, h);
+   178→    scaleRef.current = (0.42 * minDim) / Math.max(rMax, 1);
+   179→
+   180→    if (!keepLensPosition) {
+   181→      const canvas = canvasRef.current;
+   182→      const ctx = canvas?.getContext("2d");
+   183→      if (canvas && ctx) {
+   184→        ctx.save();
+   185→        ctx.setTransform(1, 0, 0, 1, 0, 0);
+   186→        ctx.clearRect(0, 0, canvas.width, canvas.height);
+   187→        ctx.restore();
+   188→      }
+   189→    }
+   190→  }, []);
+   191→
+   192→  /* ---------- integration & drawing ---------- */
+   193→
+   194→  const step = () => {
+   195→    const r = rRef.current;
+   196→    const v = vRef.current;
+   197→
+   198→    const r1 = Math.hypot(r.x, r.y);
+   199→    const k1 = -1 / (r1 * r1 * r1); // r̈ = −r/|r|³ (GM = 1)
+   200→    const ax1 = k1 * r.x;
+   201→    const ay1 = k1 * r.y;
+   202→
+   203→    r.x += v.x * DT + 0.5 * ax1 * DT * DT;
+   204→    r.y += v.y * DT + 0.5 * ay1 * DT * DT;
+   205→
+   206→    const r2 = Math.hypot(r.x, r.y);
+   207→    const k2 = -1 / (r2 * r2 * r2);
+   208→    const ax2 = k2 * r.x;
+   209→    const ay2 = k2 * r.y;
+   210→
+   211→    v.x += 0.5 * (ax1 + ax2) * DT;
+   212→    v.y += 0.5 * (ay1 + ay2) * DT;
+   213→  };
+   214→
+   215→  const draw = useCallback(() => {
+   216→    const canvas = canvasRef.current;
+   217→    const ctx = canvas?.getContext("2d");
+   218→    if (!canvas || !ctx) return;
+   219→    const { w, h, dpr } = sizeRef.current;
+   220→    if (!w || !h) return;
+   221→
+   222→    const dark = document.documentElement.classList.contains("dark");
+   223→    const bg = hexToRgb(cssVar("--background"));
+   224→    const photon = hexToRgb(cssVar("--photon"));
+   225→    const dust = hexToRgb(cssVar("--dust"));
+   226→    const star: [number, number, number] = dark ? [242, 244, 248] : hexToRgb(cssVar("--foreground"));
+   227→
+   228→    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+   229→
+   230→    // Fade (or clear) — this is what leaves the trails
+   231→    if (trailsRef.current) {
+   232→      ctx.fillStyle = rgba(bg, 0.055);
+   233→      ctx.fillRect(0, 0, w, h);
+   234→    } else {
+   235→      ctx.clearRect(0, 0, w, h);
+   236→      ctx.fillStyle = rgba(bg, 1);
+   237→      ctx.fillRect(0, 0, w, h);
+   238→    }
+   239→
+   240→    const cx = w / 2;
+   241→    const cy = h / 2;
+   242→    const scale = scaleRef.current;
+   243→
+   244→    // Analytic conic (dashed) — the exact solution, for contrast
+   245→    const orb = orbitRef.current;
+   246→    if (analyticRef.current && orb.bound) {
+   247→      const p = orb.h * orb.h; // semi-latus rectum (GM = 1)
+   248→      ctx.save();
+   249→      ctx.strokeStyle = rgba(dust, dark ? 0.55 : 0.6);
+   250→      ctx.lineWidth = 1;
+   251→      ctx.setLineDash([4, 6]);
+   252→      ctx.beginPath();
+   253→      for (let i = 0; i <= 240; i++) {
+   254→        const th = (i / 240) * Math.PI * 2;
+   255→        const rr = p / (1 + orb.e * Math.cos(th - orb.thetaP));
+   256→        if (rr <= 0 || rr > 60) continue;
+   257→        const X = cx + Math.cos(th) * rr * scale;
+   258→        const Y = cy - Math.sin(th) * rr * scale;
+   259→        if (i === 0) ctx.moveTo(X, Y);
+   260→        else ctx.lineTo(X, Y);
+   261→      }
+   262→      ctx.closePath();
+   263→      ctx.stroke();
+   264→
+   265→      // Periapsis / apoapsis ticks
+   266→      const rPeri = p / (1 + orb.e);
+   267→      const rApo = p / (1 - orb.e);
+   268→      const tick = (ang: number, rad: number, label: string) => {
+   269→        const X = cx + Math.cos(ang) * rad * scale;
+   270→        const Y = cy - Math.sin(ang) * rad * scale;
+   271→        ctx.setLineDash([]);
+   272→        ctx.strokeStyle = rgba(dust, 0.8);
+   273→        ctx.lineWidth = 1;
+   274→        ctx.beginPath();
+   275→        ctx.moveTo(X - 4, Y - 4);
+   276→        ctx.lineTo(X + 4, Y + 4);
+   277→        ctx.moveTo(X - 4, Y + 4);
+   278→        ctx.lineTo(X + 4, Y - 4);
+   279→        ctx.stroke();
+   280→        ctx.fillStyle = rgba(dust, 0.9);
+   281→        ctx.font = "10px ui-monospace, monospace";
+   282→        ctx.fillText(label, X + 7, Y - 5);
+   283→        ctx.setLineDash([4, 6]);
+   284→      };
+   285→      tick(orb.thetaP, rPeri, "P");
+   286→      tick(orb.thetaP + Math.PI, rApo, "A");
+   287→      ctx.restore();
+   288→    }
+   289→
+   290→    // Barycentre
+   291→    ctx.strokeStyle = rgba(dust, 0.7);
+   292→    ctx.lineWidth = 1;
+   293→    ctx.beginPath();
+   294→    ctx.moveTo(cx - 5, cy);
+   295→    ctx.lineTo(cx + 5, cy);
+   296→    ctx.moveTo(cx, cy - 5);
+   297→    ctx.lineTo(cx, cy + 5);
+   298→    ctx.stroke();
+   299→
+   300→    // Body positions: r1 = −(m2/M)·r, r2 = +(m1/M)·r, M = 1
+   301→    const rho = ratioRef.current;
+   302→    const m1 = 1 / (1 + rho);
+   303→    const m2 = rho / (1 + rho);
+   304→    const r = rRef.current;
+   305→    const x1 = cx - m2 * r.x * scale;
+   306→    const y1 = cy + m2 * r.y * scale; // canvas y is inverted
+   307→    const x2 = cx + m1 * r.x * scale;
+   308→    const y2 = cy - m1 * r.y * scale;
+   309→
+   310→    // Primary — warm starlight with a restrained glow
+   311→    const R1 = 8 + 7 * m1;
+   312→    const g1 = ctx.createRadialGradient(x1, y1, 0, x1, y1, R1 * 3);
+   313→    g1.addColorStop(0, rgba(star, 0.16));
+   314→    g1.addColorStop(1, rgba(star, 0));
+   315→    ctx.fillStyle = g1;
+   316→    ctx.fillRect(x1 - R1 * 3, y1 - R1 * 3, R1 * 6, R1 * 6);
+   317→    ctx.beginPath();
+   318→    ctx.arc(x1, y1, R1, 0, Math.PI * 2);
+   319→    ctx.fillStyle = `rgb(${star[0]}, ${star[1]}, ${star[2]})`;
+   320→    ctx.fill();
+   321→
+   322→    // Secondary — photon cyan
+   323→    const R2 = 3.5 + 9 * m2;
+   324→    const g2 = ctx.createRadialGradient(x2, y2, 0, x2, y2, R2 * 4);
+   325→    g2.addColorStop(0, rgba(photon, 0.28));
+   326→    g2.addColorStop(1, rgba(photon, 0));
+   327→    ctx.fillStyle = g2;
+   328→    ctx.fillRect(x2 - R2 * 4, y2 - R2 * 4, R2 * 8, R2 * 8);
+   329→    ctx.beginPath();
+   330→    ctx.arc(x2, y2, R2, 0, Math.PI * 2);
+   331→    ctx.fillStyle = `rgb(${photon[0]}, ${photon[1]}, ${photon[2]})`;
+   332→    ctx.fill();
+   333→
+   334→    // Velocity vector on the secondary
+   335→    const v = vRef.current;
+   336→    const vmag = Math.hypot(v.x, v.y);
+   337→    if (vmag > 1e-6) {
+   338→      // velocity of m2 in the barycentric frame: m1·v
+   339→      const vx = m1 * v.x;
+   340→      const vy = -m1 * v.y; // canvas inversion
+   341→      const len = Math.hypot(vx, vy) * 52;
+   342→      const ux = (vx / Math.hypot(vx, vy)) * len;
+   343→      const uy = (vy / Math.hypot(vx, vy)) * len;
+   344→      const tipX = x2 + ux;
+   345→      const tipY = y2 + uy;
+   346→      ctx.strokeStyle = rgba(photon, 0.9);
+   347→      ctx.lineWidth = 1.5;
+   348→      ctx.beginPath();
+   349→      ctx.moveTo(x2, y2);
+   350→      ctx.lineTo(tipX, tipY);
+   351→      ctx.stroke();
+   352→      // arrowhead
+   353→      const ang = Math.atan2(uy, ux);
+   354→      ctx.beginPath();
+   355→      ctx.moveTo(tipX, tipY);
+   356→      ctx.lineTo(tipX - 8 * Math.cos(ang - 0.4), tipY - 8 * Math.sin(ang - 0.4));
+   357→      ctx.lineTo(tipX - 8 * Math.cos(ang + 0.4), tipY - 8 * Math.sin(ang + 0.4));
+   358→      ctx.closePath();
+   359→      ctx.fillStyle = rgba(photon, 0.9);
+   360→      ctx.fill();
+   361→    }
+   362→
+   363→    // Live readouts (direct DOM writes — no React re-render per frame)
+   364→    const epsNow = (v.x * v.x + v.y * v.y) / 2 - 1 / Math.hypot(r.x, r.y);
+   365→    const eNow = Math.sqrt(Math.max(0, 1 + 2 * epsNow * Math.pow(orbitRef.current.h, 2)));
+   366→    const aNow = epsNow < 0 ? -1 / (2 * epsNow) : Infinity;
+   367→    const dE = e0Ref.current !== 0 ? ((epsNow - e0Ref.current) / Math.abs(e0Ref.current)) * 100 : 0;
+   368→    const T = aNow < Infinity ? 2 * Math.PI * Math.pow(aNow, 1.5) : Infinity;
+   369→    if (readE.current) readE.current.textContent = eNow.toFixed(3);
+   370→    if (readA.current)
+   371→      readA.current.textContent = aNow < Infinity ? aNow.toFixed(3) : "—";
+   372→    if (readEps.current) readEps.current.textContent = epsNow.toFixed(3);
+   373→    if (readT.current)
+   374→      readT.current.textContent = T < Infinity ? `${T.toFixed(1)} τ` : "unbound";
+   375→    if (readDE.current) readDE.current.textContent = `${dE >= 0 ? "+" : ""}${dE.toFixed(3)} %`;
+   376→  }, []);
+   377→
+   378→  /* ---------- lifecycle ---------- */
+   379→
+   380→  useEffect(() => {
+   381→    const canvas = canvasRef.current;
+   382→    if (!canvas) return;
+   383→
+   384→    const resize = () => {
+   385→      const parent = canvas.parentElement;
+   386→      if (!parent) return;
+   387→      const rect = parent.getBoundingClientRect();
+   388→      if (rect.width < 2 || rect.height < 2) return;
+   389→      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+   390→      const prevScale = scaleRef.current;
+   391→      sizeRef.current = { w: rect.width, h: rect.height, dpr };
+   392→      canvas.width = Math.round(rect.width * dpr);
+   393→      canvas.height = Math.round(rect.height * dpr);
+   394→      if (prevScale === 1) {
+   395→        resetSim(launchF);
+   396→      } else {
+   397→        // keep the orbit fitted on resize
+   398→        resetSim(launchF, false);
+   399→      }
+   400→    };
+   401→
+   402→    resize();
+   403→    resetSim(launchF);
+   404→
+   405→    const ro = new ResizeObserver(resize);
+   406→    ro.observe(canvas.parentElement ?? canvas);
+   407→
+   408→    const io = new IntersectionObserver(
+   409→      (entries) => {
+   410→        visibleRef.current = entries[0]?.isIntersecting ?? true;
+   411→      },
+   412→      { threshold: 0.05 }
+   413→    );
+   414→    io.observe(canvas);
+   415→
+   416→    const onVisibility = () => {
+   417→      visibleRef.current = document.visibilityState === "visible";
+   418→    };
+   419→    document.addEventListener("visibilitychange", onVisibility);
+   420→
+   421→    const mo = new MutationObserver(() => {
+   422→      const ctx = canvas.getContext("2d");
+   423→      if (ctx) {
+   424→        ctx.save();
+   425→        ctx.setTransform(1, 0, 0, 1, 0, 0);
+   426→        ctx.clearRect(0, 0, canvas.width, canvas.height);
+   427→        ctx.restore();
+   428→      }
+   429→    });
+   430→    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+   431→
+   432→    let last = performance.now();
+   433→    const frame = (now: number) => {
+   434→      rafRef.current = requestAnimationFrame(frame);
+   435→      // Advance only while playing and on screen; always redraw (cheap)
+   436→      if (playingRef.current && visibleRef.current) {
+   437→        const sub = speedRef.current;
+   438→        for (let i = 0; i < sub; i++) step();
+   439→      }
+   440→      if (now - last > 8) {
+   441→        last = now;
+   442→        draw();
+   443→      }
+   444→    };
+   445→    rafRef.current = requestAnimationFrame(frame);
+   446→
+   447→    return () => {
+   448→      cancelAnimationFrame(rafRef.current);
+   449→      ro.disconnect();
+   450→      io.disconnect();
+   451→      mo.disconnect();
+   452→      document.removeEventListener("visibilitychange", onVisibility);
+   453→    };
+   454→  }, [draw, resetSim]);
+   455→
+   456→  // Mirror state into refs for the animation loop
+   457→  useEffect(() => { playingRef.current = playing; }, [playing]);
+   458→  useEffect(() => { ratioRef.current = massRatio; }, [massRatio]);
+   459→  useEffect(() => { speedRef.current = speed; }, [speed]);
+   460→  useEffect(() => { analyticRef.current = showAnalytic; }, [showAnalytic]);
+   461→  useEffect(() => { trailsRef.current = showTrails; }, [showTrails]);
+   462→
+   463→  const reset = () => {
+   464→    resetSim(launchF);
+   465→  };
+   466→
+   467→  /* ---------- presets: parameters + reset + run (unless calm) ---------- */
+   468→
+   469→  const applyPreset = (preset: OrbitsPreset) => {
+   470→    setMassRatio(preset.massRatio);
+   471→    setLaunchF(preset.launchF);
+   472→    setShowAnalytic(preset.showAnalytic);
+   473→    setShowTrails(preset.showTrails);
+   474→    resetSim(preset.launchF);
+   475→    // f only takes effect on reset, so the preset resets the integration;
+   476→    // mass ratio and the toggles are live. Run the experiment immediately —
+   477→    // unless the visitor prefers calm, in which case it stays paused (the
+   478→    // overlay play button remains available), matching the initial state.
+   479→    if (!playing && !reduceMotion) setPlayingOverride(true);
+   480→  };
+   481→
+   482→  const activePresetId =
+   483→    ORBITS_PRESETS.find(
+   484→      (p) =>
+   485→        presetParamEq(p.massRatio, massRatio) &&
+   486→        presetParamEq(p.launchF, launchF) &&
+   487→        p.showAnalytic === showAnalytic &&
+   488→        p.showTrails === showTrails
+   489→    )?.id ?? null;
+   490→
+   491→  // One builder feeds the per-bench share chip and the tour reporter,
+   492→  // so the two views of "this experiment" can never drift apart.
+   493→  const shareParams = useCallback(
+   494→    () => ({
+   495→      m: massRatio.toFixed(2),
+   496→      f: launchF.toFixed(2),
+   497→      a: showAnalytic ? 1 : 0,
+   498→      t: showTrails ? 1 : 0,
+   499→    }),
+   500→    [massRatio, launchF, showAnalytic, showTrails]
+   501→  );
+   502→
+   503→  useEffect(() => {
+   504→    onReport?.(shareParams(), activePresetId);
+   505→  }, [onReport, shareParams, activePresetId]);
+   506→
+   507→  /* ---------- shared-link restore ---------- */
+   508→
+   509→  useEffect(() => {
+   510→    const onRestore = (e: Event) => {
+   511→      const spec = (e as CustomEvent<ExperimentSpec>).detail;
+   512→      if (spec?.tab !== "orbits") return;
+   513→      const m = restoreNumber(spec.params, "m", 0.05, 0.5, 0.18);
+   514→      const f = restoreNumber(spec.params, "f", 0.5, 1.5, 1.0);
+   515→      setMassRatio(m);
+   516→      setLaunchF(f);
+   517→      setShowAnalytic(restoreFlag(spec.params, "a", true));
+   518→      setShowTrails(restoreFlag(spec.params, "t", true));
+   519→      // f only takes effect on reset, so restoring replays the launch.
+   520→      resetSim(f);
+   521→      if (!playing && !reduceMotion) setPlayingOverride(true);
+   522→    };
+   523→    window.addEventListener(EXPERIMENT_EVENT, onRestore);
+   524→    return () => window.removeEventListener(EXPERIMENT_EVENT, onRestore);
+   525→  }, [resetSim, playing, reduceMotion]);
+   526→
+   527→  const onKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
+   528→    if (e.key === " ") {
+   529→      e.preventDefault();
+   530→      setPlayingOverride(!playing);
+   531→    } else if (e.key.toLowerCase() === "r") {
+   532→      e.preventDefault();
+   533→      reset();
+   534→    }
+   535→  };
+   536→
+   537→  return (
+   538→    <div data-print="hide" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+   539→      <figure className="m-0">
+   540→        <div className="relative h-[380px] overflow-hidden rounded-lg border border-border bg-card sm:h-[460px] lg:h-[560px]">
+   541→          <canvas
+   542→            ref={canvasRef}
+   543→            className="h-full w-full focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+   544→            tabIndex={0}
+   545→            role="application"
+   546→            aria-label="Two-body orbital mechanics simulation. Press Space to play or pause, R to reset. Adjust parameters in the controls panel."
+   547→            onKeyDown={onKeyDown}
+   548→          />
+   549→          {!playing && (
+   550→            <button
+   551→              type="button"
+   552→              onClick={() => setPlayingOverride(true)}
+   553→              className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[1px] transition-colors hover:bg-background/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+   554→              aria-label="Play the simulation"
+   555→            >
+   556→              <span className="flex size-16 items-center justify-center rounded-full border border-border bg-card/90">
+   557→                <Play className="size-6 translate-x-0.5" aria-hidden="true" />
+   558→              </span>
+   559→            </button>
+   560→          )}
+   561→        </div>
+   562→        <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 meta-sm text-muted-foreground">
+   563→          <span>Fig. L-2 · Two-body · Velocity-Verlet</span>
+   564→          <span className="tabular-nums">GM = 1 · dt = {DT}</span>
+   565→        </figcaption>
+   566→      </figure>
+   567→
+   568→      <div className="flex flex-col gap-6">
+   569→        <div className="rounded-lg border border-border bg-card p-5">
+   570→          <h4 className="meta-sm text-muted-foreground">
+   571→            Controls
+   572→          </h4>
+   573→
+   574→          <div className="mt-5 space-y-5">
+   575→            <PresetChips
+   576→              ariaLabel="Experiment presets for orbital mechanics"
+   577→              presets={ORBITS_PRESETS}
+   578→              activeId={activePresetId}
+   579→              onSelect={applyPreset}
+   580→            />
+   581→
+   582→            <div>
+   583→              <ShareExperimentButton
+   584→                tab="orbits"
+   585→                preset={activePresetId}
+   586→                instrument="the orbital-mechanics bench"
+   587→                params={shareParams}
+   588→              />
+   589→            </div>
+   590→
+   591→            <div className="space-y-3">
+   592→              <div className="flex items-baseline justify-between">
+   593→                <Label htmlFor="mass-ratio" className="text-sm">
+   594→                  Mass ratio
+   595→                </Label>
+   596→                <span className="font-mono text-xs tabular-nums text-photon">
+   597→                  m₂/m₁ = {massRatio.toFixed(2)}
+   598→                </span>
+   599→              </div>
+   600→              <Slider
+   601→                id="mass-ratio"
+   602→                aria-label="Mass ratio of the two bodies"
+   603→                min={0.05}
+   604→                max={0.5}
+   605→                step={0.01}
+   606→                value={[massRatio]}
+   607→                onValueChange={([v]) => setMassRatio(v)}
+   608→              />
+   609→              <p className="text-xs leading-relaxed text-muted-foreground">
+   610→                Live — shifts the barycentre the two bodies orbit around.
+   611→              </p>
+   612→            </div>
+   613→
+   614→            <div className="space-y-3">
+   615→              <div className="flex items-baseline justify-between">
+   616→                <Label htmlFor="launch-speed" className="text-sm">
+   617→                  Launch speed
+   618→                </Label>
+   619→                <span className="font-mono text-xs tabular-nums text-photon">
+   620→                  f = {launchF.toFixed(2)} v_circ
+   621→                </span>
+   622→              </div>
+   623→              <Slider
+   624→                id="launch-speed"
+   625→                aria-label="Initial tangential speed as a fraction of circular speed"
+   626→                min={0.5}
+   627→                max={1.5}
+   628→                step={0.01}
+   629→                value={[launchF]}
+   630→                onValueChange={([v]) => setLaunchF(v)}
+   631→              />
+   632→              <p className="text-xs leading-relaxed text-muted-foreground">
+   633→                Applies on reset — f &lt; 1 drops from apoapsis, f &gt; 1 climbs
+   634→                from periapsis, and past f = √2 ≈ 1.41 the conic opens and the
+   635→                body escapes for good.
+   636→              </p>
+   637→            </div>
+   638→
+   639→            <div className="space-y-3">
+   640→              <div className="flex items-baseline justify-between">
+   641→                <Label htmlFor="sim-speed" className="text-sm">
+   642→                  Simulation speed
+   643→                </Label>
+   644→                <span className="font-mono text-xs tabular-nums text-photon">
+   645→                  {speed}× dt
+   646→                </span>
+   647→              </div>
+   648→              <Slider
+   649→                id="sim-speed"
+   650→                aria-label="Simulation speed"
+   651→                min={1}
+   652→                max={15}
+   653→                step={1}
+   654→                value={[speed]}
+   655→                onValueChange={([v]) => setSpeed(v)}
+   656→              />
+   657→            </div>
+   658→
+   659→            <div className="flex gap-2">
+   660→              <Button
+   661→                variant={playing ? "outline" : "default"}
+   662→                size="sm"
+   663→                className="flex-1"
+   664→                onClick={() => setPlayingOverride(!playing)}
+   665→                aria-pressed={playing}
+   666→              >
+   667→                {playing ? (
+   668→                  <>
+   669→                    <Pause className="size-3.5" aria-hidden="true" /> Pause
+   670→                  </>
+   671→                ) : (
+   672→                  <>
+   673→                    <Play className="size-3.5" aria-hidden="true" /> Play
+   674→                  </>
+   675→                )}
+   676→              </Button>
+   677→              <Button variant="outline" size="sm" className="flex-1" onClick={reset}>
+   678→                <RotateCcw className="size-3.5" aria-hidden="true" /> Reset
+   679→              </Button>
+   680→            </div>
+   681→
+   682→            <div className="flex items-center justify-between">
+   683→              <Label htmlFor="analytic-toggle" className="text-sm">
+   684→                Analytic orbit
+   685→              </Label>
+   686→              <Switch
+   687→                id="analytic-toggle"
+   688→                aria-label="Show the exact analytic conic section"
+   689→                checked={showAnalytic}
+   690→                onCheckedChange={setShowAnalytic}
+   691→              />
+   692→            </div>
+   693→
+   694→            <div className="flex items-center justify-between">
+   695→              <Label htmlFor="trails-toggle" className="text-sm">
+   696→                Trails
+   697→              </Label>
+   698→              <Switch
+   699→                id="trails-toggle"
+   700→                aria-label="Show fading trails behind the bodies"
+   701→                checked={showTrails}
+   702→                onCheckedChange={setShowTrails}
+   703→              />
+   704→            </div>
+   705→          </div>
+   706→        </div>
+   707→
+   708→        <div className="rounded-lg border border-border bg-card p-5">
+   709→          <h4 className="meta-sm text-muted-foreground">
+   710→            Readout
+   711→          </h4>
+   712→          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-xs tabular-nums">
+   713→            <dt className="text-muted-foreground">eccentricity e</dt>
+   714→            <dd className="text-right" ref={readE}>—</dd>
+   715→            <dt className="text-muted-foreground">semi-major a</dt>
+   716→            <dd className="text-right" ref={readA}>—</dd>
+   717→            <dt className="text-muted-foreground">energy ε</dt>
+   718→            <dd className="text-right" ref={readEps}>—</dd>
+   719→            <dt className="text-muted-foreground">period T</dt>
+   720→            <dd className="text-right" ref={readT}>—</dd>
+   721→            <dt className="text-muted-foreground">ΔE drift</dt>
+   722→            <dd className="text-right text-photon" ref={readDE}>—</dd>
+   723→          </dl>
+   724→          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+   725→            ΔE is the honest measure of the integrator: velocity Verlet is
+   726→            symplectic, so the drift stays bounded rather than accumulating.
+   727→          </p>
+   728→        </div>
+   729→      </div>
+   730→    </div>
+   731→  );
+   732→}
+   733→
