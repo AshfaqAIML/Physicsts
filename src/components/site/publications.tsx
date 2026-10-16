@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { publicationTypes, publicationsEmptyState } from "@/content/publications";
@@ -57,6 +58,14 @@ export function Publications() {
                       cy={cy}
                       r={i % 3 === 0 ? 2.4 : 1.5}
                       fill="currentColor"
+                      className="constellation-star"
+                      style={
+                        {
+                          "--tw-del": `${(i * 0.6).toFixed(1)}s`,
+                          "--tw-dur": `${(4.2 + (i % 4) * 1.3).toFixed(1)}s`,
+                          "--tw-min": i % 3 === 0 ? "0.7" : "0.45",
+                        } as CSSProperties
+                      }
                     />
                   ))}
                 </g>

@@ -32,9 +32,10 @@ export function DeepField() {
     let visible = true;
     let last = 0;
     let reduce = getMotionReduced();
+    let dark = document.documentElement.classList.contains("dark");
 
     const seed = () => {
-      const dark = document.documentElement.classList.contains("dark");
+      dark = document.documentElement.classList.contains("dark");
       const count = dark ? 110 : 40;
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * w,
@@ -84,6 +85,11 @@ export function DeepField() {
     document.addEventListener("visibilitychange", onVisibility);
 
     const mo = new MutationObserver(() => {
+      /* Only a genuine theme change re-seeds the field — the <html>
+         class also flips for motion preferences and the theme
+         cross-fade, none of which should redraw the sky. */
+      const darkNow = document.documentElement.classList.contains("dark");
+      if (darkNow === dark) return;
       seed();
       if (reduce) draw(0, window.scrollY);
     });

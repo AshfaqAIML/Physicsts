@@ -1,0 +1,753 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+     4→import { ArrowRight, ArrowUpRight, BookOpen, Check, Clock, Link2, ListTree, NotebookPen, Shuffle } from "lucide-react";
+     5→import { toast } from "sonner";
+     6→import {
+     7→  Dialog,
+     8→  DialogContent,
+     9→  DialogDescription,
+    10→  DialogHeader,
+    11→  DialogTitle,
+    12→} from "@/components/ui/dialog";
+    13→import { AskAssistant } from "@/components/site/ask-assistant";
+    14→import { PrintEssayButton } from "@/components/site/print-essay";
+    15→import { QuoteCopy } from "@/components/site/quote-copy";
+    16→import { Reveal } from "@/components/site/reveal";
+    17→import { SectionHeading } from "@/components/site/section-heading";
+    18→import { Prose } from "@/components/site/tex";
+    19→import { noteCategories, notes, type Note, type NoteCategory } from "@/content/notes";
+    20→import { cn } from "@/lib/utils";
+    21→
+    22→/**
+    23→ * SCIENTIFIC NOTEBOOK — a premium digital journal. One full example
+    24→ * essay; the rest are honestly-marked planned topics.
+    25→ */
+    26→
+    27→/* ------------------------------------------------------------------ */
+    28→/* Deep links — readable essays are addressable as `#note-<noteId>`    */
+    29→/* ------------------------------------------------------------------ */
+    30→
+    31→const NOTE_HASH_PREFIX = "#note-";
+    32→
+    33→const noteHash = (note: Note) => `${NOTE_HASH_PREFIX}${note.id}`;
+    34→
+    35→/* Recently-read essays — most recent first, capped at three, kept in
+    36→   localStorage so the command palette can offer to resume them. */
+    37→const RECENT_KEY = "phys:recent-notes";
+    38→const RECENT_CAP = 3;
+    39→
+    40→function recordRecentNote(id: string) {
+    41→  try {
+    42→    const stored = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+    43→    const ids: string[] = Array.isArray(stored) ? stored.filter((x): x is string => typeof x === "string") : [];
+    44→    if (ids[0] === id) return;
+    45→    window.localStorage.setItem(
+    46→      RECENT_KEY,
+    47→      JSON.stringify([id, ...ids.filter((x) => x !== id)].slice(0, RECENT_CAP))
+    48→    );
+    49→    window.dispatchEvent(new Event("phys:recent-notes-changed"));
+    50→  } catch {
+    51→    // Storage unavailable (private mode, quota) — recently-read is a bonus,
+    52→    // never a blocker.
+    53→  }
+    54→}
+    55→
+    56→/** Resolve a location hash to a readable (essay-bearing) note, else null. */
+    57→function readableNoteFromHash(hash: string): Note | null {
+    58→  if (!hash.startsWith(NOTE_HASH_PREFIX)) return null;
+    59→  const note = notes.find((n) => n.id === hash.slice(NOTE_HASH_PREFIX.length));
+    60→  return note?.essay ? note : null;
+    61→}
+    62→
+    63→export function Notebook() {
+    64→  const [category, setCategory] = useState<NoteCategory | "All">("All");
+    65→  const [open, setOpen] = useState<Note | null>(null);
+    66→  /**
+    67→   * The reading view's table of contents navigates with in-dialog anchors
+    68→   * (`#<section-id>`). This ref records the hash a contents link is about
+    69→   * to produce so the `hashchange` listener can recognise and ignore it —
+    70→   * those hashes are not note deep-links and must never close or swap the
+    71→   * reading view.
+    72→   */
+    73→  const contentsHash = useRef<string | null>(null);
+    74→
+    75→  /**
+    76→   * User-initiated open (ledger row, command palette). Pushes a history
+    77→   * entry — Back then closes the essay — via pushState, which changes the
+    78→   * hash without a scroll jump and without firing a hashchange echo.
+    79→   */
+    80→  const openNote = useCallback((note: Note) => {
+    81→    contentsHash.current = null;
+    82→    setOpen(note);
+    83→    const target = noteHash(note);
+    84→    if (window.location.hash !== target) {
+    85→      window.history.pushState(null, "", target);
+    86→    }
+    87→  }, []);
+    88→
+    89→  const filtered = useMemo(
+    90→    () => (category === "All" ? notes : notes.filter((n) => n.category === category)),
+    91→    [category]
+    92→  );
+    93→
+    94→  // The reading view ends with a hand-off to whatever essay comes next.
+    95→  const readableNotes = useMemo(() => notes.filter((n) => n.essay), []);
+    96→  const nextNoteOf = useCallback(
+    97→    (note: Note): Note | null => {
+    98→      if (readableNotes.length < 2) return null;
+    99→      const idx = readableNotes.findIndex((n) => n.id === note.id);
+   100→      if (idx === -1) return null;
+   101→      return readableNotes[(idx + 1) % readableNotes.length];
+   102→    },
+   103→    [readableNotes]
+   104→  );
+   105→
+   106→  // External openers (command palette)
+   107→  useEffect(() => {
+   108→    const onOpen = (e: Event) => {
+   109→      const id = (e as CustomEvent<string>).detail;
+   110→      const note = notes.find((n) => n.id === id);
+   111→      if (note?.essay) openNote(note);
+   112→    };
+   113→    window.addEventListener("phys:open-note", onOpen);
+   114→    return () => window.removeEventListener("phys:open-note", onOpen);
+   115→  }, [openNote]);
+   116→
+   117→  // Random page — fate chooses from the readable essays, preferring the
+   118→  // current category filter (external openers: palette action, R hotkey).
+   119→  const openRandomNote = useCallback(() => {
+   120→    const pool = filtered.filter((n) => n.essay);
+   121→    const source = pool.length > 0 ? pool : notes.filter((n) => n.essay);
+   122→    if (source.length === 0) return;
+   123→    openNote(source[Math.floor(Math.random() * source.length)]);
+   124→  }, [filtered, openNote]);
+   125→
+   126→  useEffect(() => {
+   127→    const onRandom = () => openRandomNote();
+   128→    window.addEventListener("phys:open-random-note", onRandom);
+   129→    return () => window.removeEventListener("phys:open-random-note", onRandom);
+   130→  }, [openRandomNote]);
+   131→
+   132→  // Any open — ledger row, palette, deep link, random — feeds the
+   133→  // recently-read trail the command palette offers to resume.
+   134→  useEffect(() => {
+   135→    if (open?.essay) recordRecentNote(open.id);
+   136→  }, [open]);
+   137→
+   138→  // Resume reading — the essay this browser last had open, one quiet
+   139→  // affordance above the ledger. Refreshes from the shared trail so the
+   140→  // palette, deep links, and this row never disagree; hidden while an
+   141→  // essay is already on the reading stage.
+   142→  const [resumeId, setResumeId] = useState<string | null>(null);
+   143→  useEffect(() => {
+   144→    const readTrail = () => {
+   145→      try {
+   146→        const ids: unknown = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+   147→        setResumeId(
+   148→          Array.isArray(ids) && typeof ids[0] === "string" ? ids[0] : null
+   149→        );
+   150→      } catch {
+   151→        setResumeId(null);
+   152→      }
+   153→    };
+   154→    readTrail();
+   155→    window.addEventListener("phys:recent-notes-changed", readTrail);
+   156→    return () => window.removeEventListener("phys:recent-notes-changed", readTrail);
+   157→  }, []);
+   158→  const resumeNote =
+   159→    resumeId === null ? null : readableNotes.find((n) => n.id === resumeId) ?? null;
+   160→
+   161→  // Deep links: `#note-<id>` opens that essay on initial load and on
+   162→  // back/forward navigation. Hashes without the `#note-` prefix (nav
+   163→  // anchors, in-dialog contents anchors) never open anything; only a
+   164→  // move *away* from a note hash closes the reading view.
+   165→  useEffect(() => {
+   166→    const syncFromHash = () => {
+   167→      const hash = window.location.hash;
+   168→      const expected = contentsHash.current;
+   169→      contentsHash.current = null;
+   170→      if (expected !== null && expected === hash) return; // contents anchor — ignore
+   171→      if (hash.startsWith(NOTE_HASH_PREFIX)) {
+   172→        const note = readableNoteFromHash(hash);
+   173→        if (note) setOpen(note); // hash-driven opens never touch history
+   174→      } else {
+   175→        setOpen(null); // back/forward moved away from an essay deep link
+   176→      }
+   177→    };
+   178→
+   179→    syncFromHash(); // initial load — history is left untouched
+   180→    window.addEventListener("hashchange", syncFromHash);
+   181→    return () => window.removeEventListener("hashchange", syncFromHash);
+   182→  }, []);
+   183→
+   184→  return (
+   185→    <section
+   186→      id="notes"
+   187→      aria-labelledby="notes-heading"
+   188→      className="relative section-pad"
+   189→    >
+   190→      <div className="shell">
+   191→        <SectionHeading
+   192→          index="05"
+   193→          headingId="notes-heading"
+   194→          eyebrow="Scientific Notebook"
+   195→          title="Ideas in Progress."
+   196→          lede="Essays and notes on physics, mathematics, and the history of ideas — written to think clearly, published when ready."
+   197→          meta="Essays · 9 in progress"
+   198→        />
+   199→
+   200→        {/* Resume where you left off — only for returning readers */}
+   201→        {resumeNote && !open && (
+   202→          <Reveal delay={0.02} className="mt-12">
+   203→            <button
+   204→              type="button"
+   205→              onClick={() => openNote(resumeNote)}
+   206→              className="group flex w-full flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border border-dashed border-border px-5 py-4 text-left transition-colors hover:border-photon/50 hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+   207→              aria-label={`Resume reading the essay: ${resumeNote.title}`}
+   208→            >
+   209→              <span className="flex items-center gap-2 meta-sm text-muted-foreground">
+   210→                <BookOpen className="size-3 text-photon/70" aria-hidden="true" />
+   211→                Last read
+   212→              </span>
+   213→              <span className="font-serif text-base text-foreground/90 transition-colors group-hover:text-photon sm:text-lg">
+   214→                {resumeNote.title}
+   215→              </span>
+   216→              <span className="ml-auto hidden items-center gap-1 meta-sm text-muted-foreground transition-colors group-hover:text-photon sm:flex">
+   217→                Resume
+   218→                <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
+   219→              </span>
+   220→            </button>
+   221→          </Reveal>
+   222→        )}
+   223→
+   224→        {/* Category filter + the dice */}
+   225→        <Reveal delay={0.05} className="mt-12">
+   226→          <div className="flex flex-wrap items-center gap-x-2 gap-y-3">
+   227→            <div
+   228→              role="group"
+   229→              aria-label="Filter notes by category"
+   230→              className="flex flex-wrap items-center gap-2"
+   231→            >
+   232→              {(["All", ...noteCategories] as const).map((c) => (
+   233→                <button
+   234→                  key={c}
+   235→                  type="button"
+   236→                  aria-pressed={category === c}
+   237→                  onClick={() => setCategory(c)}
+   238→                  className={cn(
+   239→                    "rounded-full border px-3.5 py-1.5 meta-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+   240→                    category === c
+   241→                      ? "border-photon/60 bg-photon/10 text-foreground"
+   242→                      : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
+   243→                  )}
+   244→                >
+   245→                  {c}
+   246→                </button>
+   247→              ))}
+   248→            </div>
+   249→            <button
+   250→              type="button"
+   251→              onClick={openRandomNote}
+   252→              title="Open a random readable essay — prefers the current filter"
+   253→              className="chip-btn chip-btn--dashed rounded-full px-3.5 py-1.5 sm:ml-auto"
+   254→            >
+   255→              <Shuffle className="size-3" aria-hidden="true" />
+   256→              Random page
+   257→            </button>
+   258→          </div>
+   259→        </Reveal>
+   260→
+   261→        {/* The ledger */}
+   262→        <div className="mt-8 divide-y divide-border border-y border-border">
+   263→          {filtered.map((note, i) => {
+   264→            const readable = Boolean(note.essay);
+   265→            return (
+   266→              <Reveal key={note.id} delay={Math.min(0.05 * i, 0.25)} as="div">
+   267→                <button
+   268→                  type="button"
+   269→                  disabled={!readable}
+   270→                  onClick={() => readable && openNote(note)}
+   271→                  aria-haspopup="dialog"
+   272→                  aria-label={
+   273→                    readable
+   274→                      ? `Read the essay: ${note.title}`
+   275→                      : `${note.title} — planned, not yet written`
+   276→                  }
+   277→                  className={cn(
+   278→                    "group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-4 py-6 text-left transition-colors sm:gap-x-8",
+   279→                    readable
+   280→                      ? "hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+   281→                      : "cursor-default opacity-60"
+   282→                  )}
+   283→                >
+   284→                  <span className="meta-num text-muted-foreground">
+   285→                    {String(i + 1).padStart(2, "0")}
+   286→                  </span>
+   287→
+   288→                  <span>
+   289→                    <span
+   290→                      className={cn(
+   291→                        "block font-serif text-xl leading-snug sm:text-2xl",
+   292→                        readable ? "text-foreground transition-colors group-hover:text-photon" : "text-muted-foreground"
+   293→                      )}
+   294→                    >
+   295→                      {note.title}
+   296→                    </span>
+   297→                    <span className="mt-1.5 block max-w-2xl text-sm leading-relaxed text-muted-foreground">
+   298→                      {note.excerpt}
+   299→                    </span>
+   300→                    <span className="mt-3 flex flex-wrap items-center gap-3 meta-sm text-muted-foreground">
+   301→                      <span className="tag">
+   302→                        {note.category}
+   303→                      </span>
+   304→                      {readable ? (
+   305→                        <span className="inline-flex items-center gap-1.5">
+   306→                          <Clock className="size-3" aria-hidden="true" />
+   307→                          {note.readingMinutes} min read
+   308→                        </span>
+   309→                      ) : (
+   310→                        <span className="inline-flex items-center gap-1.5">
+   311→                          <NotebookPen className="size-3" aria-hidden="true" />
+   312→                          Planned — not yet written
+   313→                        </span>
+   314→                      )}
+   315→                    </span>
+   316→                  </span>
+   317→
+   318→                  <span
+   319→                    className={cn(
+   320→                      "self-center",
+   321→                      readable
+   322→                        ? "text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
+   323→                        : "text-muted-foreground"
+   324→                    )}
+   325→                    aria-hidden="true"
+   326→                  >
+   327→                    {readable ? <ArrowUpRight className="size-5" /> : <span className="meta-num">—</span>}
+   328→                  </span>
+   329→                </button>
+   330→              </Reveal>
+   331→            );
+   332→          })}
+   333→        </div>
+   334→      </div>
+   335→
+   336→      {/* Reading view — a quiet room for one essay */}
+   337→      <Dialog
+   338→        open={open !== null}
+   339→        onOpenChange={(nextOpen) => {
+   340→          if (!nextOpen && open) {
+   341→            // Manual close: if the hash points at this essay (its deep link
+   342→            // or a stale in-dialog contents anchor), clear it without adding
+   343→            // a history entry.
+   344→            const hash = window.location.hash;
+   345→            const pointsAtThisEssay =
+   346→              hash === noteHash(open) ||
+   347→              Boolean(open.essay?.sections.some((s) => `#${s.id}` === hash));
+   348→            if (pointsAtThisEssay) {
+   349→              window.history.replaceState(
+   350→                null,
+   351→                "",
+   352→                window.location.pathname + window.location.search
+   353→              );
+   354→            }
+   355→            contentsHash.current = null;
+   356→            setOpen(null);
+   357→          }
+   358→        }}
+   359→      >
+   360→        <DialogContent
+   361→          className="max-h-[92vh] gap-0 overflow-hidden border-border bg-background p-0 sm:max-w-5xl"
+   362→          showCloseButton
+   363→        >
+   364→          {open?.essay && (
+   365→            <ReadingView
+   366→              note={open}
+   367→              nextNote={nextNoteOf(open)}
+   368→              onOpenNext={openNote}
+   369→              onContentsNavigate={(hash) => {
+   370→                contentsHash.current = hash;
+   371→              }}
+   372→            />
+   373→          )}
+   374→        </DialogContent>
+   375→      </Dialog>
+   376→    </section>
+   377→  );
+   378→}
+   379→
+   380→/* ------------------------------------------------------------------ */
+   381→/* The reading view                                                      */
+   382→/* ------------------------------------------------------------------ */
+   383→
+   384→function ReadingView({
+   385→  note,
+   386→  nextNote,
+   387→  onOpenNext,
+   388→  onContentsNavigate,
+   389→}: {
+   390→  note: Note;
+   391→  /** The essay to offer when this one ends, if any. */
+   392→  nextNote: Note | null;
+   393→  /** Opens another essay the way a ledger row does. */
+   394→  onOpenNext: (note: Note) => void;
+   395→  /** Reports the hash a contents link is about to navigate to. */
+   396→  onContentsNavigate: (hash: string) => void;
+   397→}) {
+   398→  const essay = note.essay!;
+   399→  const [active, setActive] = useState(essay.sections[0]?.id ?? "");
+   400→  const articleRef = useRef<HTMLElement | null>(null);
+   401→  const progressRef = useRef<HTMLDivElement | null>(null);
+   402→  const percentRef = useRef<HTMLSpanElement | null>(null);
+   403→
+   404→  // Reading progress — a photon hairline along the top of the reading
+   405→  // pane, plus a quiet counter in the header. Driven by direct style and
+   406→  // text writes on scroll (no re-renders), and mirrored as a data
+   407→  // attribute that reveals the header's depth shadow.
+   408→  const handleArticleScroll = useCallback(() => {
+   409→    const el = articleRef.current;
+   410→    if (!el) return;
+   411→    const max = el.scrollHeight - el.clientHeight;
+   412→    const p = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0;
+   413→    const bar = progressRef.current;
+   414→    if (bar) bar.style.transform = `scaleX(${p})`;
+   415→    const counter = percentRef.current;
+   416→    if (counter) counter.textContent = String(Math.round(p * 100)).padStart(3, "0");
+   417→    el.dataset.scrolled = el.scrollTop > 8 ? "true" : "false";
+   418→  }, []);
+   419→
+   420→  // A fresh essay starts at the top with a zeroed measure.
+   421→  useEffect(() => {
+   422→    const el = articleRef.current;
+   423→    if (el) {
+   424→      // "instant" — never animate the jump back to the top; the pane's
+   425→      // CSS smooth scroll is for contents navigation only.
+   426→      el.scrollTo({ top: 0, behavior: "instant" });
+   427→      el.dataset.scrolled = "false";
+   428→    }
+   429→    if (progressRef.current) progressRef.current.style.transform = "scaleX(0)";
+   430→    if (percentRef.current) percentRef.current.textContent = "000";
+   431→  }, [note.id]);
+   432→
+   433→  // Scroll-spy — the contents rail tracks the section under the eye
+   434→  // as the essay scrolls, not only on explicit clicks.
+   435→  useEffect(() => {
+   436→    const article = articleRef.current;
+   437→    if (!article) return;
+   438→    const sections = essay.sections
+   439→      .map((s) => article.querySelector(`#${s.id}`))
+   440→      .filter((el): el is HTMLElement => el !== null);
+   441→    if (sections.length === 0) return;
+   442→
+   443→    const io = new IntersectionObserver(
+   444→      (entries) => {
+   445→        for (const entry of entries) {
+   446→          if (entry.isIntersecting) setActive(entry.target.id);
+   447→        }
+   448→      },
+   449→      // A band just below the header marks "currently reading"
+   450→      { root: article, rootMargin: "-15% 0px -70% 0px" }
+   451→    );
+   452→    sections.forEach((s) => io.observe(s));
+   453→    return () => io.disconnect();
+   454→  }, [essay.sections]);
+   455→
+   456→  return (
+   457→    <div className="reading-stage grid h-[92vh] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
+   458→      {/* Table of contents */}
+   459→      <aside className="hidden flex-col border-r border-border bg-card/60 py-6 lg:flex">
+   460→        <p className="flex items-center gap-2 px-6 meta-sm text-muted-foreground">
+   461→          <ListTree className="size-3.5" aria-hidden="true" /> Contents
+   462→        </p>
+   463→        <nav aria-label="Table of contents" className="reading-toc mt-5 flex-1 overflow-y-auto px-3">
+   464→          <ol className="space-y-1">
+   465→            {essay.sections.map((s, i) => (
+   466→              <li key={s.id}>
+   467→                <a
+   468→                  href={`#${s.id}`}
+   469→                  onClick={() => {
+   470→                    onContentsNavigate(`#${s.id}`);
+   471→                    setActive(s.id);
+   472→                  }}
+   473→                  aria-current={active === s.id ? "true" : undefined}
+   474→                  className={cn(
+   475→                    "block rounded-md px-3 py-2 text-sm leading-snug transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+   476→                    active === s.id
+   477→                      ? "bg-accent text-foreground"
+   478→                      : "text-muted-foreground hover:text-foreground"
+   479→                  )}
+   480→                >
+   481→                  <span className="mr-2 meta-num text-photon">
+   482→                    {String(i + 1).padStart(2, "0")}
+   483→                  </span>
+   484→                  {s.heading.replace(/^\d+\s·\s/, "")}
+   485→                </a>
+   486→              </li>
+   487→            ))}
+   488→          </ol>
+   489→        </nav>
+   490→        <p className="mt-4 border-t border-border px-6 pt-4 meta-xs text-muted-foreground">
+   491→          {essay.readingMinutes} min read · {essay.date}
+   492→        </p>
+   493→      </aside>
+   494→
+   495→      {/* The essay — relative so the quote chip can ride its scroll */}
+   496→      <article ref={articleRef} onScroll={handleArticleScroll} className="reading-pane relative overflow-y-auto">
+   497→        {/* Reading measure — fills as the essay scrolls (screen only) */}
+   498→        <div aria-hidden="true" data-essay-print="hide" className="sticky top-0 z-20 h-0.5">
+   499→          <div
+   500→            ref={progressRef}
+   501→            className="h-full w-full origin-left bg-photon"
+   502→            style={{ transform: "scaleX(0)" }}
+   503→          />
+   504→        </div>
+   505→        <DialogHeader className="reading-head sticky top-0 z-10 border-b border-border bg-background/90 px-6 py-5 text-left backdrop-blur-sm sm:px-10">
+   506→          {/* Offprint provenance — inked only by the essay print mode */}
+   507→          <p
+   508→            data-essay-print="only"
+   509→            className="hidden font-mono text-[9.5pt] uppercase tracking-[0.14em] text-black/70"
+   510→          >
+   511→            The Physicist's Notebook · an essay printed from the companion
+   512→            site · <span data-essay-print="url" />
+   513→          </p>
+   514→          <p className="meta-sm text-photon">
+   515→            Scientific Notebook · {note.category}
+   516→          </p>
+   517→          <DialogTitle className="mt-2 max-w-2xl font-serif text-2xl leading-tight text-balance sm:text-3xl">
+   518→            {essay.title}
+   519→          </DialogTitle>
+   520→          <DialogDescription className="max-w-2xl font-serif text-base italic leading-relaxed">
+   521→            {essay.dek}
+   522→          </DialogDescription>
+   523→          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+   524→            <p className="meta-xs text-muted-foreground">
+   525→              {essay.readingMinutes} min read · {essay.date} ·{" "}
+   526→              <span aria-hidden="true" data-essay-print="hide" className="tabular-nums">
+   527→                <span ref={percentRef} className="text-photon">
+   528→                  000
+   529→                </span>
+   530→                %
+   531→              </span>
+   532→              <span className="sr-only">reading position shown as a percentage</span>
+   533→            </p>
+   534→            <span className="flex items-center gap-2" data-essay-print="hide">
+   535→              <CopyLinkButton note={note} />
+   536→              <PrintEssayButton note={note} />
+   537→            </span>
+   538→          </div>
+   539→        </DialogHeader>
+   540→
+   541→        {/* Select any passage — the quote chip rises beneath it; the chip
+   542→            can quote it to the clipboard or print it as an excerpt */}
+   543→        <QuoteCopy
+   544→          articleRef={articleRef}
+   545→          note={note}
+   546→          essayTitle={essay.title}
+   547→          essayMeta={`${note.category} · ${essay.readingMinutes} min read · ${essay.date}`}
+   548→        />
+   549→
+   550→        <div className="reading-measure px-6 py-10 sm:px-10">
+   551→          {essay.sections.map((s, i) => (
+   552→            <section
+   553→              key={s.id}
+   554→              id={s.id}
+   555→              className={cn("scroll-mt-24", i > 0 && "mt-12", i === 0 && "first:mt-0")}
+   556→              aria-labelledby={`${s.id}-h`}
+   557→            >
+   558→              <h2
+   559→                id={`${s.id}-h`}
+   560→                className="font-serif text-xl leading-snug text-foreground sm:text-2xl"
+   561→              >
+   562→                {s.heading}
+   563→              </h2>
+   564→              <div className="mt-5 space-y-5">
+   565→                {s.paragraphs.map((p, j) => (
+   566→                  <p
+   567→                    key={j}
+   568→                    className={cn(
+   569→                      "text-[1.05rem] leading-[1.85] text-muted-foreground",
+   570→                      i === 0 && j === 0 && "drop-cap text-foreground/90"
+   571→                    )}
+   572→                  >
+   573→                    <Prose text={p} />
+   574→                  </p>
+   575→                ))}
+   576→              </div>
+   577→            </section>
+   578→          ))}
+   579→
+   580→          {/* References — linked only where the record was verified */}
+   581→          <section className="mt-16 border-t border-border pt-8" aria-labelledby="refs-h">
+   582→            <h2 id="refs-h" className="meta-sm text-muted-foreground">
+   583→              References
+   584→            </h2>
+   585→            <ol className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+   586→              {essay.references.map((r, i) => (
+   587→                <li key={i} className="flex gap-3">
+   588→                  <span className="font-mono text-xs text-photon">[{i + 1}]</span>
+   589→                  {r.url ? (
+   590→                    <a
+   591→                      href={r.url}
+   592→                      target="_blank"
+   593→                      rel="noopener noreferrer"
+   594→                      className="link-quiet inline-flex items-baseline gap-1 rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+   595→                    >
+   596→                      {r.text}
+   597→                      <ArrowUpRight className="size-3 shrink-0 self-center text-muted-foreground/50" aria-hidden="true" />
+   598→                    </a>
+   599→                  ) : (
+   600→                    <span>{r.text}</span>
+   601→                  )}
+   602→                </li>
+   603→              ))}
+   604→            </ol>
+   605→          </section>
+   606→
+   607→          {/* Further reading — accessible next steps, all links verified */}
+   608→          {essay.furtherReading && essay.furtherReading.length > 0 && (
+   609→            <section className="mt-10" aria-labelledby="further-h">
+   610→              <h2 id="further-h" className="meta-sm text-muted-foreground">
+   611→                Further reading
+   612→              </h2>
+   613→              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+   614→                {essay.furtherReading.map((r) => (
+   615→                  <li key={r.text} className="flex gap-3">
+   616→                    <span aria-hidden="true" className="font-mono text-xs text-nebula">→</span>
+   617→                    {r.url ? (
+   618→                      <a
+   619→                        href={r.url}
+   620→                        target="_blank"
+   621→                        rel="noopener noreferrer"
+   622→                        className="link-quiet inline-flex items-baseline gap-1 rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+   623→                      >
+   624→                        {r.text}
+   625→                        <ArrowUpRight className="size-3 shrink-0 self-center text-muted-foreground/50" aria-hidden="true" />
+   626→                      </a>
+   627→                    ) : (
+   628→                      <span>{r.text}</span>
+   629→                    )}
+   630→                  </li>
+   631→                ))}
+   632→              </ul>
+   633→            </section>
+   634→          )}
+   635→
+   636→          {/* AI study companion — grounded in this essay's actual text
+   637→              (screen companion; the offprint stands on its own) */}
+   638→          <div data-essay-print="hide">
+   639→            <AskAssistant note={note} />
+   640→          </div>
+   641→
+   642→          <p className="mt-10 meta-xs text-muted-foreground">
+   643→            Example essay · placeholder content until replaced by genuine
+   644→            writing
+   645→          </p>
+   646→
+   647→          {/* The hand-off — one essay ends, the notebook continues */}
+   648→          {nextNote && (
+   649→            <button
+   650→              type="button"
+   651→              data-essay-print="hide"
+   652→              onClick={() => onOpenNext(nextNote)}
+   653→              className="group mt-8 flex w-full items-center justify-between gap-4 rounded-lg border border-border bg-card p-5 text-left transition-colors hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-6"
+   654→            >
+   655→              <span className="min-w-0">
+   656→                <span className="block meta-sm text-muted-foreground">
+   657→                  Next in the notebook
+   658→                </span>
+   659→                <span className="mt-2 block truncate font-serif text-lg leading-snug text-foreground sm:text-xl">
+   660→                  {nextNote.title}
+   661→                </span>
+   662→                <span className="mt-1.5 block meta-xs text-muted-foreground">
+   663→                  {nextNote.category} · {nextNote.essay!.readingMinutes} min
+   664→                  read
+   665→                </span>
+   666→              </span>
+   667→              <ArrowRight
+   668→                className="size-5 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-photon"
+   669→                aria-hidden="true"
+   670→              />
+   671→            </button>
+   672→          )}
+   673→        </div>
+   674→      </article>
+   675→    </div>
+   676→  );
+   677→}
+   678→
+   679→/* ------------------------------------------------------------------ */
+   680→/* Copy link — share the deep link to this essay                        */
+   681→/* ------------------------------------------------------------------ */
+   682→
+   683→function CopyLinkButton({ note }: { note: Note }) {
+   684→  const [copied, setCopied] = useState(false);
+   685→  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+   686→
+   687→  // Clear any pending label-reset if the view unmounts mid-flight.
+   688→  useEffect(
+   689→    () => () => {
+   690→      if (resetTimer.current) clearTimeout(resetTimer.current);
+   691→    },
+   692→    []
+   693→  );
+   694→
+   695→  const handleCopy = async () => {
+   696→    const url = `${window.location.origin}${window.location.pathname}${noteHash(note)}`;
+   697→    let ok = false;
+   698→    try {
+   699→      if (navigator.clipboard) {
+   700→        await navigator.clipboard.writeText(url);
+   701→        ok = true;
+   702→      }
+   703→    } catch {
+   704→      ok = false;
+   705→    }
+   706→    if (!ok) {
+   707→      // Fallback for insecure contexts / older browsers.
+   708→      let scratch: HTMLTextAreaElement | null = null;
+   709→      try {
+   710→        scratch = document.createElement("textarea");
+   711→        scratch.value = url;
+   712→        scratch.readOnly = true;
+   713→        scratch.style.position = "fixed";
+   714→        scratch.style.opacity = "0";
+   715→        document.body.appendChild(scratch);
+   716→        scratch.select();
+   717→        ok = document.execCommand("copy");
+   718→      } catch {
+   719→        ok = false;
+   720→      } finally {
+   721→        scratch?.remove();
+   722→      }
+   723→    }
+   724→
+   725→    if (ok) {
+   726→      toast.success("Link copied — share this essay.", {
+   727→        description: "The URL now points directly to this essay.",
+   728→      });
+   729→      setCopied(true);
+   730→      if (resetTimer.current) clearTimeout(resetTimer.current);
+   731→      resetTimer.current = setTimeout(() => setCopied(false), 2000);
+   732→    } else {
+   733→      toast.error("Could not copy the link.");
+   734→    }
+   735→  };
+   736→
+   737→  return (
+   738→    <button
+   739→      type="button"
+   740→      onClick={handleCopy}
+   741→      aria-label="Copy a link to this essay"
+   742→      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 meta-sm text-muted-foreground transition-colors hover:border-photon/50 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+   743→    >
+   744→      {copied ? (
+   745→        <Check className="size-3" aria-hidden="true" />
+   746→      ) : (
+   747→        <Link2 className="size-3" aria-hidden="true" />
+   748→      )}
+   749→      {copied ? "Copied" : "Copy link"}
+   750→    </button>
+   751→  );
+   752→}
+   753→

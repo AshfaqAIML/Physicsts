@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BookMarked, Menu, Orbit, Search } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useMotionPreference } from "@/components/site/providers";
 import { MotionToggle } from "@/components/site/motion-toggle";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { navItems, site } from "@/content/site";
@@ -19,7 +20,7 @@ export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("#home");
   const [open, setOpen] = useState(false);
-  const reduce = useReducedMotion();
+  const { reduced } = useMotionPreference();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -50,7 +51,7 @@ export function Navigation() {
 
   return (
     <motion.header
-      initial={reduce ? false : { y: -24, opacity: 0 }}
+      initial={reduced ? false : { y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
       className={cn(
@@ -105,7 +106,7 @@ export function Navigation() {
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "absolute inset-x-3 -bottom-px h-px bg-photon transition-transform duration-300",
+                    "absolute inset-x-3 -bottom-px h-px origin-left bg-photon transition-transform duration-500 ease-[cubic-bezier(0.21,0.47,0.32,0.98)]",
                     active === item.href ? "scale-x-100" : "scale-x-0"
                   )}
                 />

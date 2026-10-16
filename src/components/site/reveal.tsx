@@ -1,11 +1,15 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useMotionPreference } from "@/components/site/providers";
+import { DUR, EASE, VIEW_ONCE } from "@/lib/motion-tokens";
 
 /**
  * Restrained scroll-reveal: a gentle rise and fade, once.
- * Honours prefers-reduced-motion by rendering statically.
+ * Renders statically when the visitor has calmed the universe
+ * (site preference) or asked the OS to reduce motion — the same
+ * signal that stills the canvases, so the whole site agrees.
  */
 export function Reveal({
   children,
@@ -18,10 +22,10 @@ export function Reveal({
   className?: string;
   as?: "div" | "section" | "article" | "li" | "span";
 }) {
-  const reduce = useReducedMotion();
+  const { reduced } = useMotionPreference();
   const Comp = motion[as];
 
-  if (reduce) {
+  if (reduced) {
     const Static = as;
     return <Static className={className}>{children}</Static>;
   }
@@ -31,8 +35,8 @@ export function Reveal({
       className={className}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.9, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
+      viewport={VIEW_ONCE}
+      transition={{ duration: DUR.entrance, delay, ease: EASE }}
     >
       {children}
     </Comp>

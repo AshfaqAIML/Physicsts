@@ -100,12 +100,12 @@ export function ResearchInterests() {
                 onClick={() => setOpenArea(area)}
                 aria-haspopup="dialog"
                 aria-label={`Open research area: ${area.title}`}
-                className="group relative flex w-full flex-col gap-5 border-b border-border py-7 pl-4 pr-4 text-left transition-colors duration-300 hover:bg-accent/30 focus-visible:bg-accent/30 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring active:bg-accent/50 sm:pl-6 lg:grid lg:grid-cols-[84px_minmax(0,1fr)_minmax(260px,320px)_44px] lg:items-center lg:gap-x-9 lg:py-9"
+                className="group relative flex w-full flex-col gap-5 border-b border-border py-7 pl-4 pr-4 text-left transition-colors duration-300 before:absolute before:left-0 before:top-1/4 before:h-1/2 before:w-px before:origin-center before:scale-y-0 before:bg-photon before:transition-transform before:duration-500 before:ease-[cubic-bezier(0.21,0.47,0.32,0.98)] hover:bg-accent/30 hover:before:scale-y-100 focus-visible:bg-accent/30 focus-visible:before:scale-y-100 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring active:bg-accent/50 sm:pl-6 lg:grid lg:grid-cols-[84px_minmax(0,1fr)_minmax(260px,320px)_44px] lg:items-center lg:gap-x-9 lg:py-9"
               >
                 {/* Folio numeral */}
                 <span
                   aria-hidden="true"
-                  className="type-folio text-muted-foreground transition-all duration-300 group-hover:text-photon"
+                  className="type-folio text-muted-foreground transition-all duration-500 group-hover:translate-x-1 group-hover:text-photon"
                 >
                   {area.index}
                 </span>

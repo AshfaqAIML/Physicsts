@@ -29,14 +29,14 @@ export function About() {
         <div className="section-flow grid gap-12 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-20">
           {/* Portrait plate */}
           <Reveal className="lg:sticky lg:top-28 lg:self-start">
-            <figure className="relative m-0">
+            <figure className="group relative m-0">
               <div className="relative overflow-hidden rounded-lg border border-border">
                 <Image
                   src="/portrait.jpg"
                   alt="Placeholder portrait — a figure beneath a night sky, to be replaced with a real photograph"
                   width={760}
                   height={950}
-                  className="h-auto w-full object-cover"
+                  className="h-auto w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.21,0.47,0.32,0.98)] group-hover:scale-[1.02]"
                   sizes="(min-width: 1024px) 380px, (min-width: 640px) 60vw, 100vw"
                   priority={false}
                 />

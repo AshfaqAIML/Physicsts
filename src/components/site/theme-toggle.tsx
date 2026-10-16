@@ -22,12 +22,32 @@ export function ThemeToggle() {
 
   const isDark = resolvedTheme === "dark";
 
+  /** Theme cross-fade — while the observatory lights change, every
+      colour on the page is given a brief transition. The class is a
+      passing state, never a permanent style; calm-motion visitors
+      and reduced-motion OS settings switch instantly instead (the
+      kill-switch outranks this rule). */
+  const switchTheme = () => {
+    const root = document.documentElement;
+    const calm =
+      root.classList.contains("motion-calm") ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!calm) {
+      root.classList.add("theme-x-fade");
+      window.setTimeout(
+        () => root.classList.remove("theme-x-fade"),
+        650
+      );
+    }
+    setTheme(isDark ? "light" : "dark");
+  };
+
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label={mounted ? `Switch to ${isDark ? "light" : "dark"} theme` : "Toggle colour theme"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={switchTheme}
       className="hit-target relative h-9 w-9 text-muted-foreground transition-colors hover:text-foreground"
     >
       <Sun

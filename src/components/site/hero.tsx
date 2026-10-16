@@ -1,31 +1,49 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { BlackHoleCanvas } from "@/components/site/black-hole";
+import { useMotionPreference } from "@/components/site/providers";
+import { DUR, EASE, EASE_MASK, STAGGER } from "@/lib/motion-tokens";
 import { Tex } from "@/components/site/tex";
+
+/** The display statement, split at its rhetorical seam: the
+    emphasised word opens the second line. */
+const HERO_LINES = [
+  <>The Universe Is a</>,
+  <>
+    <em className="text-glow-photon not-italic text-photon">Question</em>{" "}
+    Worth a Lifetime.
+  </>,
+] as const;
 
 /**
  * HERO — the cinematic opening. A procedural black hole behind,
  * an editorial statement in front, and Einstein's field equation
  * presented as an intellectual aside, not a decoration.
+ *
+ * Choreography (no waiting required — the page is usable at 0s):
+ * eyebrow → display lines rising out of their own masks → lede →
+ * keys → the equation, whose rule draws itself in. On scroll, the
+ * scene and the content part at different rates — a parallax with
+ * actual depth — and the whole statement lifts away.
  */
 export function Hero() {
   const ref = useRef<HTMLElement | null>(null);
-  const reduce = useReducedMotion();
+  const { reduced } = useMotionPreference();
 
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
 
-  // Subtle parallax — content drifts up and fades; the scene scales.
-  const contentY = useTransform(scrollYProgress, [0, 0.8], ["0%", reduce ? "0%" : "-18%"]);
+  // Two-plane parallax — content lifts away faster than the scene
+  // recedes, and the scene slowly scales: depth without weight.
+  const contentY = useTransform(scrollYProgress, [0, 0.8], ["0%", reduced ? "0%" : "-18%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
-  const sceneScale = useTransform(scrollYProgress, [0, 1], [1, reduce ? 1 : 1.08]);
-
-  const ease = [0.21, 0.47, 0.32, 0.98] as const;
+  const sceneY = useTransform(scrollYProgress, [0, 1], ["0%", reduced ? "0%" : "9%"]);
+  const sceneScale = useTransform(scrollYProgress, [0, 1], [1, reduced ? 1 : 1.08]);
 
   return (
     <section
@@ -35,7 +53,11 @@ export function Hero() {
       className="grain relative flex min-h-[100svh] items-center overflow-hidden"
     >
       {/* Scene */}
-      <motion.div style={{ scale: sceneScale }} className="absolute inset-0" aria-hidden="true">
+      <motion.div
+        style={{ scale: sceneScale, y: sceneY }}
+        className="absolute inset-0"
+        aria-hidden="true"
+      >
         <BlackHoleCanvas />
         {/* Vignette + transition into the page */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,var(--background)_105%)]" />
@@ -46,36 +68,58 @@ export function Hero() {
 
       {/* Content */}
       <motion.div
-        style={reduce ? undefined : { y: contentY, opacity: contentOpacity }}
+        style={reduced ? undefined : { y: contentY, opacity: contentOpacity }}
         className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-28 pt-32 sm:px-6 sm:pb-32 lg:px-8"
       >
         <div className="max-w-3xl">
           <motion.p
-            initial={reduce ? false : { opacity: 0, y: 16 }}
+            initial={reduced ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.15, ease }}
+            transition={{ duration: 0.9, delay: 0.15, ease: EASE }}
             className="flex items-center gap-3 eyebrow-wide text-muted-foreground"
           >
-            <span aria-hidden="true" className="inline-block h-px w-10 bg-photon/70" />
+            <motion.span
+              aria-hidden="true"
+              initial={reduced ? false : { scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
+              className="inline-block h-px w-10 origin-left bg-photon/70"
+            />
             Physics · Mathematics · The Universe
           </motion.p>
 
-          <motion.h1
+          {/* The display statement — each line rises out of its own
+              mask. The padding/negative-margin pair reserves room for
+              the serif descenders the tight line-height would clip. */}
+          <h1
             id="hero-heading"
-            initial={reduce ? false : { opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, delay: 0.3, ease }}
             className="type-display mt-7 text-balance text-foreground"
           >
-            The Universe Is a{" "}
-            <em className="text-glow-photon not-italic text-photon">Question</em>{" "}
-            Worth a Lifetime.
-          </motion.h1>
+            {HERO_LINES.map((line, i) => (
+              <span
+                key={i}
+                className="-mb-[0.26em] block overflow-hidden pb-[0.26em]"
+              >
+                <motion.span
+                  className="block"
+                  initial={reduced ? false : { y: "112%" }}
+                  animate={{ y: "0%" }}
+                  transition={{
+                    duration: DUR.cinematic,
+                    delay: 0.3 + i * STAGGER,
+                    ease: EASE_MASK,
+                  }}
+                >
+                  {line}
+                </motion.span>
+              </span>
+            ))}
+          </h1>
 
           <motion.p
-            initial={reduce ? false : { opacity: 0, y: 24 }}
+            initial={reduced ? false : { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.5, ease }}
+            transition={{ duration: 1, delay: 0.56, ease: EASE }}
             className="mt-7 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
           >
             Notes that rebuild spacetime and quantum theory from first
@@ -85,9 +129,9 @@ export function Hero() {
           </motion.p>
 
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 20 }}
+            initial={reduced ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.68, ease }}
+            transition={{ duration: 1, delay: 0.72, ease: EASE }}
             data-print="hide"
             className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-4"
           >
@@ -111,14 +155,22 @@ export function Hero() {
             </a>
           </motion.div>
 
-          {/* The field equation — an aside, presented quietly */}
+          {/* The field equation — an aside, presented quietly; its
+              rule draws itself in, like a margin being ruled. */}
           <motion.figure
-            initial={reduce ? false : { opacity: 0 }}
+            initial={reduced ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.4, delay: 1.0 }}
             className="mt-14 max-w-md"
           >
-            <div className="border-l-2 border-photon/40 pl-5 text-muted-foreground">
+            <div className="relative pl-5 text-muted-foreground">
+              <motion.span
+                aria-hidden="true"
+                initial={reduced ? false : { scaleY: 0 }}
+                animate={{ scaleY: 1 }}
+                transition={{ duration: 1.1, delay: 1.05, ease: EASE }}
+                className="absolute left-0 top-0 h-full w-[2px] origin-top bg-photon/40"
+              />
               <div className="text-[1.05em]">
                 <Tex
                   display
@@ -138,7 +190,7 @@ export function Hero() {
       {/* Observatory annotation — binds the render to the page furniture.
           The lensing behind is computed live; the label states exactly that. */}
       <motion.div
-        initial={reduce ? false : { opacity: 0 }}
+        initial={reduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.4, delay: 1.3 }}
         aria-hidden="true"
@@ -155,7 +207,7 @@ export function Hero() {
       {/* Scroll invitation */}
       <motion.a
         href="#about"
-        initial={reduce ? false : { opacity: 0 }}
+        initial={reduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.2, delay: 1.6 }}
         data-print="hide"
@@ -166,7 +218,7 @@ export function Hero() {
         <span aria-hidden="true" className="relative flex h-10 w-px justify-center overflow-hidden bg-border">
           <motion.span
             className="absolute top-0 h-4 w-px bg-photon"
-            animate={reduce ? undefined : { y: [-16, 40] }}
+            animate={reduced ? undefined : { y: [-16, 40] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: "easeIn" }}
           />
         </span>

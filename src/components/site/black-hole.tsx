@@ -104,7 +104,12 @@ export function BlackHoleCanvas() {
 
     const buildParticles = () => {
       const arr: Particle[] = [];
-      const N = 1150;
+      /* Performance guard — the particle budget scales with the area
+         being painted, so small viewports (usually the weakest GPUs)
+         carry a lighter disk. ~560 at phone sizes, ~900 at tablet,
+         the full 1150 on desktop. */
+      const budget = w * h;
+      const N = budget < 500_000 ? 560 : budget < 1_100_000 ? 900 : 1150;
       for (let i = 0; i < N; i++) {
         // Radius biased toward the hot inner edge
         const u = Math.random();
@@ -314,7 +319,12 @@ export function BlackHoleCanvas() {
     io.observe(canvas);
 
     const mo = new MutationObserver(() => {
-      dark = document.documentElement.classList.contains("dark");
+      /* Only a genuine theme change rebuilds the star canvas — the
+         <html> class also flips for motion preferences and the theme
+         cross-fade, none of which should re-seed the sky. */
+      const darkNow = document.documentElement.classList.contains("dark");
+      if (darkNow === dark) return;
+      dark = darkNow;
       buildStars();
       if (reduced) draw(0);
     });

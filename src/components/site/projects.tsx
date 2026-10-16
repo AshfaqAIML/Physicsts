@@ -57,7 +57,7 @@ export function Projects() {
             onClick={() => setOpen(projects[0])}
             aria-haspopup="dialog"
             aria-label={`Open project details: ${projects[0].title}`}
-            className="group grid w-full overflow-hidden rounded-lg border border-border bg-card text-left transition-colors duration-300 hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:border-photon/30 lg:grid-cols-12"
+            className="group grid w-full overflow-hidden rounded-lg border border-border bg-card text-left transition-[border-color,translate,box-shadow] duration-500 ease-[cubic-bezier(0.21,0.47,0.32,0.98)] hover:-translate-y-0.5 hover:border-photon/50 hover:shadow-[0_18px_44px_-18px_rgb(0_0_0/0.22)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:border-photon/30 lg:grid-cols-12"
           >
             <div className="flex flex-col p-6 sm:p-8 lg:col-span-5 lg:p-10">
               <div className="flex items-center justify-between gap-3">
@@ -111,7 +111,7 @@ export function Projects() {
                   onClick={() => setOpen(p)}
                   aria-haspopup="dialog"
                   aria-label={`Open project details: ${p.title}`}
-                  className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card p-6 text-left transition-all duration-300 hover:border-photon/50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:border-photon/30 before:absolute before:inset-x-0 before:top-0 before:h-px before:origin-left before:scale-x-0 before:bg-gradient-to-r before:from-transparent before:via-nebula/70 before:to-transparent before:transition-transform before:duration-500 hover:before:scale-x-100 sm:p-7"
+                  className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card p-6 text-left transition-[border-color,translate,box-shadow] duration-500 ease-[cubic-bezier(0.21,0.47,0.32,0.98)] hover:-translate-y-0.5 hover:border-photon/50 hover:shadow-[0_14px_36px_-16px_rgb(0_0_0/0.2)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:border-photon/30 before:absolute before:inset-x-0 before:top-0 before:h-px before:origin-left before:scale-x-0 before:bg-gradient-to-r before:from-transparent before:via-nebula/70 before:to-transparent before:transition-transform before:duration-500 hover:before:scale-x-100 sm:p-7"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="meta-sm text-muted-foreground">

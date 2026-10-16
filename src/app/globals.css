@@ -174,6 +174,27 @@
     background-clip: padding-box;
   }
 
+  /* Theme cross-fade — a passing state (~650ms) applied by the theme
+     toggle while the observatory lights change, so Deep Field and
+     Archival Journal dissolve into one another instead of snapping.
+     Deliberately NOT !important: the reduced-motion kill-switches
+     below outrank it, so calmed visitors still switch instantly. */
+  html.theme-x-fade,
+  html.theme-x-fade *,
+  html.theme-x-fade *::before,
+  html.theme-x-fade *::after {
+    transition:
+      background-color 0.5s ease,
+      background 0.5s ease,
+      color 0.5s ease,
+      border-color 0.5s ease,
+      outline-color 0.5s ease,
+      fill 0.5s ease,
+      stroke 0.5s ease,
+      box-shadow 0.5s ease,
+      text-shadow 0.5s ease;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -671,6 +692,25 @@
   .reading-pane[data-scrolled="true"] .reading-head::after {
     opacity: 1;
   }
+}
+
+/* ----------------------------------------------------------------
+   SCIENTIFIC TWINKLE — the publications constellation breathes:
+   each star holds its own phase and period via the custom
+   properties set inline. The reduced-motion kill-switches freeze
+   it to the resting opacity.
+   ---------------------------------------------------------------- */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: var(--tw-min, 0.55);
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.constellation-star {
+  animation: twinkle var(--tw-dur, 5s) ease-in-out var(--tw-del, 0s) infinite;
 }
 
 /* KaTeX — inherit colour, tune size to the typographic scale */
