@@ -117,6 +117,7 @@ export function Contact() {
           eyebrow="Contact & Collaboration"
           title="Every Answer Opens Another Question."
           lede="Interested in physics, mathematics, scientific computing, or exchanging ideas about the universe? I would be glad to connect."
+          meta="Correspondence · open"
         />
 
         <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-16">

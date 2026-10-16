@@ -193,6 +193,7 @@ export function Notebook() {
           eyebrow="Scientific Notebook"
           title="Ideas in Progress."
           lede="Essays and notes on physics, mathematics, and the history of ideas — written to think clearly, published when ready."
+          meta="Essays · 9 in progress"
         />
 
         {/* Resume where you left off — only for returning readers */}

@@ -233,6 +233,7 @@ export function PhysicsLab() {
           eyebrow="Interactive Laboratory"
           title="Touch the Mathematics."
           lede="Three working instruments — deflect starlight through a gravitational lens, set a two-body system in motion, or watch a quantum wave packet tunnel through a wall it classically cannot climb."
+          meta="3 instruments · live"
         />
 
         <Reveal className="mt-12" delay={0.1}>

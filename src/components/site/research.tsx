@@ -85,43 +85,55 @@ export function ResearchInterests() {
           eyebrow="Research Interests"
           title="Mapping the Frontiers of Curiosity."
           lede="The directions I read toward and think about — a map of interests being earned, not a list of credentials claimed."
+          meta="Index · 6 directions"
         />
 
-        <div className="mt-16 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {/* The index — a journal table of contents, not a card grid.
+            Each direction is a full-width entry: folio numeral, the
+            words, the equation set on its plate, and a cue. */}
+        <div className="mt-14 border-t border-border lg:mt-16">
           {researchAreas.map((area, i) => (
-            <Reveal key={area.id} delay={0.05 * (i % 3)}>
+            <Reveal key={area.id} delay={0.04 * i}>
               <button
                 type="button"
                 onClick={() => setOpenArea(area)}
                 aria-haspopup="dialog"
-                className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-card/80 p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-photon/50 hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring before:absolute before:inset-x-0 before:top-0 before:h-px before:origin-left before:scale-x-0 before:bg-gradient-to-r before:from-transparent before:via-photon/70 before:to-transparent before:transition-transform before:duration-500 hover:before:scale-x-100"
+                aria-label={`Open research area: ${area.title}`}
+                className="group relative flex w-full flex-col gap-5 border-b border-border py-7 pl-4 pr-4 text-left transition-colors duration-300 hover:bg-accent/30 focus-visible:bg-accent/30 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ring active:bg-accent/50 sm:pl-6 lg:grid lg:grid-cols-[84px_minmax(0,1fr)_minmax(260px,320px)_44px] lg:items-center lg:gap-x-9 lg:py-9"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <span className="font-mono text-[11px] tabular-nums text-photon">
-                    {area.index}
-                  </span>
-                  <ArrowUpRight
-                    className="size-4 text-muted-foreground/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon"
-                    aria-hidden="true"
-                  />
-                </div>
-
-                <h3 className="mt-6 font-serif text-2xl leading-tight text-foreground">
-                  {area.title}
-                </h3>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  {area.tagline}
-                </p>
-
-                <div className="my-5 overflow-hidden border-y border-border/70 bg-plot-grid py-4 text-center text-foreground/85">
-                  <Tex math={area.equation} ariaLabel={area.equationLabel} />
-                </div>
-
-                <p className="text-sm leading-relaxed text-muted-foreground">{area.summary}</p>
-
-                <span className="mt-auto pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 transition-colors group-hover:text-photon">
-                  Explore this area →
+                {/* Folio numeral */}
+                <span
+                  aria-hidden="true"
+                  className="font-serif text-[2rem] leading-none text-muted-foreground/35 transition-all duration-300 group-hover:text-photon lg:text-[2.6rem]"
+                >
+                  {area.index}
                 </span>
+
+                {/* The words */}
+                <span className="block">
+                  <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <span className="font-serif text-2xl leading-tight text-foreground sm:text-[1.7rem]">
+                      {area.title}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">
+                      {area.tagline}
+                    </span>
+                  </span>
+                  <span className="mt-2.5 block max-w-xl text-sm leading-relaxed text-muted-foreground">
+                    {area.summary}
+                  </span>
+                </span>
+
+                {/* The equation, set on its plate */}
+                <span className="block overflow-x-auto border border-border/70 bg-plot-grid px-4 py-3.5 text-center text-foreground/85 transition-colors duration-300 group-hover:border-photon/40">
+                  <Tex math={area.equation} ariaLabel={area.equationLabel} />
+                </span>
+
+                {/* Cue */}
+                <ArrowUpRight
+                  className="hidden size-4 text-muted-foreground/40 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-photon lg:block"
+                  aria-hidden="true"
+                />
               </button>
             </Reveal>
           ))}

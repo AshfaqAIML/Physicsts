@@ -88,20 +88,33 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.68, ease }}
             data-print="hide"
-            className="mt-10 flex flex-wrap items-center gap-4"
+            className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-4"
           >
+            {/* The instrument button — a labelled key, not a pill */}
             <a
               href="#projects"
-              className="group inline-flex h-12 items-center gap-2.5 rounded-md bg-primary px-7 text-sm font-medium text-primary-foreground transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring dark:hover:shadow-photon/25"
+              className="group inline-flex h-12 items-stretch overflow-hidden rounded-sm bg-primary text-primary-foreground shadow-lg transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:translate-y-0 active:shadow-md dark:hover:shadow-photon/25"
             >
-              Explore My Work
-              <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+              <span className="flex items-center px-6 font-mono text-[11px] font-medium uppercase tracking-[0.18em]">
+                Explore the work
+              </span>
+              <span
+                aria-hidden="true"
+                className="flex items-center border-l border-primary-foreground/15 px-4 transition-colors duration-300 group-hover:bg-primary-foreground/10"
+              >
+                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
             </a>
+            {/* The quiet alternative — an editorial link, not a button */}
             <a
               href="#about"
-              className="inline-flex h-12 items-center rounded-md border border-border px-7 text-sm font-medium text-foreground transition-colors duration-300 hover:border-photon/50 hover:bg-photon/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              className="group inline-flex h-12 items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
             >
-              About the Physicist
+              <span className="link-quiet pb-0.5">About the physicist</span>
+              <ArrowDown
+                className="size-3.5 text-muted-foreground/60 transition-all duration-300 group-hover:translate-y-0.5 group-hover:text-photon"
+                aria-hidden="true"
+              />
             </a>
           </motion.div>
 
@@ -126,6 +139,23 @@ export function Hero() {
             </div>
           </motion.figure>
         </div>
+      </motion.div>
+
+      {/* Observatory annotation — binds the render to the page furniture.
+          The lensing behind is computed live; the label states exactly that. */}
+      <motion.div
+        initial={reduce ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.4, delay: 1.3 }}
+        aria-hidden="true"
+        data-print="hide"
+        className="absolute bottom-28 right-8 z-10 hidden flex-col items-center gap-4 xl:flex"
+      >
+        <span className="size-1.5 rounded-full bg-photon/80" />
+        <span className="h-28 w-px bg-gradient-to-b from-photon/50 to-transparent" />
+        <span className="writing-vertical font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground/60">
+          Fig. 00 · Gravitational lensing — computed live
+        </span>
       </motion.div>
 
       {/* Scroll invitation */}

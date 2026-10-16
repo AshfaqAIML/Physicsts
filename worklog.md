@@ -1733,3 +1733,86 @@ Stage Summary:
 - Next-phase candidates: almanac "on this day" deep-links (milestone → related
   lexicon term or lab bench); a fourth lab instrument; real content
   replacement (name/portrait/channels/CV) when the owner is ready.
+
+---
+Task ID: R11 (art-direction round — main agent)
+Agent: main agent (user-directed art direction)
+Task: R11 — a pure ART-DIRECTION round per the owner's brief: "act as an award-winning digital art director and senior creative frontend engineer… elevate visual quality… replace generic card grids with varied editorial layouts… prioritise visual quality over adding unnecessary new features." No new features were added on purpose; every change below is visual/compositional. Trace 1a13ff1b9f673871-web-cron-review-202610160526.
+
+Work Log:
+- Baseline: server up (200), full regression PASSED at open (carried over from
+  R10: page health, hotkeys, deep links, print modes, lint 0, tsc 0).
+- AUDIT: VLM CLI auth restored this round (was 401 in R10). Full-page + per-
+  section viewport screenshots (1440) + art-director VLM critiques. Verdict:
+  hero/lab/contact strong; WEAKEST = (1) Research "3-col uniform card grid —
+  SaaS pricing page", (2) Projects "cards on a dark grid, nothing breaks out",
+  (3) Publications "centered empty-state cop-out, hourglass on-the-nose",
+  (4) hero CTA "standard SaaS landing button", (5) no shared folio furniture.
+- SectionHeading: new optional `meta` prop prints a journal running-head —
+  flexible hairline + right micro caption on the eyebrow line (lg only).
+  All 7 sections wired: "Personal account · 1 plate", "Index · 6 directions",
+  "Briefs · 5 figures · examples", "Ledger · empty by design", "Essays · 9
+  in progress", "3 instruments · live", "Correspondence · open".
+- RESEARCH (02) REDESIGNED: uniform 3-col cards → journal table-of-contents
+  index rows. Full-width entries: large serif folio numeral / title+tagline+
+  summary / equation set on its own hairline plot-grid plate / arrow cue;
+  hairline dividers; hover wash (accent/30) + numeral turns photon + plate
+  border warms; focus-visible with negative offset; active state added.
+- PROJECTS (03) REDESIGNED: project 01 promoted to a full-width FEATURE
+  PLATE — words left (5 cols), mathematics set LARGE on an instrument plate
+  right (7 cols, plot-grid, register corner ticks that brighten on hover,
+  KaTeX at 1.28em) — then FIG. 02–05 in a mirrored asymmetric 7/5 + 5/7
+  spread on a 12-col grid. Every card numbered "Fig. NN".
+- PUBLICATIONS (04) REDESIGNED: centered empty-state box → asymmetric two-
+  leaf LEDGER. Left: philosophy of the section (status dot with restrained
+  ping, serif headline, copy, note) with the uncharted-constellation SVG
+  behind. Right: "Index of contributions" — 7 contribution types as ledger
+  rows with dotted leaders and honest "000" counts, footer line "Counts move
+  when verified work exists — never before". Hourglass icon removed.
+- HERO REFINED: primary CTA restyled as a labelled instrument key (mono
+  uppercase label + arrow compartment separated by an inner hairline;
+  rounded-sm; proper active state). Secondary CTA demoted to a quiet
+  editorial link (link-quiet underline + arrow-down). New right-edge
+  observatory annotation (xl only, aria-hidden, print-hidden): photon dot,
+  fading hairline, vertical mono caption "FIG. 00 · GRAVITATIONAL LENSING —
+  COMPUTED LIVE" (binds the render to the page furniture; honest).
+- BUG FOUND & FIXED during mobile audit: the running-head eyebrow span was
+  given `shrink-0`, forcing single-line max-content width → 75px horizontal
+  overflow at 375px on long eyebrows ("Research & Scientific Projects").
+  Fix: `min-w-0` (text may wrap inside the span). Verified 0 overflow after.
+- Publications "000" count contrast raised (muted-foreground/45 → /70) after
+  VLM flagged WCAG legibility on dark.
+- VLM false positives DISPROVEN by DOM probes (standing rule re-confirmed):
+  mobile claims of "clipped tagline text" (string not in DOM), "truncated
+  featured quote" (scrollWidth == clientWidth), "equation overflow"
+  (scrollWidth 309 == clientWidth 309) — all hallucinated from screenshots.
+  KaTeX sub-pixel internal spans report tiny scroll deltas; not real clipping.
+- VERIFIED after all edits: lint 0, tsc 0 under src/, desktop 1440 overflow 0,
+  mobile 375 overflow 0, research row click → dialog, featured plate click →
+  dialog, hero CTA anchors navigate, L lexicon opens, T theme round-trip,
+  #note-spacetime-curved deep link opens + hash clears on close, contact form
+  happy path (subject select → toast "Delivered. Thank you."), 0 failed
+  resources, console clean, dev.log clean. VLM grades on the redesigned
+  sections: Research A, Projects A+, Publications ledger praised in light
+  mode ("intentional, no visual bugs"), Hero A-. Light-mode render of the
+  new sections verified.
+
+Stage Summary:
+- The card-grid era is over: Research is a journal index, Projects is a
+  monograph spread with a feature plate + mirrored asymmetric grid,
+  Publications is an honest ledger. The site now reads as one art-directed
+  editorial object rather than sections of cards.
+- New shared furniture: running-head meta line on every SectionHeading;
+  "Fig. NN" numbering in projects; instrument-key CTA language in the hero;
+  vertical observatory annotation.
+- Patterns for future rounds: (1) SectionHeading `meta` prop is available for
+  any new section; (2) never use shrink-0 on text-bearing eyebrow spans —
+  use min-w-0; (3) the feature-plate pattern (5/7 words/math split with
+  register ticks) is reusable for e.g. a future "selected publication" hero.
+- Known notes: VLM hallucination rate on mobile screenshots remains high —
+  always DOM-verify; agent-browser eval vars persist between calls (wrap in
+  IIFE); SVG child getBoundingClientRect reports viewBox units (false
+  overflow positives — only trust documentElement.scrollWidth deltas).
+- Next-phase candidates: almanac "on this day" deep-links; a fourth lab
+  instrument; apply the feature-plate pattern to one notebook essay;
+  real content replacement (name/portrait/channels/CV) when owner is ready.

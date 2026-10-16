@@ -22,6 +22,7 @@ export function About() {
           eyebrow="About"
           title={profile.headline}
           lede="The person behind the questions — honestly rendered, credentials still being earned."
+          meta="Personal account · 1 plate"
         />
 
         <div className="mt-16 grid gap-12 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-20">
