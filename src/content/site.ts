@@ -7,8 +7,7 @@
  */
 
 export const site = {
-  /** Replace with your name — e.g. "Ada Lovelace" */
-  name: "Your Name" as string,
+  name: "Ishfaq Dar" as string,
   /** Short wordmark shown in the navigation */
   wordmark: "The Physicist",
   /** Role descriptor — adjust honestly to your situation */

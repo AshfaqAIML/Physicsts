@@ -5,9 +5,9 @@ import { profile } from "@/content/profile";
 import { site } from "@/content/site";
 import { Sparkles } from "lucide-react";
 
-/** 12-px LQIP — generated from public/portrait.jpg (see README). */
+/** 16-px LQIP — generated from public/portrait.jpg (see README). */
 const PORTRAIT_BLUR =
-  "data:image/jpeg;base64,/9j/2wBDABcXFxcYFxocHBokJiImJDUwLCwwNVA5PTk9OVB5S1hLS1hLeWuBaWJpgWvAl4WFl8DeurC63v/w8P//////////2wBDARcXFxcYFxocHBokJiImJDUwLCwwNVA5PTk9OVB5S1hLS1hLeWuBaWJpgWvAl4WFl8DeurC63v/w8P//////////wgARCAAQAAwDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAQMEBf/EABQBAQAAAAAAAAAAAAAAAAAAAAH/2gAMAwEAAhADEAAAAMaZgT//xAAbEAEBAQACAwAAAAAAAAAAAAACAQADERIxYf/aAAgBAQABPwDgFsXw5npXDnJ9W5Mq2+U3/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwB//9k=";
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDABQODxIPDRQSERIXFhQYHzMhHxwcHz8tLyUzSkFOTUlBSEZSXHZkUldvWEZIZoxob3p9hIWET2ORm4+AmnaBhH//2wBDARYXFx8bHzwhITx/VEhUf39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f3//wAARCAAUABADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwCMxotuS+cY4CnBJx0qJdktsjLIJPl5IPP41larJuvCvZAo+nFRabIVvFwMK2UP5Uh3E1A/6dL9c/oKXS1BuST/AAqSPr0oopiP/9k=";
 
 /**
  * ABOUT — an editorial spread: portrait plate on the left, the
@@ -37,9 +37,9 @@ export function About() {
               <div className="relative overflow-hidden rounded-lg border border-border">
                 <Image
                   src="/portrait.jpg"
-                  alt="Placeholder portrait — a figure beneath a night sky, to be replaced with a real photograph"
-                  width={760}
-                  height={950}
+                  alt="Portrait plate — the site's author, photographed in a black suit against a studio backdrop"
+                  width={864}
+                  height={1080}
                   className="h-auto w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.21,0.47,0.32,0.98)] group-hover:scale-[1.02]"
                   sizes="(min-width: 1024px) 380px, (min-width: 640px) 60vw, 100vw"
                   placeholder="blur"
@@ -52,8 +52,8 @@ export function About() {
                 />
               </div>
               <figcaption className="mt-3 flex items-center justify-between meta-sm text-muted-foreground">
-                <span>Plate I · Portrait (placeholder)</span>
-                <span>replace with your own</span>
+                <span>Plate I · Portrait</span>
+                <span>Studio plate · 4:5</span>
               </figcaption>
             </figure>
 

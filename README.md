@@ -202,13 +202,16 @@ self-hosted):
 ## Regenerating the imagery
 
 The hero black hole, lensing star fields, and orbit diagrams are procedural
-Canvas 2D code (no image assets). Two images were generated for placeholders
-and social sharing — regenerate freely:
+Canvas 2D code (no image assets). `public/og.jpg` is generated for social
+sharing and can be regenerated freely:
 
 ```bash
-z-ai image -p "..." -o ./public/portrait.jpg -s 864x1152
 z-ai image -p "..." -o ./public/og.jpg -s 1344x768
 ```
 
-Replace `public/portrait.jpg` with your real photograph; the caption in the
-About section updates itself only if you edit `profile.ts`.
+`public/portrait.jpg` is a real photograph (864×1080, 4:5). To swap it, drop
+your own image in at the same filename and dimensions; the About plate picks
+it up automatically. The dimensions declared in `src/components/site/about.tsx`
+(`width`/`height`) must be updated in step with it to avoid layout shift, and
+`PORTRAIT_BLUR` there is a base64 LQIP generated from the image — regenerate it
+if you change the photo.
